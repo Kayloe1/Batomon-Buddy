@@ -1,94 +1,77 @@
-# Status (2026-11-12: battle logging and simulator added; 2026-11-11: end of fourth session)
+# Status (2026-11-14)
 
-**New on 2026-11-12: the offline battle simulator (step 3), in `sim/`.** `python -m sim --check` replays the
-two recorded battles: the Day 2 win is reproduced exactly (winner, end time, every Stats number), and the
-Day 3 loss is exact on the opponent's side (HP 124/800, their Poison and Shock, every badge) but the sim
-keeps Ed alive about 2 s too long, short by exactly his 140 of heals. What is verified and what is guessed:
-`docs\simulator.md` and `python -m sim --rules`. The simple shop rules do not use it yet.
+Batomon Buddy plays whole **Casual** runs of Batomon Showdown by reading the game window and clicking.
+The decision engine (`engine/`) picks every shop action by simulating battles (`sim/`) against a pool of
+opponent teams, including real ones the bot recorded. On 2026-11-14 it **won a run: 10 badges on day 14**
+(Bug Catcher). Earlier Casual runs: Swim Coach won (10 badges, day 11), Chef and Chemist reached 6 badges.
 
-**New on 2026-11-12: every battle is logged as a simulator check.** At battle start the bot saves the frame
-to `captures\battles\` and reads both teams from it (names from sprites, levels, badges); the result box is
-saved too. The `battle` record in `logs\run_*.jsonl` now has a `seen` field with both teams. To name
-opponents' monsters the bot never owned, it saves the sprite of every shop card it sees in
-`templates\card_sprites\` (63 to start, about 30 species, cut from the saved captures). `python -m
-sim.from_logs` turns the logs into cases and prints how often the simulator picks the same winner as the
-game. Checked offline on the Day 2 battle (the read teams equal the hand-made case); **not yet run live.**
-The Stats screen and the end HP bars are still not read.
+How often it still needs help (sessions in `logs\` that ended with the bot stopping itself on something it
+did not understand): 16 of 17 on 11-11, 24 of 27 on 11-12, 14 of 20 on 11-13, 4 of 7 on 11-14. Every recent
+stop was a first-time sight (the "Take All" trinket dialog, a capital K read as H, the "Rank Max" label).
+Stopping is deliberate: the bot never guesses an unreadable value.
 
-The program now **starts a Casual run, plays it to the end, and stops**. Two runs were played today:
-1. The run Ed had open (Rich Lady), from Day 2 to its end on Day 8 with 3 badges.
-2. A new **Casual** run the bot started itself (Monster Ranger), from Day 1 to its end on Day 7 with 1 badge.
+Real-run timing (6 runs, 53 minutes): battles 33%, clicking and checking about a fifth, thinking 15%
+(median 2 s per decision, never over 5 s), reading the Stats window 12%.
 
-Neither was unattended from start to finish: the bot stopped whenever it met a digit, letter or screen it
-had not seen, that was taught from the saved capture, and it was restarted. In the second run it played
-Days 3 to 6 without help. The game is on the end-of-run screen. Nothing was ever started in Ranked Mode.
-
-The simple rules play badly (they stop buying once the team is full), which is expected until the simulator
-replaces them.
-
-## What works (tested live and by 33 tests)
-| File | Status |
+## What works (tested live and by 236 tests)
+| Part | Status |
 |---|---|
-| `window.py` | Finds and captures the window. Fractions are measured against the 16:9 game picture, not the black bars. |
+| `window.py` | Finds and captures the window (works while covered). Fractions are measured against the 16:9 game picture. |
 | `glyphs.py` | Reads the pixel fonts by matching glyph templates in `templates\glyphs.json`. An unknown glyph is `?`, never a guess. |
-| `reader.py` | `read_state(image)`. Screens recognised: `new_run`, `trainer_pick`, `shop`, `matchmaking`, `battle`, `result`, `stats`, `event`, `gift_box`, `trinket_pick`, `run_over`, `blank` (fade), else `unknown`. On the shop it reads lives, day, badges, trainer, trainer HP, money, shop rank and odds, reroll price, lock state, 5 shop slots (name, price, monster or item, stat badges, rarity from the frame colour, greyed out, sold), 6 team and 4 bench slots (level 1 to 3, stat badges, name by sprite). It also reads the selected mode and region on the New Run dialog, the three trainer names, and the offered trinket names. Anything unreadable is `None` plus a line in `problems`. |
-| `teach.py` | Rebuilds `templates\glyphs.json` from the labelled captures in its `LESSONS` list and adds their sprites. |
-| `hands.py` | Live or dry-run. Verified live: buy, use item, move (drag), sell, reroll, lock/unlock, battle (waits for the result, turns fast forward on if off), confirm result, event choice, open gift, pick trinket, pick trainer, and `start_casual_run()`. Each action reads the state first and checks it afterwards. |
-| `play.py` | Simple-rules loop: use free items, buy the dearest affordable monster while the team has an empty slot, BATTLE!, CONFIRM, last event option, first trinket, preferred trainer (Monster Ranger, Swim Coach, else the left card). With `--new-run` it starts a Casual run when none is open. Stops on anything unclear and at the end of the run. |
-| `sim\` | Offline battle simulator: `simulate(team_a, team_b)`, `team_from_reader(state)`, `win_rate()`. CLI `python -m sim`. Recorded battles in `sim\cases\`. See `docs\simulator.md`. |
-| `tests\` | `.venv\Scripts\python.exe -m unittest discover tests` (`tests\test_sim.py` needs only Python) |
+| `reader.py` | `read_state(image)`. Screens: `new_run`, `trainer_pick`, `shop`, `matchmaking`, `battle`, `result`, `stats`, `event`, `gift_box`, `trinket_pick`, `take_one_confirm`, `select_target`, `overflow`, `cash_in`, `run_over`, `title`, `main_menu`, `main_menu_continue`, `continue_confirm`, `blank` (fade), else `unknown`. On the shop it reads lives, day, badges, trainer, trainer HP, money, shop rank and odds, reroll price (FREE = 0), lock state, 5 shop cards (name, price, stat badges, rarity, shiny), 6 team and 4 bench slots (level 1 to 3, badges, name by sprite). Also event effect lines, trinket names, both teams on the battle screen, the Stats window and the end HP bars. |
+| `teach.py` | Adds the glyphs and sprites of the labelled captures in its `LESSONS` list to what the reader knows (never deletes `glyphs.json`; a `.bak` is kept; `--rebuild` starts from nothing). |
+| `hands.py` | Buy, use item, move (drag), sell, reroll, lock, battle, confirm, events, gifts, trinkets (incl. Take All), trainer pick, select target, overflow, Cash In, Continue, `start_casual_run()`. Each action reads the state first and checks it afterwards; no click is sent while another window covers the game. |
+| `play.py` | The main loop (see `docs\decision-engine.md`). `--simple` uses the old rules, `--learned` the learned policy, `--new-run` starts a Casual run when none is open. Stops on anything unclear and at the end of the run. |
+| `gui.py` | The control window (`control_window.bat`): Start, Pause, Stop, status, the thinking log, a red box with the reason for a stop. |
+| `engine\` | Planner, model, evaluator, opponent pool, layout search, events, trinkets, trainers. `docs\decision-engine.md`. |
+| `sim\` | Offline battle simulator, checked against recorded battles. `docs\simulator.md`, `python -m sim --rules`. |
+| `train\` | Offline practice and a learned policy (optional). `docs\training.md`. |
+| `batch.py`, `report.py` | Several Casual runs in a row; statistics from the logs. |
+| `learn_monsters.py` | Hovers monsters the reader cannot name and learns them from the info panel. |
+| `tests\` | `.venv\Scripts\python.exe -m unittest discover tests` (about a minute). The screenshots they need are tracked in git (`git add -f` a new one). |
 
-Logs: `logs\actions_<date>.jsonl` (every action with the state before and after) and `logs\run_<time>.jsonl`.
+Logs: `logs\run_<time>.jsonl` (every shop read, plan, action, battle, Stats numbers), `logs\thinking_<time>.txt`
+(the bot's reasoning in plain English), `logs\actions_<date>.jsonl`, `logs\last_stop.txt`,
+`logs\batch_summary.jsonl`, `logs\engine_memory.json` (trinkets, rescue, today's buys; reset when a new run is
+detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 so far).
 
-## The Ranked safeguard (rule 1)
+## The Ranked safeguard
 - The New Run dialog has two buttons, Ranked Mode and Casual Mode; the selected one is blue, the other grey.
-  This was checked by clicking each once without confirming. Today the dialog opened with Casual already
-  selected (it seems to remember the last mode), but the code does not rely on that.
 - `hands.start_casual_run()` presses CONFIRM only after two fresh captures both read "Casual blue, Ranked grey,
   Pantra selected". If the reading is unclear it stops. It never clicks the Ranked button, and no other code
-  path presses CONFIRM on that dialog. Tests cover the reading and that the Ranked button box is never used.
-- `play.py` only starts a run when given `--new-run`.
+  path presses CONFIRM on that dialog. `hands.confirm_continue()` uses the same two-read rule for a saved run.
+- `play.py` only starts a run when given `--new-run` (the control window's first box).
+- The shop screen shows no mode, so a run that is already open is played whatever its mode. Ed (2026-11-14)
+  does not mind if it continues a Ranked run by accident.
 
 ## How to add what the reader does not know yet
 When `play.py` stops with "cannot read", the capture is saved as `captures\unread_*.png`. Look at it, add
 an entry with the true text to `LESSONS` in `teach.py`, run `teach.py`, then
-`reader.py <capture> --expect` to make it a test (check the printed values by eye first).
+`reader.py <capture> --expect` to make it a test (check the printed values by eye first). Keep the capture
+in git (`git add -f`) so the lesson can be repeated.
 
 ## Limits
-- **Fonts are still incomplete.** Each run today met a few unseen glyphs (a digit in one of the fonts, or a new
-  label colour). Names with unknown letters resolve when exactly one known name fits, which has worked for
-  every monster, item, trainer and trinket met. Expect occasional stops until every glyph has been seen once.
 - **Window size:** templates only fit a 2560 x 1440 game picture. At another size the reader reports a problem.
-- **Not handled:** the main menu, a won run (10 badges), level 4.
-- **Not read:** the Stats screen contents, event option texts (the bot takes the last option blindly), the
-  result text (win or loss is worked out from badges and lives on the next shop), owned trinkets, the item
-  counter, the hover panel, the small flag and arrow marks trinkets put on team slots.
-- **Team names come from sprites** saved when the bot buys a monster. A monster that arrives another way
-  (an event, a Green Stone transformation) has `name: None` until its sprite is taught. Venopuff, Mosslug and
-  Panbud were named by Claude from their stats; Ed should confirm the cream and purple fox is Venopuff.
-- A shine animation crosses shop cards of monsters you own; the hands re-read the shop up to four times to
-  get past it.
-- `CONTINUE_PROMPT.md` describes the state before these sessions; this file is the current one.
-
-## What the runs taught us about the game
-See `docs\step2-screen-map.md`: trainer HP per day, lives lost per loss, shop rank and odds per day, sell
-value, what LOCK does, three copies make a level 2 and give a trinket gift, level label colours, the events,
-and Stats screen numbers that match the CSV data.
+- **Level 4** is not read (the label font only knows 1 to 3, and its colour was never captured): the bot stops.
+  Events and Ultra Candy can make one.
+- **Fonts are never complete.** A glyph, name or screen met for the first time stops the run until it is taught.
+- Names with unknown letters resolve when exactly one known name fits. `reader.near_miss_name` (a look-alike
+  letter such as K read as H) is unfinished and always answers "no match".
+- **Not read:** owned trinkets (kept in the engine's memory), the item counter (assumed until the game refuses
+  an item), a monster's passive text (the info panel's picture is saved for a person to read).
+- **Team names come from sprites** saved when the bot buys a monster, plus card sprites from every shop seen.
+  A monster that arrives another way is named by hovering it (`learn_monsters.py`).
+- The real-opponent pool is thin late in a run: days 10 to 14 have 13 recorded teams between them.
 
 ## Next steps
-1. Run `play.py --new-run` a few more times in Casual until a whole run passes with no stop (this fills in
-   the remaining glyphs). Add the main menu so it can also start from there.
-2. Play a few Casual runs with the new battle logging, then run `python -m sim.from_logs -v` to see where
-   the simulator disagrees with the game. Opponent monsters the bot has never seen in the shop come out
-   unnamed and those battles are skipped; they shrink as more card sprites are saved. Next readings to add:
-   the Stats screen and the HP bars on the result box.
-3. Settle the Day 3 gap (do heals count while heavily poisoned?) with a Replay of a battle where we heal
-   under Poison; see `docs\simulator.md`.
-4. Read event options and trinket effects so those choices can be made on purpose.
-5. Replace the simple shop rules with simulator-scored choices, including selling and the bench.
+1. Teach what the next stops show; consider a way to teach from the red box without a coding session.
+2. Level 4: capture one, teach the label and its colour.
+3. Settle the Day 3 simulator gap (do heals count while heavily poisoned?) with a logged battle.
+4. Keep recording opponents; re-run `python -m engine.opponents` and `python -m train.learn` as late-day
+   teams accumulate.
 
 ## Safety rules (unchanged)
 - Never start a Ranked run without Ed saying so.
 - Do not decrypt, unpack or modify the game's files, and do not read or write its memory.
-- Bots: Ed said on 2026-11-11 that the developer allows bots. (This is Ed's statement; no source is recorded here.) Rule 1 still applies: Ranked only when Ed says to start it.
+- Bots: Ed said on 2026-11-11 that the developer allows bots. (This is Ed's statement; no source is recorded here.)
 - Work only inside this folder.

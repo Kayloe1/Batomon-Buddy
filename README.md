@@ -1,7 +1,9 @@
 # Batomon Buddy
 
-A Python helper that will play **Batomon Showdown** by reading the game window and clicking.
-It reads the screen and plays a run that is already open with simple rules; see `STATUS.md`.
+A Python helper that plays **Batomon Showdown** by reading the game window and clicking, like a player.
+It decides every shop move by simulating battles against a pool of opponent teams (`engine/`, `sim/`),
+plays a Casual run to its end, and stops with a saved screenshot when it meets something it does not
+understand. See `STATUS.md` for what works today and `docs/decision-engine.md` for how it decides.
 
 ## Layout
 
@@ -11,18 +13,25 @@ It reads the screen and plays a run that is already open with simple rules; see 
 | `window.py` | Finds the game window, captures it, finds the 16:9 game picture inside it, and converts picture fractions to screen pixels |
 | `capture.py` | Saves a timestamped PNG of the client area to `captures/` |
 | `glyphs.py` | Reads the game's pixel fonts with glyph templates |
-| `reader.py` | `read_state(image)`: which screen is showing, and everything on the shop screen |
-| `teach.py` | Rebuilds `templates/` (glyphs and monster sprites) from labelled captures |
-| `hands.py` | Mouse actions (buy, move, sell, reroll, lock, battle, confirm, event choice), each one checked afterwards |
-| `play.py` | Plays the open run with simple rules and logs everything; stops on anything unclear |
+| `reader.py` | `read_state(image)`: which screen is showing and everything on it (shop, events, trinkets, battle, Stats window) |
+| `teach.py` | Adds glyphs and monster sprites from labelled captures to `templates/` (never wipes what is there; `--rebuild` starts from nothing, with a `.bak` kept) |
+| `hands.py` | Mouse actions (shop actions, battle, confirm, events, gifts, trinkets, starting a Casual run), each one checked afterwards |
+| `play.py` | The main loop: plays the open run with the decision engine and logs everything; stops on anything unclear |
 | `gui.py` | The control window: Start, Pause / Resume, Stop, what the bot is thinking, and why it stopped |
+| `engine/` | The decision engine: planner, game model, opponent pool, layout search, events, trinkets, trainers |
 | `sim/` | Offline battle simulator (`python -m sim --help`, `docs/simulator.md`) |
-| `tests/` | Tests that run on the saved captures, plus `test_sim.py` for the simulator |
-| `captures/` | Saved screenshots; a `.expected.json` beside one makes it a test |
-| `templates/` | Glyph and sprite templates (built by `teach.py`) |
-| `logs/` | One JSON line per action |
-| `data/` | Batomon, item, trinket and trainer data read from the in-game Batopedia |
-| `docs/` | Research findings and the screen map |
+| `train/` | Optional offline practice and a learned policy (`play.py --learned`, `docs/training.md`) |
+| `knowledge.py` | Lessons from the September runs that the engine uses (trainers, events, eggs) |
+| `learn_monsters.py` | Hovers monsters the reader cannot name and learns them from the info panel |
+| `batch.py` | Plays several Casual runs back to back and prints a summary |
+| `report.py` | Statistics from the logs: results per run, unseen Batomon, shop odds, events |
+| `tests/` | The test suite (`python -m unittest discover tests`, about a minute); needs the tracked screenshots |
+| `captures/` | Saved screenshots; a `.expected.json` beside one makes it a test. Only the ones tests need are in git |
+| `templates/` | Glyph and sprite templates (added to by `teach.py` and by play) |
+| `logs/` | Run logs, the bot's thinking, the engine's memory (not in git) |
+| `runs/` | A saved set of logs from the first live engine run (2026-11-12) |
+| `data/` | Batomon, item, trinket and trainer data from the Batopedia; `opponents_recorded.jsonl` holds real opponent teams the bot met |
+| `docs/` | Research findings, the screen map, how the engine and simulator work; `docs/archive/` holds retired notes |
 | `STATUS.md` | What works, what does not, and what is next |
 
 All positions are **fractions (0.0-1.0) of the 16:9 game picture** (the client area without its

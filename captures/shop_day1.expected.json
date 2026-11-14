@@ -1,0 +1,133 @@
+{
+ "screen": "shop",
+ "lives": 10,
+ "day": 1,
+ "badges": 0,
+ "badges_goal": 10,
+ "trainer": "Monster Ranger",
+ "trainer_hp": 300,
+ "money": 30,
+ "shop_rank": 1,
+ "shop_odds": {
+  "Common": 100,
+  "Uncommon": 0,
+  "Rare": 0,
+  "Super Rare": 0,
+  "Legendary": 0
+ },
+ "reroll_price": 3,
+ "locked": false,
+ "shop": [
+  {
+   "name": "Velocect",
+   "price": 15,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 15,
+     "raw": "15",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 2,
+     "raw": "x2",
+     "stat": "multicast",
+     "color": "#218ca5"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Velocect"
+  },
+  {
+   "name": "Bumblebolt",
+   "price": 10,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 3,
+     "raw": "3",
+     "stat": "damage",
+     "color": "#ff6f89"
+    },
+    {
+     "value": 1,
+     "raw": "1",
+     "stat": "shock",
+     "color": "#ffce00"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Bumblebolt"
+  },
+  {
+   "name": "Stingarde",
+   "price": 10,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 150,
+     "raw": "150",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Stingarde"
+  },
+  {
+   "name": "Pebbler",
+   "price": 15,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Pebbler"
+  },
+  {
+   "name": "Voucher",
+   "price": 5,
+   "kind": "item",
+   "stats": [],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Voucher"
+  }
+ ],
+ "team": [
+  null,
+  null,
+  null,
+  null,
+  null,
+  {
+   "name": "Electranade",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "shock",
+     "color": "#ffce00"
+    }
+   ]
+  }
+ ],
+ "bench": [
+  null,
+  null,
+  null,
+  null
+ ],
+ "problems": []
+}

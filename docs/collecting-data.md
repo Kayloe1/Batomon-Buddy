@@ -14,8 +14,9 @@ What the bot records now, for the simulator and the practice shop:
 The Stats window is opened from the result box, scrolled to reach the opponent's second row, read
 and closed again, before CONFIRM. Reading problems (for example a digit the reader has not seen)
 never stop a run; they are listed in `problems` and the captures are kept in `captures\battles\`.
-Digits 4 and 8 of the Stats font have not been seen yet, so a number containing one will be
-`null` until `teach.py` has a capture of it (see "How to add what the reader does not know").
+A digit of the Stats font that has never been seen makes that number `null` until `teach.py` has a
+capture of it (see "How to add what the reader does not know" in STATUS.md). All ten digits have been
+taught since 2026-11-12.
 
 ## Commands
 

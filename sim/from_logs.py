@@ -134,7 +134,13 @@ def _lives_lost(day) -> int:
 
 def battles_from_log(path: Path) -> list[dict]:
     """One case per logged battle: {"a", "b", "day", "result", "problems", "source"}."""
-    records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            try:
+                records.append(json.loads(line))
+            except ValueError:
+                pass                     # a half-written last line after a crash
     trinkets: list[str] = []
     cases: list[dict] = []
     open_case: dict | None = None

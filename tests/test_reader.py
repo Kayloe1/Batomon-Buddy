@@ -159,11 +159,6 @@ class ScreenDetection(unittest.TestCase):
         for name in ("event_dragon_hoard.png", "event_baby_basilisk.png", "event_mysterious_trainer.png"):
             self.assertEqual(reader.read_state(Image.open(CAPTURES / name))["choices"], 3, name)
 
-    def test_fast_forward_is_seen_as_on(self):
-        import numpy as np
-        pic = np.asarray(window.canonical_picture(Image.open(CAPTURES / "battle_day2.png")))
-        self.assertTrue(reader.fast_forward_on(pic))
-
 
 class NewRunSafety(unittest.TestCase):
     """Rule 1: never start a Ranked run. The mode must be read correctly."""

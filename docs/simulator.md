@@ -128,7 +128,8 @@ Scrap Sword, Zenith Stone, Magic Lasso, Jinto monsters, the 6 locked Mythical tr
 Either Ed's heals did not count while he was heavily poisoned, or the opponent had about 140 damage the
 end screen does not show (for example a self-knockout monster that left the board). The cheapest way to
 settle it: after a battle where we heal while poisoned, open **Replay** and read both HP bars every few
-seconds, or read the opponent's Stats tab (the bot does not read the Stats screen yet). Once known, change
+seconds, or read the opponent's Stats tab (the bot reads the Stats window after every battle since 2026-11-13,
+so a logged battle where we heal while poisoned can settle it). Once known, change
 the rule in `sim/battle.py` and move the case's `known_gaps` entry to a passing check.
 
 ## Checking against logged battles
@@ -138,8 +139,8 @@ Since 2026-11-12 the bot reads both teams from the battle screen at the start of
 loss). `python -m sim.from_logs` replays every logged battle and prints how often the simulator picks the
 same winner (`-v` lists each battle, `--save` writes them to `sim/cases/logged/`). The opponent's trinkets
 and trainer bonuses are not visible, so they are left out, and their HP is the day's HP from the table.
-A battle is skipped when a monster could not be named (one the bot has never seen in the shop) or day 9+
-HP is not known. An unnamed level-1 monster with only a 1 damage badge is taken to be the Dragon Egg (guess).
+A battle is skipped when a monster could not be named (one the bot has never seen in the shop) or the day is past 14
+(the HP table in `sim/data.py` ends there). An unnamed level-1 monster with only a 1 damage badge is taken to be the Dragon Egg (guess).
 
-Winner agreement is a coarse check. The exact numbers (end time, Dealt, Healed) need the Stats screen,
-which is not read yet.
+Winner agreement is a coarse check. The exact numbers (end time, Dealt, Healed) come from the Stats window,
+which the bot now reads after every battle (`battle_stats` records; `python -m sim.from_logs -v` compares them).

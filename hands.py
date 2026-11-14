@@ -4,16 +4,18 @@
     result = hands.buy(2)             # Result(ok, message, before, after)
 
 Rules built in:
-- Input is only ever sent on the shop screen. This module cannot start a run,
-  so it cannot start a Ranked run.
-- Before an action the state must read cleanly (no "problems"); after it the
+- Besides the shop actions, this module presses the buttons of the other screens (BATTLE!,
+  CONFIRM on the result box, events, gifts, trinkets, trainer pick, Continue, Cash In, the
+  Stats window) and can start a run: start_casual_run() presses CONFIRM on the New Run dialog
+  only after two fresh reads show Casual Mode + Pantra, and nothing here clicks the Ranked
+  button. confirm_continue() uses the same two-read gate for a saved run's panel.
+- Before a shop action the state must read cleanly (no "problems"); after it the
   screen is captured again and compared with what the action should have done.
   If anything is off, ok is False and the caller must stop.
+- No click is sent while another window covers the game at that point (_ensure_visible).
+- The fast-forward button is never clicked (the game remembers it between battles).
 - pyautogui's fail-safe stays on: push the mouse into a screen corner to abort.
 - Every state, action and result is appended to logs/actions_<date>.jsonl.
-
-Not covered yet (no captures of those screens exist): fast forward, confirming
-the battle result, the trinket choice. battle() presses BATTLE! and then stops.
 """
 from __future__ import annotations
 

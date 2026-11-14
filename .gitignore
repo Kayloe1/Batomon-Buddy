@@ -4,8 +4,12 @@ venv/
 __pycache__/
 *.pyc
 
-# Screen captures (large, regenerated while playing)
+# Screen captures (large, regenerated while playing).
+# The ones the tests and teach.py need are tracked anyway: add a new one with `git add -f`.
 captures/
+
+# Copy teach.py keeps of glyphs.json before it writes
+templates/glyphs.json.bak
 
 # Run and action logs written by play.py
 logs/

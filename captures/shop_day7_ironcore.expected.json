@@ -1,0 +1,189 @@
+{
+ "screen": "shop",
+ "lives": 2,
+ "day": 7,
+ "badges": 3,
+ "badges_goal": 10,
+ "trainer": "Rich Lady",
+ "trainer_hp": 5700,
+ "money": 304,
+ "shop_rank": 9,
+ "shop_odds": {
+  "Common": 20,
+  "Uncommon": 25,
+  "Rare": 38,
+  "Super Rare": 15,
+  "Legendary": 2
+ },
+ "reroll_price": 3,
+ "locked": false,
+ "shop": [
+  {
+   "name": "Pebbler",
+   "price": 15,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Pebbler"
+  },
+  {
+   "name": "Aristobat",
+   "price": 25,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 4,
+     "raw": "4",
+     "stat": "poison",
+     "color": "#845abd"
+    },
+    {
+     "value": 2,
+     "raw": "x2",
+     "stat": "multicast",
+     "color": "#218ca5"
+    }
+   ],
+   "rarity": "Rare",
+   "greyed": false,
+   "raw": "Aristobat"
+  },
+  {
+   "name": "Ironcore",
+   "price": 40,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 30,
+     "raw": "30",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ],
+   "rarity": "Rare",
+   "greyed": false,
+   "raw": "lroncore"
+  },
+  {
+   "name": "Cinderfly",
+   "price": 25,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 7,
+     "raw": "7",
+     "stat": "burn",
+     "color": "#ff9c31"
+    }
+   ],
+   "rarity": "Uncommon",
+   "greyed": false,
+   "raw": "Cinderfly"
+  },
+  {
+   "name": "Lucky Coin",
+   "price": 0,
+   "kind": "item",
+   "stats": [],
+   "rarity": "Rare",
+   "greyed": false,
+   "raw": "Lucky Coin"
+  }
+ ],
+ "team": [
+  {
+   "name": "Brawlmantis",
+   "level": 1,
+   "stats": [
+    {
+     "value": 70,
+     "raw": "70",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ]
+  },
+  {
+   "name": "Venopuff",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 4,
+     "raw": "4",
+     "stat": "poison",
+     "color": "#845abd"
+    }
+   ]
+  },
+  {
+   "name": "Dribblet",
+   "level": 1,
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "heal",
+     "color": "#31c6f7"
+    }
+   ]
+  },
+  null,
+  {
+   "name": "Mosslug",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 30,
+     "raw": "30",
+     "stat": "heal",
+     "color": "#31c6f7"
+    }
+   ]
+  },
+  {
+   "name": "Panbud",
+   "level": 1,
+   "stats": [
+    {
+     "value": 45,
+     "raw": "45",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ]
+  }
+ ],
+ "bench": [
+  null,
+  null,
+  null,
+  null
+ ],
+ "problems": []
+}

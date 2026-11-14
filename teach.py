@@ -1,13 +1,15 @@
 """Teach the reader the glyphs and sprites of captures whose content is known.
 
-    python teach.py
+    python teach.py             # adds what the lessons show to the glyphs already known
+    python teach.py --rebuild   # starts from nothing (loses glyphs not in LESSONS; a .bak is kept)
 
-Rebuilds templates/glyphs.json and adds to templates/sprites/ from the labelled
-captures listed in LESSONS. To teach a new glyph or monster, add a capture
-with its true text here and run this again.
+Adds to templates/glyphs.json and templates/sprites/ from the labelled captures listed in
+LESSONS. To teach a new glyph or monster, add a capture with its true text here and run this
+again. templates/glyphs.json.bak holds the file as it was before the last run.
 """
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -256,14 +258,27 @@ def teach_stats(store: glyphs.GlyphStore, pic: np.ndarray, lesson: dict) -> None
                     store.add(font, ch, g.bitmap)
 
 
-def main() -> None:
-    if glyphs.TEMPLATE_FILE.exists():
-        glyphs.TEMPLATE_FILE.unlink()
+def main(lessons: list | None = None, rebuild: bool = False) -> None:
+    """Teach the lessons ADDING to the glyphs already known.
+
+    The old version deleted templates/glyphs.json and rebuilt it from LESSONS alone, which lost every
+    glyph added one at a time since (a $7 price and a Stats digit stopped reading, 2026-11-14). Now the
+    existing file is loaded, a copy is kept in templates/glyphs.json.bak before anything is written, and
+    nothing is saved unless every lesson went through. A lesson whose screenshot is missing is skipped
+    with a warning. `--rebuild` is the old behaviour (start empty), still with the backup.
+    """
+    lessons = LESSONS if lessons is None else lessons
+    path = glyphs.TEMPLATE_FILE
     # Sprites are NOT wiped: hands.py saves new ones while playing (it knows what it
     # just bought), and those cannot be rebuilt from the lessons here.
-    store = glyphs.GlyphStore()
+    store = glyphs.GlyphStore(path)
+    if rebuild:
+        store.fonts = {}
     reader._store = store        # the reader's own helpers must see glyphs as they are taught
-    for lesson in LESSONS:
+    for lesson in lessons:
+        if not (ROOT / lesson["file"]).exists():
+            print(f"skipped (screenshot not found): {lesson['file']}")
+            continue
         pic = np.asarray(window.canonical_picture(Image.open(ROOT / lesson["file"])))
         masks = reader.text_masks(pic)
         for key, truth in lesson.get("text", {}).items():
@@ -291,6 +306,8 @@ def main() -> None:
                 _teach_digits(store, "badge", reader.badge_digit_glyphs(pic, reader.owned_badge_band(box_of(i))),
                               digits, f"{kind} {i}")
                 reader.learn_sprite(name, rgb)
+    if path.exists():
+        shutil.copy2(path, path.with_name(path.name + ".bak"))
     store.save()
     reader.reload_templates()
     for font, entries in sorted(store.fonts.items()):
@@ -299,4 +316,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(rebuild="--rebuild" in sys.argv[1:])

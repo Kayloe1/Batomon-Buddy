@@ -84,6 +84,21 @@ def event_outcome(before: dict | None, after: dict) -> dict:
             "monsters_new_or_changed": gained, "monsters_gone_or_changed": lost}
 
 
+_warn_sink = None       # set by main(): where warnings go besides the console (the Thinking pane and its file)
+
+
+def warn(text: str) -> None:
+    """A problem that does not stop the run. Under the control window the console is a hidden file,
+    so it is shown in the Thinking pane and written to logs\\thinking_<time>.txt as well."""
+    if _warn_sink is not None:
+        try:
+            _warn_sink(text)
+            return
+        except Exception:
+            pass
+    print(text)
+
+
 def learn_sprites(h, state: dict) -> None:
     """Save the shop cards' sprites so opponents' monsters can be named on the battle screen."""
     if getattr(h, "last_image", None) is None:
@@ -94,7 +109,7 @@ def learn_sprites(h, state: dict) -> None:
         import window
         reader.learn_card_sprites(np.asarray(window.canonical_picture(h.last_image)), state)
     except Exception as e:      # never stop a run over this
-        print("card sprites not saved:", e)
+        warn(f"card sprites not saved: {type(e).__name__}: {e}")
 
 
 def remember_opponent(log_path) -> None:
@@ -108,7 +123,7 @@ def remember_opponent(log_path) -> None:
         if spec is not None and opponents.add_recorded(spec["day"], spec):
             print(f"  opponent of day {spec['day']} recorded ({spec['unnamed']} unnamed)")
     except Exception as e:      # never stop a run over this
-        print("opponent not recorded:", type(e).__name__, e)
+        warn(f"opponent not recorded: {type(e).__name__}: {e}")
 
 
 def act(h, a):
@@ -219,6 +234,9 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
         except OSError:
             pass
 
+    global _warn_sink
+    _warn_sink = lambda text: think([f"WARNING (carried on): {text}"])
+
     if brain is not None:
         think(["HOW TO READ THIS: each option gets a 'gain' = how much better the run looks after it",
                "(and the buys it leads to) than ending the turn now. It mixes the chance to win today,",
@@ -292,7 +310,9 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
                         return stop(f"buy failed: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
                     continue
             else:
-                brain.observe_shop(state)
+                if brain.observe_shop(state):
+                    think([f"This looks like a NEW run (day {state['day']}, {state['badges']} badges): "
+                           f"I forgot the trinkets and rescue state of the previous run."])
                 last_shop_state = state
                 control.event("doing", what="thinking")
                 plan = brain.shop_plan(state)
@@ -354,7 +374,7 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
                 r.battle["stats"] = {k: v for k, v in st.items() if k != "stuck"}
                 log("battle_stats", day=state["day"], **r.battle["stats"])
                 for p_ in st["problems"]:
-                    print("  stats:", p_)
+                    warn(f"Stats window: {p_}")
                 remember_opponent(log_path)
                 if st["stuck"]:
                     return stop("the Stats window did not close", None)

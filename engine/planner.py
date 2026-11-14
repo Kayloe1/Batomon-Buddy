@@ -577,14 +577,6 @@ def _same_units(tb, owned) -> bool:
     return sorted(map(repr, placed)) == sorted(map(repr, owned))
 
 
-def _count(lst, u) -> int:
-    return sum(1 for x in lst if x == u)
-
-
-def _contains(lst, u) -> bool:
-    return u is not None and any(x == u for x in lst)
-
-
 def _new_slot(before: RunState, after: RunState, name: str) -> tuple[str, int] | None:
     for w in (TEAM, BENCH):
         for i in range(len(before.team if w == TEAM else before.bench)):

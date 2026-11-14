@@ -165,11 +165,7 @@ def read_overflow(pic: np.ndarray) -> dict:
     waiting = _read_owned_slot(pic, OVERFLOW_SLOT, "overflow", problems)
     return {"bench": bench, "overflow": waiting, "problems": problems}
 
-FAST_FORWARD: Box = (1300, 15, 1420, 125)   # top centre of the battle screen; red when on
-
-
-def fast_forward_on(pic: np.ndarray) -> bool:
-    return bool(_near(pic[65, 1325], RED, 45))
+# (The fast-forward button is never read or clicked: the game remembers it between battles.)
 
 # Buttons on the other screens
 RESULT_CONFIRM: Box = BATTLE_BUTTON

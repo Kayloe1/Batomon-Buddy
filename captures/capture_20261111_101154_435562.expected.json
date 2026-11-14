@@ -1,0 +1,155 @@
+{
+ "screen": "shop",
+ "lives": 10,
+ "day": 2,
+ "badges": 1,
+ "badges_goal": 10,
+ "trainer": "Rich Lady",
+ "trainer_hp": 500,
+ "money": 40,
+ "shop_rank": 4,
+ "shop_odds": {
+  "Common": 67,
+  "Uncommon": 30,
+  "Rare": 3,
+  "Super Rare": 0,
+  "Legendary": 0
+ },
+ "reroll_price": 3,
+ "locked": false,
+ "shop": [
+  {
+   "name": "Dribblet",
+   "price": 10,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "heal",
+     "color": "#31c6f7"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Dribblet"
+  },
+  {
+   "name": "Pebbler",
+   "price": 15,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Pebbler"
+  },
+  {
+   "name": "Brawlmantis",
+   "price": 30,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 50,
+     "raw": "50",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ],
+   "rarity": "Uncommon",
+   "greyed": false,
+   "raw": "Brawlmantis"
+  },
+  {
+   "name": "Berroon",
+   "price": 20,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 40,
+     "raw": "40",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ],
+   "rarity": "Uncommon",
+   "greyed": false,
+   "raw": "Berroon"
+  },
+  {
+   "name": "Gray Chip",
+   "price": 0,
+   "kind": "item",
+   "stats": [],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Gray Chip"
+  }
+ ],
+ "team": [
+  null,
+  {
+   "name": "Venopuff",
+   "level": 1,
+   "stats": [
+    {
+     "value": 5,
+     "raw": "5",
+     "stat": "damage",
+     "color": "#ff6f89"
+    },
+    {
+     "value": 4,
+     "raw": "4",
+     "stat": "poison",
+     "color": "#845abd"
+    }
+   ]
+  },
+  null,
+  null,
+  {
+   "name": "Mosslug",
+   "level": 1,
+   "stats": [
+    {
+     "value": 5,
+     "raw": "5",
+     "stat": "damage",
+     "color": "#ff6f89"
+    },
+    {
+     "value": 30,
+     "raw": "30",
+     "stat": "heal",
+     "color": "#31c6f7"
+    }
+   ]
+  },
+  {
+   "name": "Panbud",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ]
+  }
+ ],
+ "bench": [
+  null,
+  null,
+  null,
+  null
+ ],
+ "problems": []
+}
