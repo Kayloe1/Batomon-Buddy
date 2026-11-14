@@ -212,6 +212,10 @@ LESSONS = [
         "file": "captures/trinket_pick_20261112_210942.png",
         "trinket_cards": ["MINI DUPLICATOR", "PLAIN LURE", "LOCKED BOX"],
     },
+    {   # a foreign monster's card: capital K was read as H ("Hickrane") and the bot stopped (2026-11-14)
+        "file": "captures/shop_kickrane_card.png",
+        "text": {"shop4": "Kickrane|$40"},
+    },
 ]
 
 

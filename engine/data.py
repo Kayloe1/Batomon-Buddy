@@ -53,11 +53,12 @@ RANK_ODDS = {
     5: (55, 30, 15, 0, 0), 6: (45, 32, 20, 3, 0), 7: (30, 40, 25, 5, 0), 8: (25, 30, 35, 10, 0),
     9: (20, 25, 38, 15, 2), 10: (15, 20, 40, 20, 5), 11: (10, 20, 35, 25, 10),
     12: (5, 15, 30, 35, 15), 13: (1, 10, 30, 39, 20),
+    14: (1, 2, 20, 47, 30),      # shown as "Rank Max" (day 12, 2026-11-14)
 }
 
 
 def rank_odds(rank: int) -> tuple[int, ...]:
-    return RANK_ODDS[min(max(rank, 1), 13)]
+    return RANK_ODDS[min(max(rank, 1), 14)]
 
 
 # Copies needed for a level: 3 Lv1 make a Lv2, two Lv2 (6 copies) make a Lv3.

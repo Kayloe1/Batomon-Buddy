@@ -15,6 +15,16 @@ class Report(unittest.TestCase):
         self.assertTrue(s["ended"])
         self.assertEqual(s["battles"], 2)
 
+    def test_a_won_run_counts_ten_badges(self):
+        # 2026-11-14: the badge case on the last result box hides the HP bars; the end screen's count decides
+        recs = [{"kind": "shop", "state": {"day": 14, "badges": 9, "lives": 1, "trainer": "Bug Catcher"}},
+                {"kind": "battle"}, {"kind": "battle_stats", "end_hp_fraction": {"me": 0.5, "opponent": 0.3}},
+                {"kind": "run_over", "badges": 10}]
+        s = report.summarize_run(recs)
+        self.assertEqual((s["badges"], s["final_battle"]), (10, "win"))
+        recs[-1] = {"kind": "run_over", "badges": 9}
+        self.assertEqual(report.summarize_run(recs)["final_battle"], "loss")
+
     def test_log_without_a_battle_is_skipped(self):
         self.assertIsNone(report.summarize_run([{"kind": "stop", "why": "x"}]))
 

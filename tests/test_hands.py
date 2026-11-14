@@ -192,3 +192,26 @@ class LookRereadsUnnamed(unittest.TestCase):
         state, n = self._look([self._shop(None)])
         self.assertIsNone(state["team"][0]["name"])
         self.assertEqual(n, 3)
+
+
+
+class FastForwardIsLeftAlone(unittest.TestCase):
+    """The game remembers fast forward, and the button is grey for about a second at the start
+    of every battle: clicking a grey button turned it off (Ed, 2026-11-14). Nothing is clicked
+    while waiting for a battle to end."""
+
+    def test_no_click_during_a_battle(self):
+        from unittest import mock
+        import hands as hands_mod
+
+        h = hands_mod.Hands.__new__(hands_mod.Hands)
+        h.dry_run = False
+        h.last_image = None
+        clock = {"t": 0.0}
+        clicks = []
+        h.look = lambda save_if_unreadable=True: {"screen": "battle" if clock["t"] < 8 else "result", "problems": []}
+        h._click = lambda box: clicks.append(box)
+        with mock.patch.object(hands_mod.time, "time", lambda: clock["t"]),                 mock.patch.object(hands_mod.time, "sleep", lambda s: clock.__setitem__("t", clock["t"] + s)):
+            state = h.wait_for({"result"}, 60)
+        self.assertEqual(state["screen"], "result")
+        self.assertEqual(clicks, [])

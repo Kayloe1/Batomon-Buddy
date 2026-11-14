@@ -318,7 +318,7 @@ def item_outcomes(s: RunState, i: int) -> list[RunState]:
         return outs
     if name == "Apex Bait":
         t.items_left -= 1
-        t.rank = min(t.rank + 1, 13)
+        t.rank = min(t.rank + 1, 14)
         t.odds = None
         return [t]
     if name in CANDIES:

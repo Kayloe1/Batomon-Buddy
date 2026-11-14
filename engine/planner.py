@@ -172,12 +172,22 @@ class Planner:
         p_card = (odds[r] / 100.0) / n
         return 1.0 - (1.0 - p_card) ** self.CARDS_AHEAD
 
+    def merge_value(self, rarity: str) -> float:
+        """What finishing a merge of this rarity is worth (its gift and the level-up), before chance."""
+        r = data.RARITIES.index(rarity) if rarity in data.RARITIES else 0
+        return self.p.copy_progress * (1 + r)
+
     def extras(self, s: RunState, bench: list[Unit | None], team: list[Unit | None] | None = None) -> float:
         # money and what the monsters would sell for, counted up to a cap: beyond it,
         # saved money buys nothing that today's spending could not
         resale = sum(u.sell_price() for _, _, u in s.owned())
         v = self.p.money * min(s.money + self.p.bench_money * resale, self.p.money_cap)
-        v += self.p.gift_scale * sum(GIFT_VALUE.get(r, 0.03) for r in s.gifts)
+        # A finished merge is never worth less than the pair it came from: the pair's bonus below is
+        # copy_progress x (1 + rarity) x the chance of a third copy, so the merge itself counts at least
+        # copy_progress x (1 + rarity). (2026-11-14, day 11: with two Galvanines owned, the third copy at
+        # $40 scored -0.008 against ending the turn. The pair's bonus vanished with the merge, and the
+        # Legendary gift (0.09) was worth less than the $40 (0.12). The bot rerolled the card away.)
+        v += self.p.gift_scale * sum(max(GIFT_VALUE.get(r, 0.03), self.merge_value(r)) for r in s.gifts)
         counts: dict[str, int] = {}
         for _, _, u in s.owned():
             if u.level == 1 and u.name:
@@ -498,7 +508,28 @@ class Planner:
         hand and nothing worth buying, rerolling (the shop, and its item slot) is the way to find
         merges, higher-tier monsters and items. Nothing is kept when a loss today could end the run."""
         reserve = 0 if s.lives <= data.lives_lost(s.day) else self.p.reserve
+        # A reroll is only worth its price while the money left can still buy what the new shop is
+        # likely to offer. (Ed, 2026-11-14: on day 11 at shop rank 13 the bot rerolled from $38 down
+        # to $8, although most cards there cost $30-$45. That money is worth more carried to tomorrow.)
+        # On the last life tomorrow's money counts for little, so there the bar is only the cheapest
+        # card this shop is at all likely to show.
+        reserve = self.typical_price(s, cheapest=True) if reserve == 0 else max(reserve, self.typical_price(s))
         return max(0, s.money - reserve)
+
+    def typical_price(self, s: RunState, cheapest: bool = False) -> int:
+        """The price of a typical monster card at this shop's odds: the odds-weighted mean list price,
+        or with `cheapest` the lowest mean price among rarities with at least a 10% share."""
+        odds = s.odds or data.rank_odds(s.rank)
+        means = []
+        for r, share in zip(data.RARITIES, odds):
+            costs = [sp.cost for sp in data.by_rarity(r) if not sp.foreign]
+            if share and costs:
+                means.append((share, sum(costs) / len(costs)))
+        if not means:
+            return 0
+        if cheapest:
+            return round(min((m for share, m in means if share >= 10), default=min(m for _, m in means)))
+        return round(sum(share * m for share, m in means) / sum(share for share, _ in means))
 
     def _lock_choice(self, s: RunState, team, bench, base: float) -> str | None:
         """Lock only for a card the bot would really buy tomorrow.

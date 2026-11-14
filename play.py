@@ -131,7 +131,7 @@ def act(h, a):
 # Every screen the loop in main() acts on. A fade, matchmaking or a battle can end on any of them
 # (a fade after an event leads to a gift box, after the last battle to the run-over screen), so
 # the wait at the top of the loop accepts them all.
-AFTER_WAIT = {"shop", "result", "event", "gift_box", "trinket_pick", "trainer_pick", "select_target",
+AFTER_WAIT = {"shop", "result", "event", "gift_box", "trinket_pick", "take_one_confirm", "trainer_pick", "select_target",
               "overflow", "cash_in", "run_over", "new_run", "main_menu", "main_menu_continue",
               "continue_confirm", "title", "stats"}
 
@@ -406,8 +406,8 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
         elif screen in ("run_over", "new_run", "main_menu"):
             if screen in ("run_over", "main_menu") and played:
                 h.last_image.save(hands_mod.CAPTURE_DIR / f"run_over_{datetime.now():%Y%m%d_%H%M%S}.png")
-                print("run over")
-                log("run_over")
+                print("run over" + (f": {state['badges']} badges" if state.get("badges") is not None else ""))
+                log("run_over", badges=state.get("badges"))
                 return 0
             if not args.new_run:
                 return stop("no run is open; use --new-run to start a Casual run")
@@ -425,6 +425,18 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
         elif screen == "trinket_pick":
             h.last_image.save(hands_mod.CAPTURE_DIR / f"trinket_pick_{datetime.now():%Y%m%d_%H%M%S}.png")
             offered = state["trinkets"]
+            if state.get("take_all"):
+                # a "Take All" button: every card can be had, so nothing is chosen
+                r = h.take_all_trinkets()
+                if brain:
+                    brain.memory["trinkets"].extend(o for o in offered if o)
+                    brain.save()
+                think([f"Trinket choice between {', '.join(str(o) for o in offered)} with a Take All button: "
+                       f"I took all of them. ({r.message})"])
+                log("trinket", offered=offered, picked="all", why="Take All button", ok=r.ok, message=r.message)
+                if not r.ok:
+                    return stop(f"after Take All: {r.message}", r.after)
+                continue
             k, why = brain.trinket(last_shop_state, offered) if brain else (0, "first card")
             r = h.pick_trinket(k)
             think([f"Trinket choice between {', '.join(str(o) for o in offered)}: "
@@ -432,6 +444,12 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
             log("trinket", offered=offered, picked=k, why=why, ok=r.ok, message=r.message)
             if not r.ok:
                 return stop(f"after picking a trinket: {r.message}", r.after)
+        elif screen == "take_one_confirm":
+            # one card was clicked although all could be taken: go back and take all
+            r = h.cancel_take_one()
+            log("cancel_take_one", ok=r.ok, message=r.message)
+            if not r.ok:
+                return stop(f"after Cancel on the take-one question: {r.message}", r.after)
         elif screen == "trainer_pick":
             h.last_image.save(hands_mod.CAPTURE_DIR / f"trainer_pick_{datetime.now():%Y%m%d_%H%M%S}.png")
             offered = state["trainers"]
