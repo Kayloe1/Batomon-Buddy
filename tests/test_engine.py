@@ -18,6 +18,21 @@ opponents._CACHE.clear()
 FAST = Params(k_final=4, k_quick=3, reroll_samples=1, greedy_steps=1, final_rounds=1)
 
 
+def setUpModule():
+    # The Brain saves what it remembers of the run to logs/engine_memory.json. The tests must never
+    # write there: running them while the bot was playing wiped its trinkets (2026-11-14).
+    import tempfile
+    from pathlib import Path
+    from engine import bot
+    global _TMP
+    _TMP = tempfile.TemporaryDirectory()
+    bot.MEMORY_FILE = Path(_TMP.name) / "engine_memory.json"
+
+
+def tearDownModule():
+    _TMP.cleanup()
+
+
 def card(name, price=None):
     sp = data.species(name)
     return Card(name, sp.cost if price is None else price, "monster", tuple(sorted(sp.stats(1).items())), sp.rarity)
@@ -383,10 +398,33 @@ class WastefulPlay(unittest.TestCase):
         s.team = [new_unit("Spinarai", 10)] * 6
         self.assertEqual(p.decide(s).actions[-1].kind, "battle")
 
-    def test_last_life_keeps_nothing(self):
+    def test_last_life_keeps_only_the_price_of_a_cheap_card(self):
         p = small_planner()
-        self.assertEqual(p.surplus(RunState(day=9, lives=1, money=40)), 40)
-        self.assertEqual(p.surplus(RunState(day=9, lives=8, money=40)), 40 - p.p.reserve)
+        last, safe = RunState(day=9, lives=1, money=60, rank=9), RunState(day=9, lives=8, money=60, rank=9)
+        self.assertEqual(p.surplus(last), 60 - p.typical_price(last, cheapest=True))
+        self.assertEqual(p.surplus(safe), 60 - max(p.p.reserve, p.typical_price(safe)))
+        self.assertGreater(p.surplus(last), p.surplus(safe))
+
+    def test_no_surplus_reroll_when_the_shop_is_too_dear(self):
+        # Ed, 2026-11-14: day 11, shop rank 13 (1/10/30/39/20), rerolled from $38 down to $8
+        p = small_planner()
+        s = RunState(day=11, rank=13, lives=6, money=26, shop=[None] * 5, odds=(1, 10, 30, 39, 20))
+        s.team = [new_unit("Spinarai", 10)] * 6
+        self.assertGreaterEqual(p.typical_price(s), 30)
+        self.assertEqual(p.surplus(s), 0)
+        self.assertNotEqual(p.decide(s).actions[0].kind, "reroll")
+
+    def test_third_copy_of_a_pair_is_bought(self):
+        # 2026-11-14, day 11: two Galvanines owned, the third at $40 scored below ending the turn
+        p = small_planner()
+        s = RunState(day=11, rank=13, lives=6, money=41, odds=(1, 10, 30, 39, 20),
+                     shop=[card("Galvanine"), None, None, None, None])
+        s.team = [new_unit("Galvanine", 40), new_unit("Reapra", 30), new_unit("Reapra", 30),
+                  new_unit("Ironcore", 30, 2), new_unit("Galvanine", 40), new_unit("Coalem", 30)]
+        base = p.extras(s, s.bench, s.team)
+        merged = p.extras(model.buy(s, 0), s.bench, s.team)
+        self.assertGreater(merged + p.p.money * 40, base)      # the merge outweighs the pair's bonus
+        self.assertEqual(str(p.decide(s).actions[0]), "buy card 0")
 
     def test_dead_weight_bench_monsters_are_sold(self):
         p = small_planner()

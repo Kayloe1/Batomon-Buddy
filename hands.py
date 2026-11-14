@@ -441,7 +441,9 @@ class Hands:
     def wait_for(self, wanted: set[str], timeout: float = 120, unknown_limit: float = 25) -> dict:
         """Watch the game until one of the wanted screens shows (twice in a row).
 
-        During a battle, turns fast forward on if it is off. Gives up at the
+        The fast-forward button is never touched: the game remembers it between battles
+        and restarts, and it shows grey for about a second at the start of every battle,
+        so a click on a "grey" button turned it off (Ed, 2026-11-14). Gives up at the
         timeout, or when an unrecognised screen stays for unknown_limit seconds
         (fades and the VS animation are shorter); the capture is then saved.
         """
@@ -449,7 +451,6 @@ class Hands:
         start = time.time()
         unknown_since = None
         hits = 0
-        ff_clicked = False
         state: dict = {}
         while time.time() - start < timeout:
             state = self.look(save_if_unreadable=False)
@@ -471,11 +472,6 @@ class Hands:
                     break
             else:
                 unknown_since = None
-            if screen == "battle" and not ff_clicked and not self.dry_run:
-                pic = np.asarray(window.canonical_picture(self.last_image))
-                if not reader.fast_forward_on(pic):
-                    self._click(reader.FAST_FORWARD)
-                    ff_clicked = True
             time.sleep(0.4)
         path = CAPTURE_DIR / f"stuck_{datetime.now():%Y%m%d_%H%M%S}.png"
         self.last_image.save(path)
@@ -753,6 +749,19 @@ class Hands:
         # a new day's monster (Swim Coach: a Water monster each day) can arrive with team and bench full
         return self._press_and_wait(f"pick trinket {k}", "trinket_pick", reader.trinket_card(place),
                                     {"shop", "gift_box", "overflow"}, 20)
+
+    def take_all_trinkets(self) -> Result:
+        """Press "Take All" under the trinket cards: every offered trinket is kept."""
+        state = self.look()
+        if state.get("screen") == "trinket_pick" and not state.get("take_all"):
+            return self._log("take all trinkets", Result(False, "no Take All button on this trinket choice", state))
+        return self._press_and_wait("take all trinkets", "trinket_pick", reader.TAKE_ALL,
+                                    {"shop", "gift_box", "overflow", "event", "cash_in"}, 20)
+
+    def cancel_take_one(self) -> Result:
+        """Press Cancel on "Are you sure you want to take one trinket rather than all?"."""
+        return self._press_and_wait("cancel take one", "take_one_confirm", reader.TAKE_ONE_CANCEL,
+                                    {"trinket_pick"}, 15)
 
     def choose_event(self, k: int) -> Result:  # may be followed by "select_target"
         """Click choice k (0 = top) on an event screen."""

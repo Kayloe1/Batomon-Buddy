@@ -39,6 +39,7 @@ BADGES: Box = (1620, 30, 1800, 110)
 TRAINER: Box = (30, 180, 530, 235)
 HP: Box = (120, 985, 530, 1035)
 RANK_BAR: Box = (510, 1075, 1100, 1140)
+RANK_MAX = 14            # what "Rank Max" is reported as: one above the last numbered rank (13)
 MONEY: Box = (1185, 1085, 1370, 1155)
 REROLL_PRICE: Box = (60, 1320, 360, 1410)
 
@@ -113,6 +114,10 @@ SCREENS: dict[str, list[tuple[int, int, tuple[int, int, int]]]] = {
     # (a single trinket, e.g. a Super Rare gift, sits in the middle card's place: so the middle card)
     "trinket_pick": [(100, 1215, BLUE), (460, 1300, PINK), (1280, 320, (255, 255, 255)),
                      (1320, 460, (233, 206, 228))],
+    # "Are you sure you want to take one trinket rather than all?": Cancel / Confirm over the dimmed
+    # trinket choice. It follows a click on one card while a "Take All" button is on offer (2026-11-14).
+    "take_one_confirm": [(900, 800, RED), (1500, 800, RED), (1280, 950, (106, 35, 52)),
+                         (100, 1215, (28, 89, 109)), (460, 1300, (113, 38, 52)), (850, 600, (255, 255, 255))],
     # Trainer pick: three yellow card headers over the "Select a trainer" box
     "trainer_pick": [(820, 222, YELLOW), (1483, 222, YELLOW), (2146, 222, YELLOW), (460, 1300, PINK),
                      (100, 1215, (14, 14, 14))],
@@ -357,6 +362,18 @@ def resolve(text: str, candidates: list[str], ignore_case: bool = False) -> str 
     return None
 
 
+def near_miss_name(text: str, candidates: list[str]) -> str | None:
+    """The one known name that `text` is a slight misreading of, or None.
+
+    Called only after resolve() found nothing: a glyph the reader has never seen can match a
+    look-alike instead of coming back as "?" (capital K was read as H: "Hickrane" for Kickrane,
+    2026-11-14, and the run stopped). A wrong answer here makes the bot buy or value the wrong
+    card, so when in doubt it must return None (the run then stops, as before).
+    """
+    # TODO(human): decide how close is close enough, and return the single matching candidate.
+    return None
+
+
 def fill_number(text: str, expected: int | None) -> int | None:
     """A number read with unknown digits ("24?00"), completed from the value the game data expects.
 
@@ -467,6 +484,16 @@ with open(ROOT / "data" / "trinkets.csv", newline="", encoding="utf-8") as _f:
     TRINKET_NAMES: list[str] = [row["name"] for row in csv.DictReader(_f)]
 
 
+TAKE_ALL: Box = (1090, 955, 1470, 1030)          # red "Take All" button under the cards, when offered
+TAKE_ONE_CANCEL: Box = (870, 810, 1240, 890)     # on the "take one trinket rather than all?" dialog
+TAKE_ONE_CONFIRM: Box = (1330, 810, 1700, 890)
+
+
+def take_all_offered(pic: np.ndarray) -> bool:
+    """A red "Take All" button sits under the trinket cards (every offered trinket can be had)."""
+    return all(bool(_near(pic[y, x], RED, SCREEN_TOL)) for x, y in ((1100, 960), (1280, 950), (1460, 960)))
+
+
 def trinket_card(i: int) -> Box:
     return (250 + 720 * i, 330, 870 + 720 * i, 990)
 
@@ -498,7 +525,7 @@ def read_trinket_pick(pic: np.ndarray) -> dict:
         names.append(resolve(text, TRINKET_NAMES, ignore_case=True))
         places.append(i)
     # "card_places": where each offered card sits (0 left, 1 middle, 2 right); one card sits in the middle
-    return {"trinkets": names, "card_places": places,
+    return {"trinkets": names, "card_places": places, "take_all": take_all_offered(pic),
             "problems": [] if names else ["trinket pick: no cards found"]}
 
 
@@ -521,6 +548,22 @@ def read_trainer_pick(pic: np.ndarray) -> dict:
         text = store().read("caps", glyphs.white(crop(pic, _trainer_card_name(i))), space_gap=6)
         names.append(resolve(text, TRAINER_NAMES, ignore_case=True))
     return {"trainers": names, "problems": []}
+
+
+# End-of-run screen: ten badge places (two rows of five) above the team; a won badge is gold.
+RUN_OVER_BADGES = [(x, y) for y in (337, 458) for x in (1267, 1388, 1507, 1628, 1747)]
+
+
+def read_run_over(pic: np.ndarray) -> dict:
+    """Badges on the end-of-run screen. The last battle's result is known from nothing else: no shop
+    follows it, and on a won run a badge case covers the HP bars of the result box (2026-11-14: a
+    10-badge run was reported as "9 badges, last battle lost")."""
+    gold = 0
+    for x, y in RUN_OVER_BADGES:
+        patch = pic[y - 10:y + 11, x - 10:x + 11].reshape(-1, 3)        # a patch: confetti falls over a won screen
+        r, g, b = patch[:, 0].astype(int), patch[:, 1].astype(int), patch[:, 2].astype(int)
+        gold += bool(((r > 170) & (g > 100) & (b < 130) & (r > b + 80)).mean() > 0.5)   # gold in all its shades
+    return {"badges": gold, "problems": []}
 
 
 def detect_screen(pic: np.ndarray) -> str:
@@ -1437,6 +1480,12 @@ def _read_shop_slot(pic: np.ndarray, i: int, masks: dict, problems: list[str],
         name = resolve(raw_name, ITEM_NAMES)
         if name:
             kind = "item"
+    if name is None:
+        name = near_miss_name(raw_name, MONSTER_NAMES + ITEM_NAMES)
+        if name:
+            kind = "monster" if name in MONSTER_NAMES else "item"
+            if notes is not None:
+                notes.append(f"shop {i}: name '{raw_name}' taken as {name} (one known name is that close)")
     price = _to_int(raw_price[1:]) if raw_price.startswith("$") else None
     if price is None and raw_price.startswith("$"):
         price = fill_number(raw_price[1:], _list_cost(name, kind))
@@ -1528,6 +1577,10 @@ def read_shop(pic: np.ndarray) -> dict:
     r = text("rank_bar")
     head, *odds = r.split("*")
     state["shop_rank"] = _to_int(head[4:]) if head.startswith("Rank") else None
+    if state["shop_rank"] is None and resolve(head, ["RankMax"]):
+        # "Rank Max" (day 12 on, after rank 13; 2026-11-14): wider than "Rank 13", so the R is cut off
+        # and M and x are letters this font was never taught. Its odds are read as usual.
+        state["shop_rank"] = RANK_MAX
     values = [_to_int(o[:-1]) if o.endswith("%") else None for o in odds]
     if state["shop_rank"] is None or not values or None in values or len(values) > len(RARITIES):
         problems.append(f"rank bar: cannot read '{r}'")
@@ -1565,10 +1618,12 @@ def read_state(image: Image.Image) -> dict:
     state: dict = {"screen": detect_screen(pic)}
     if state["screen"] == "shop":
         state.update(read_shop(pic))
-    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "run_over", "main_menu", "main_menu_continue", "cash_in", "title"):
+    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm"):
         # recognised. The battle field is read with read_battle() only on request: it takes
         # a few seconds, too slow for every frame while waiting.
         state["problems"] = []            # recognised; nothing on them is read yet
+    elif state["screen"] == "run_over":
+        state.update(read_run_over(pic))
     elif state["screen"] == "continue_confirm":
         state["mode"] = continue_mode(pic)
         state["problems"] = []            # an unreadable mode is not a reading error: hands refuses to confirm

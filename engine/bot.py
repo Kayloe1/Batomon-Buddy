@@ -4,6 +4,7 @@ reader states into decisions."""
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from . import choices, data, events, model, opponents
@@ -35,7 +36,11 @@ class Brain:
 
     def save(self) -> None:
         MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
-        MEMORY_FILE.write_text(json.dumps(self.memory, indent=1), encoding="utf-8")
+        # written beside the file and moved over it: a process stopped in the middle of a write left
+        # an unreadable file, and the next start then forgot the run's trinkets (2026-11-14)
+        tmp = MEMORY_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(self.memory, indent=1), encoding="utf-8")
+        os.replace(tmp, MEMORY_FILE)
 
     def new_run(self) -> None:
         self.memory = {"trinkets": [], "rescue_used": False, "last_lives": None, "last_day": None}
@@ -47,10 +52,15 @@ class Brain:
         day = state.get("day")
         if last is not None and self.memory.get("last_day") is not None and day == self.memory["last_day"] + 1:
             lost = data.lives_lost(self.memory["last_day"])
-            if last - lost <= 0 and (state.get("lives") or 0) > 0:
+            # only after a LOST battle: a win leaves the lives as they were (2026-11-14: a day-10 win
+            # with 3 lives, where a loss would have cost 3, was taken for a rescue)
+            badges, last_badges = state.get("badges"), self.memory.get("last_badges")
+            won = badges is not None and last_badges is not None and badges > last_badges
+            if last - lost <= 0 and (state.get("lives") or 0) > 0 and not won:
                 self.memory["rescue_used"] = True
         if day is not None and state.get("lives") is not None:
             self.memory["last_day"], self.memory["last_lives"] = day, state["lives"]
+            self.memory["last_badges"] = state.get("badges")
         self.save()
 
     def note_action(self, kind: str, state: dict, index: int | None = None) -> None:

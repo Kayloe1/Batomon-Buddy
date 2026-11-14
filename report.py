@@ -58,8 +58,16 @@ def summarize_run(records: list[dict]) -> dict | None:
         stats = [r for r in records if r.get("kind") == "battle_stats"]
         hp = (stats[-1].get("end_hp_fraction") or {}) if stats else {}
         won = bool(hp) and hp.get("me", 0) > 0 and hp.get("opponent", 1) == 0
+        # better: the badges counted on the end-of-run screen (logged since 2026-11-14; on a won run
+        # the badge case hides the HP bars, and a 10-badge run was reported as 9 badges and a loss)
+        end_badges = next((r.get("badges") for r in reversed(records)
+                           if r.get("kind") == "run_over" and r.get("badges") is not None), None)
+        if end_badges is not None and badges is not None:
+            won = end_badges > badges
         final = "win" if won else "loss"
-        if won and badges is not None:
+        if end_badges is not None:
+            badges = end_badges
+        elif won and badges is not None:
             badges += 1
     return {
         "trainer": trainer, "battles": len(battles), "badges": badges, "lives_left": lives,

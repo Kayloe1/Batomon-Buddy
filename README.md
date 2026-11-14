@@ -1,4 +1,4 @@
-# batomon-bot
+# Batomon Buddy
 
 A Python helper that will play **Batomon Showdown** by reading the game window and clicking.
 It reads the screen and plays a run that is already open with simple rules; see `STATUS.md`.
@@ -35,7 +35,7 @@ black bars). `window.frac_to_screen(rect, fx, fy)` gives a screen pixel and
 With the game open and not minimized:
 
 ```
-cd C:\Users\eddyp\Desktop\batomon-bot
+cd "C:\Users\eddyp\Desktop\Batomon Buddy"
 .\.venv\Scripts\python.exe capture.py
 .\.venv\Scripts\python.exe reader.py
 .\.venv\Scripts\python.exe -m unittest discover tests

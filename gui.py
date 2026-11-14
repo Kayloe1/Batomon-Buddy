@@ -38,7 +38,7 @@ from tkinter import messagebox, ttk
 SCREENS = {
     "shop": "shop", "battle": "battle", "matchmaking": "looking for an opponent", "blank": "between two screens",
     "result": "battle result", "stats": "Stats window", "event": "event", "gift_box": "gift box",
-    "trinket_pick": "trinket choice", "trainer_pick": "trainer choice", "select_target": "choosing a target",
+    "trinket_pick": "trinket choice", "take_one_confirm": "take one or all?", "trainer_pick": "trainer choice", "select_target": "choosing a target",
     "overflow": "team and bench full", "cash_in": "Cash In", "run_over": "end of the run",
     "new_run": "New Run dialog", "main_menu": "main menu", "main_menu_continue": "main menu (a run is open)",
     "continue_confirm": "Continue panel", "title": "title screen", "minimized": "game window minimized",
@@ -325,7 +325,7 @@ class App:
     # -- building --
     def _build(self) -> None:
         root = self.root
-        root.title("Batomon bot")
+        root.title("Batomon Buddy")
         root.protocol("WM_DELETE_WINDOW", self.close)
         base = tkfont.nametofont("TkDefaultFont")
         self.f_bold = base.copy()
@@ -492,7 +492,7 @@ class App:
         """The window's X: the bot first finishes what it is doing, so no click or drag is cut in half."""
         if self.session is not None and self.session.running:
             if self.closing and not messagebox.askyesno(
-                    "Batomon bot", "The bot is still finishing an action (a battle can take a few minutes).\n\n"
+                    "Batomon Buddy", "The bot is still finishing an action (a battle can take a few minutes).\n\n"
                                    "Close now anyway?", parent=self.root):
                 return
             if not self.closing:

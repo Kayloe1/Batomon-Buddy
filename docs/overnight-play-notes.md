@@ -315,3 +315,28 @@ Legendary Potions modelled, and `Params.grow_next` (tomorrow is scored with one 
   and the OVERFLOW screen (an event's Shiny Saberhorn with team and bench full; sold a Frizzly by hand).
 - **Run over on Day 9 with 4 badges** (lost Days 4, 7, 8 and 9). The OVERFLOW handling did not come up again,
   so it is tested on the saved capture only.
+
+## Done on 2026-11-14 (Bug Catcher Casual run: won, 10 badges on day 14)
+The program is now called **Batomon Buddy** and lives in `Desktop\Batomon Buddy`.
+- **Fast forward is never clicked.** The game remembers it between battles and restarts, and the button is
+  grey for about a second at the start of every battle (Ed): the bot read "off", clicked, and turned it off.
+- **Take All**: a trinket choice can come with a red "Take All" button under the cards (seen on day 10 after
+  an event: Power Bell / Speed Crest / Silver Watch). The bot presses it. Clicking one card instead opens
+  "Are you sure you want to take one trinket rather than all?" (`take_one_confirm`); the bot presses Cancel.
+- **"Rank Max"** follows rank 13 (day 12): odds 1 / 2 / 20 / 47 / 30. Read as rank 14 (`reader.RANK_MAX`).
+- Capital **K** on a shop card was read as H ("Hickrane"); taught from `captures/shop_kickrane_card.png`.
+  Kickrane (foreign Rare, $40, Deal 30 x2, 4.5 s; passive not read). **Do not rebuild `templates/glyphs.json`
+  with `teach.py`**: a full rebuild loses glyphs added since (a $7 price and a Stats digit stopped reading).
+  Add single glyphs with `reader.store().teach(font, mask, text)` and `save()`.
+- **Merges were undervalued**: with two Galvanines owned, the third copy ($40) scored below ending the turn,
+  because the pair's bonus disappeared with the merge and the Legendary gift counted less than the $40.
+  A finished merge now counts at least `copy_progress x (1 + rarity)`.
+- **Surplus rerolls** stop when the money left would not buy a typical card at the shop's odds (day 11,
+  rank 13: rerolled from $38 to $8). On the last life the bar is the cheapest likely card.
+- **Rescue**: a win with lives equal to the day's loss was taken for a used rescue (then no money was kept).
+  Now only after a battle that brought no badge. Day 12 loss at 3 lives: lives went 3 -> 1 (the rescue).
+- **The tests wrote `logs/engine_memory.json`**, so running them during a run wiped the run's trinkets. They
+  use a temporary file now, and the file is written atomically.
+- **End-of-run screen**: its ten badge places are counted (`reader.read_run_over`). The last result box of a
+  won run shows a badge case over the HP bars, so the won run was summarised as "9 badges, loss".
+- Sim calibration, this run: lost day 12 at 69%, won days 13 and 14 at 88% and 94%.

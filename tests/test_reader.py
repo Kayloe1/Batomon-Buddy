@@ -111,6 +111,8 @@ class ScreenDetection(unittest.TestCase):
         "trinket_pick_after_event.png": "trinket_pick",
         "trinket_pick_single.png": "trinket_pick",
         "trinket_pick.png": "trinket_pick",
+        "trinket_pick_take_all.png": "trinket_pick",
+        "trinket_take_all_confirm.png": "take_one_confirm",
         "shop_day1_broke.png": "shop",          # REROLL button is grey here ($0)
     }
 
@@ -121,6 +123,37 @@ class ScreenDetection(unittest.TestCase):
                 self.assertEqual(state["screen"], screen)
                 if screen not in ("unknown",):
                     self.assertEqual(state["problems"], [])
+
+    def test_take_all_button_is_seen_only_where_it_is(self):
+        with_button = reader.read_state(Image.open(CAPTURES / "trinket_pick_take_all.png"))
+        self.assertTrue(with_button["take_all"])
+        self.assertEqual(with_button["trinkets"], ["Power Bell", "Speed Crest", "Silver Watch"])
+        for name in ("trinket_pick.png", "trinket_pick_single.png", "trinket_pick_after_event.png"):
+            with self.subTest(capture=name):
+                self.assertFalse(reader.read_state(Image.open(CAPTURES / name))["take_all"])
+
+    def test_capital_k_on_a_card_is_not_an_h(self):
+        # the foreign Kickrane was read as "Hickrane" and the run stopped (2026-11-14)
+        st = reader.read_state(Image.open(CAPTURES / "shop_kickrane_card.png"))
+        self.assertEqual(st["problems"], [])
+        self.assertEqual((st["shop"][4]["name"], st["shop"][4]["price"]), ("Kickrane", 40))
+
+    def test_near_miss_never_guesses_between_two_names(self):
+        # whatever "close" means, two equally close names must give None
+        self.assertIsNone(reader.near_miss_name("Xat", ["Bat", "Cat"]))
+        self.assertIsNone(reader.near_miss_name("", ["Bat"]))
+
+    def test_rank_max_is_read(self):
+        st = reader.read_state(Image.open(CAPTURES / "shop_rank_max.png"))
+        self.assertEqual(st["problems"], [])
+        self.assertEqual(st["shop_rank"], reader.RANK_MAX)
+        self.assertEqual(list(st["shop_odds"].values()), [1, 2, 20, 47, 30])
+
+    def test_end_of_run_screen_gives_the_badges(self):
+        for name, badges in (("manual_run_won_champion.png", 10), ("run_over_day8.png", 3)):
+            with self.subTest(capture=name):
+                st = reader.read_state(Image.open(CAPTURES / name))
+                self.assertEqual((st["screen"], st["badges"]), ("run_over", badges))
 
     def test_events_have_three_choices(self):
         for name in ("event_dragon_hoard.png", "event_baby_basilisk.png", "event_mysterious_trainer.png"):
