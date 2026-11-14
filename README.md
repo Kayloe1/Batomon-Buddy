@@ -60,7 +60,8 @@ the game (not while it is minimized).
 Double-click `control_window.bat`, or run `.\.venv\Scripts\python.exe gui.py`. It plays exactly what
 `play.py` plays, without a terminal.
 
-- **Options** are the ones `play.py` takes: start a Casual run when none is open (`--new-run`), stop
+- **Options** are the ones `play.py` takes: start a Casual run when none is open (`--new-run`), or a Ranked
+  one (`--ranked`), stop
   after N battles (`--days N`), and what decides: the planner, the learned policy (`--learned`) or the
   old simple rules (`--simple`).
 - **Start** begins. **Pause** holds the bot between two actions and **Resume** carries on from a fresh
@@ -75,7 +76,8 @@ Double-click `control_window.bat`, or run `.\.venv\Scripts\python.exe gui.py`. I
 - Keep the window **beside the game picture**, not over it (it opens beside the game when there is
   room, and warns when it covers the picture). It is never kept on top: the bot brings the game to the
   front for every click. Pushing the mouse into a screen corner still aborts.
-- The window clicks nothing itself and has no control for Ranked Mode. Started from the `.bat` there is
+- **Play Ranked** (off by default) makes the bot start Ranked runs instead of Casual (`--new-run --ranked`).
+- The window clicks nothing itself. Started from the `.bat` there is
   no console; what would be printed goes to `logs\control_window_console.txt`.
 
 `python play.py ...` and `python batch.py` work as before.

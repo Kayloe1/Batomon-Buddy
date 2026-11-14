@@ -215,3 +215,56 @@ class FastForwardIsLeftAlone(unittest.TestCase):
             state = h.wait_for({"result"}, 60)
         self.assertEqual(state["screen"], "result")
         self.assertEqual(clicks, [])
+
+
+class StartRun(unittest.TestCase):
+    """start_run(mode) presses CONFIRM only after two clean reads of the wanted mode (Ranked: Ed, 2026-11-14)."""
+
+    def hands_on(self, reads):
+        h = hands.Hands.__new__(hands.Hands)
+        h.dry_run = False
+        clicks = []
+        seq = iter(reads)
+        last = {"v": None}
+
+        def look():
+            last["v"] = next(seq, last["v"])
+            return copy.deepcopy(last["v"])
+        h.look = look
+        h._click = lambda box: clicks.append(box) or [box]
+        h.wait_for = lambda wanted, t: {"screen": "trainer_pick", "problems": []}
+        h._log = lambda name, r: r
+        old = hands.SETTLE_S
+        hands.SETTLE_S = 0
+        self.addCleanup(lambda: setattr(hands, "SETTLE_S", old))
+        return h, clicks
+
+    @staticmethod
+    def dialog(mode):
+        return {"screen": "new_run", "mode": mode, "region": "Pantra", "problems": []}
+
+    def test_ranked_selects_ranked_then_confirms(self):
+        h, clicks = self.hands_on([self.dialog("casual"), self.dialog("ranked")])
+        r = h.start_run("ranked")
+        self.assertTrue(r.ok, r.message)
+        self.assertEqual(clicks, [reader.NEW_RUN_RANKED, reader.NEW_RUN_CONFIRM])
+
+    def test_casual_never_touches_ranked(self):
+        h, clicks = self.hands_on([self.dialog("ranked"), self.dialog("casual")])
+        self.assertTrue(h.start_casual_run().ok)
+        self.assertEqual(clicks, [reader.NEW_RUN_CASUAL, reader.NEW_RUN_CONFIRM])
+
+    def test_unclear_mode_is_never_confirmed(self):
+        h, clicks = self.hands_on([self.dialog("casual"), self.dialog(None)])
+        r = h.start_run("ranked")
+        self.assertFalse(r.ok)
+        self.assertNotIn(reader.NEW_RUN_CONFIRM, clicks)
+
+    def test_continue_panel_ranked_only_when_allowed(self):
+        panel = {"screen": "continue_confirm", "mode": "ranked", "problems": []}
+        h, clicks = self.hands_on([panel])
+        self.assertFalse(h.confirm_continue().ok)
+        self.assertEqual(clicks, [])
+        h, clicks = self.hands_on([panel])
+        self.assertTrue(h.confirm_continue(allow_ranked=True).ok)
+        self.assertEqual(clicks, [reader.CONTINUE_CONFIRM])

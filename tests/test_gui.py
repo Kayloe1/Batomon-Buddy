@@ -413,17 +413,18 @@ class StatusTests(unittest.TestCase):
 
 
 class SafetyTests(unittest.TestCase):
-    def test_the_window_has_no_way_to_click_or_to_pick_ranked(self):
-        """Rule 1: only hands.start_casual_run() starts a run. gui.py must not click, must not use the
-        New Run dialog's boxes, and must not call any of the hands' actions itself."""
+    def test_the_window_has_no_way_to_click(self):
+        """Only hands.start_run(), called by play.py, starts a run. gui.py must not click, must not use
+        the New Run dialog's boxes, and must not call any of the hands' actions itself."""
         import re
         src = Path(gui.__file__).read_text(encoding="utf-8")
         code = "\n".join(line.split("#")[0] for line in src.split('"""', 2)[2].splitlines())
-        for banned in ("pyautogui", "NEW_RUN", "RANKED", "_click", "_drag", "start_casual_run", "win32api.mouse",
+        for banned in ("pyautogui", "NEW_RUN", "RANKED", "_click", "_drag", "start_casual_run", "start_run",
+                       "start_ranked_run", "win32api.mouse",
                        "SendInput", "mouse_event", "keybd_event", "PostMessage", "SendMessage"):
             self.assertNotIn(banned, code, banned)
-        self.assertEqual(re.findall(r"ranked", code, re.I), ["Ranked"])       # only the words "(never Ranked)"
-        self.assertIn("(never Ranked)", code)
+        # Ranked only reaches play.py as the --ranked argument, from its own box (off by default)
+        self.assertIn('self.ranked = tk.BooleanVar(value=False)', code)
 
 
 class WindowTests(Quiet):
@@ -586,6 +587,9 @@ class WindowTests(Quiet):
         app.decide.set("simple")
         app.new_run.set(False)
         self.assertEqual(app.argv(), ["--days", "3", "--simple"])
+        app.ranked.set(True)                                     # Ranked implies starting a new run
+        self.assertEqual(app.argv(), ["--new-run", "--ranked", "--days", "3", "--simple"])
+        app.ranked.set(False)
         app.days.set("lots")
         self.assertIsNone(app.argv())
         app.start_button.invoke()                                # a bad number starts nothing

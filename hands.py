@@ -6,9 +6,9 @@
 Rules built in:
 - Besides the shop actions, this module presses the buttons of the other screens (BATTLE!,
   CONFIRM on the result box, events, gifts, trinkets, trainer pick, Continue, Cash In, the
-  Stats window) and can start a run: start_casual_run() presses CONFIRM on the New Run dialog
-  only after two fresh reads show Casual Mode + Pantra, and nothing here clicks the Ranked
-  button. confirm_continue() uses the same two-read gate for a saved run's panel.
+  Stats window) and can start a run: start_run(mode) presses CONFIRM on the New Run dialog
+  only after two fresh reads show that mode + Pantra. Ranked is used only when Ed asks for it
+  (play.py --ranked). confirm_continue() uses the same two-read gate for a saved run's panel.
 - Before a shop action the state must read cleanly (no "problems"); after it the
   screen is captured again and compared with what the action should have done.
   If anything is off, ok is False and the caller must stop.
@@ -650,12 +650,13 @@ class Hands:
                                     {"continue_confirm", "shop", "result", "event", "gift_box", "trinket_pick",
                                      "cash_in", "trainer_pick", "battle", "matchmaking"}, 30)
 
-    def confirm_continue(self) -> Result:
-        """Press Confirm on the panel that follows Continue, only for a CASUAL run.
+    def confirm_continue(self, allow_ranked: bool = False) -> Result:
+        """Press Confirm on the panel that follows Continue.
 
-        Same gate as start_casual_run(): two fresh captures in a row must both show the panel
-        with the exact "CASUAL MODE" label. Anything else (a Ranked label, an unreadable one)
-        is refused and nothing is clicked; this method never presses Confirm for a Ranked run.
+        Same gate as start_run(): two fresh captures in a row must both show the panel with the
+        exact "CASUAL MODE" label, or, when allow_ranked (Ed ticked Ranked), the exact saved
+        "RANKED MODE" label. Anything else (an unreadable label, a Ranked label without
+        allow_ranked, a Ranked label never saved) is refused and nothing is clicked.
         """
         name = "confirm continue"
         before = self.look()
@@ -667,17 +668,20 @@ class Hands:
         for _ in range(2):
             time.sleep(0.3)
             state = self.look()
-            if not (state.get("screen") == "continue_confirm" and state.get("mode") == "casual"
+            allowed = ("casual", "ranked") if allow_ranked else ("casual",)
+            if not (state.get("screen") == "continue_confirm" and state.get("mode") in allowed
                     and not state["problems"]):
+                shown = " or ".join(m.upper() + " MODE" for m in allowed)
                 return self._log(name, Result(
-                    False, f"NOT confirmed: the saved run is not shown as CASUAL MODE "
+                    False, f"NOT confirmed: the saved run is not shown as {shown} "
                            f"(mode={state.get('mode')}, screen={state.get('screen')})", before, state))
         clicks = self._click(reader.CONTINUE_CONFIRM)
         wanted = {"shop", "result", "event", "gift_box", "trinket_pick", "cash_in", "trainer_pick",
                   "battle", "matchmaking", "overflow"}
         after = self.wait_for(wanted, 40)
         ok = after.get("screen") in wanted
-        return self._log(name, Result(ok, f"Casual run continued; now on '{after.get('screen')}'", before, after, clicks))
+        return self._log(name, Result(ok, f"{state.get('mode', 'casual').capitalize()} run continued; "
+                                          f"now on '{after.get('screen')}'", before, after, clicks))
 
     def cash_in(self) -> Result:
         """Press "Cash In" on a trinket dialog (e.g. Fake Diamond after a loss: gain money)."""
@@ -685,14 +689,26 @@ class Hands:
                                     {"shop", "event", "run_over", "gift_box", "trinket_pick", "cash_in", "overflow"}, 40)
 
     def start_casual_run(self) -> Result:
-        """Start a new CASUAL Pantra run from the end-of-run screen or the New Run dialog.
+        """Start a new CASUAL Pantra run (see start_run)."""
+        return self.start_run("casual")
 
-        Rule 1 of the project: never start a Ranked run. CONFIRM is pressed only
-        when two fresh captures in a row both show Casual Mode selected (blue),
-        Ranked Mode not selected (grey) and Pantra selected. This method never
-        clicks the Ranked Mode button, and there is no ranked counterpart.
+    def start_ranked_run(self) -> Result:
+        """Start a new RANKED Pantra run (see start_run). Only called when Ed ticked Ranked."""
+        return self.start_run("ranked")
+
+    def start_run(self, mode: str) -> Result:
+        """Start a new Pantra run in `mode` ("casual" or "ranked") from the end-of-run screen or
+        the New Run dialog.
+
+        Ed allowed Ranked runs on 2026-11-14, but only when he asks for them (play.py --ranked,
+        the control window's Ranked choice). CONFIRM is pressed only when two fresh captures in a
+        row both show the wanted mode selected (blue), the other one not selected (grey) and Pantra
+        selected. Anything unclear stops without pressing CONFIRM.
         """
-        name = "start casual run"
+        if mode not in ("casual", "ranked"):
+            raise ValueError(f"unknown mode {mode!r}")
+        label = mode.capitalize()
+        name = f"start {mode} run"
         before = self.look()
         if before["screen"] == "main_menu":
             self._click(reader.MAIN_MENU_NEW_RUN)
@@ -715,24 +731,24 @@ class Hands:
             self._click(reader.NEW_RUN_PANTRA)
             time.sleep(SETTLE_S)
             state = self.look()
-        if state.get("screen") == "new_run" and state.get("mode") != "casual":
-            self._click(reader.NEW_RUN_CASUAL)
+        if state.get("screen") == "new_run" and state.get("mode") != mode:
+            self._click(reader.NEW_RUN_RANKED if mode == "ranked" else reader.NEW_RUN_CASUAL)
             time.sleep(SETTLE_S)
             state = self.look()
 
-        # the gate: two independent reads, both must be clean Casual + Pantra
+        # the gate: two independent reads, both must be clean <mode> + Pantra
         for _ in range(2):
             time.sleep(0.3)
             state = self.look()
-            if not (state.get("screen") == "new_run" and state.get("mode") == "casual"
+            if not (state.get("screen") == "new_run" and state.get("mode") == mode
                     and state.get("region") == "Pantra" and not state["problems"]):
                 return self._log(name, Result(
-                    False, f"NOT confirmed: mode={state.get('mode')}, region={state.get('region')}, "
-                           f"screen={state.get('screen')}", before, state))
+                    False, f"NOT confirmed: wanted {label}, read mode={state.get('mode')}, "
+                           f"region={state.get('region')}, screen={state.get('screen')}", before, state))
         clicks = self._click(reader.NEW_RUN_CONFIRM)
         after = self.wait_for({"trainer_pick", "shop"}, 30)
         ok = after.get("screen") in ("trainer_pick", "shop")
-        return self._log(name, Result(ok, f"Casual run confirmed; now on '{after.get('screen')}'", before, after, clicks))
+        return self._log(name, Result(ok, f"{label} run confirmed; now on '{after.get('screen')}'", before, after, clicks))
 
     def pick_trainer(self, k: int) -> Result:
         """Click trainer card k (0 = left) on the trainer pick screen; the day 1 shop follows."""

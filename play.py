@@ -14,9 +14,9 @@ Decisions (engine/, see docs/decision-engine.md):
 - trainer: Ed's record per trainer, minus trainers that fight the plan
 - result box: CONFIRM; event: the last choice (event texts are not read yet)
 
-It continues the run that is open. With --new-run it may also start one, but
-only a Casual run: hands.start_casual_run() presses CONFIRM only after reading
-"Casual Mode selected" twice, and nothing here can select Ranked Mode. It stops, with a saved capture, on any screen or
+It continues the run that is open. With --new-run it may also start one: a Casual
+run, or a Ranked run with --ranked (Ed allowed this on 2026-11-14). hands.start_run()
+presses CONFIRM only after reading the wanted mode selected twice. It stops, with a saved capture, on any screen or
 state it does not understand. Push the mouse into a screen corner to abort.
 Log: logs/run_<time>.jsonl (plus every action in logs/actions_<date>.jsonl).
 """
@@ -260,7 +260,9 @@ def _play(argv, control: Control, hands, brain) -> int:
     ap.add_argument("--learned", action="store_true",
                     help="shop with the policy learned by practice runs (train/) instead of the planner")
     ap.add_argument("--new-run", action="store_true",
-                    help="if no run is open, start a CASUAL Pantra run (never Ranked) and pick a trainer")
+                    help="if no run is open, start a Pantra run (Casual unless --ranked) and pick a trainer")
+    ap.add_argument("--ranked", action="store_true",
+                    help="with --new-run, start RANKED runs instead of Casual; also continue a saved Ranked run")
     args = ap.parse_args(argv)
 
     h = _CURRENT_HANDS = hands or hands_mod.Hands(dry_run=False)
@@ -468,8 +470,8 @@ def _play(argv, control: Control, hands, brain) -> int:
             if not r.ok:
                 return stop(f"Select a target: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
         elif screen == "continue_confirm":
-            # only a run shown as CASUAL MODE is continued (read twice); otherwise stop and tell
-            r = h.confirm_continue()
+            # only a run shown as CASUAL MODE (or RANKED MODE with --ranked) is continued (read twice)
+            r = h.confirm_continue(allow_ranked=args.ranked)
             print(f"continue panel -> {r.message}")
             log("confirm_continue", ok=r.ok, message=r.message)
             if not r.ok:
@@ -496,12 +498,13 @@ def _play(argv, control: Control, hands, brain) -> int:
                 return 0
             if not args.new_run:
                 return stop("no run is open; use --new-run to start a Casual run")
-            # hands.start_casual_run() only confirms after reading Casual Mode twice
-            r = h.start_casual_run()
+            # hands.start_run() only confirms after reading the wanted mode twice
+            mode = "ranked" if args.ranked else "casual"
+            r = h.start_run(mode)
             print("new run ->", r.message)
-            log("new_run", ok=r.ok, message=r.message)
+            log("new_run", mode=mode, ok=r.ok, message=r.message)
             if not r.ok:
-                return stop(f"could not start a Casual run: {r.message}", r.after)
+                return stop(f"could not start a {mode.capitalize()} run: {r.message}", r.after)
         elif screen == "gift_box":
             r = h.open_gift()
             log("gift", ok=r.ok, message=r.message)
