@@ -192,10 +192,67 @@ def alert(why: str, log_path) -> None:
         pass
 
 
+_CURRENT_LOG = None      # the log of the session now running (None before it has one)
+_CURRENT_HANDS = None    # the hands that session made for itself (when none were passed in)
+
+
+def _crash_stop(e: BaseException, control: Control, hands) -> int:
+    """An unexpected error (a covering window, a bug, the mouse-corner emergency stop) ends the session
+    like any other stop: a note in the log, a saved screenshot, last_stop.txt, a beep, and the same
+    "needs you" message the control window shows. Before, it came out as a bare traceback that the
+    terminal and batch.py showed without a beep or a note."""
+    import traceback
+    failsafe = type(e).__name__ == "FailSafeException"
+    if failsafe:
+        why = "Emergency stop: the mouse was pushed into a corner of the screen. Nothing more was clicked."
+    else:
+        why = f"unexpected error: {type(e).__name__}: {e}"
+        if "window not found" in str(e):
+            why += ". Open the game first, then press Start."
+    text = traceback.format_exc()
+    if not failsafe:
+        print(text)
+    capture = None
+    try:
+        img = getattr(hands or _CURRENT_HANDS, "last_image", None)
+        if img is not None:
+            hands_mod.CAPTURE_DIR.mkdir(exist_ok=True)
+            name = f"crash_{datetime.now():%Y%m%d_%H%M%S}.png"
+            img.save(hands_mod.CAPTURE_DIR / name)
+            capture = name
+    except Exception:
+        pass
+    if _CURRENT_LOG is not None:
+        try:
+            with open(_CURRENT_LOG, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"time": datetime.now().isoformat(timespec="seconds"), "kind": "stop",
+                                    "why": why, "traceback": None if failsafe else text}) + "\n")
+        except OSError:
+            pass
+    control.event("needs_you", why=why, capture=capture, log=_CURRENT_LOG.name if _CURRENT_LOG else None)
+    alert(why, _CURRENT_LOG)
+    return 1
+
+
 def main(argv=None, control: Control | None = None, hands=None, brain=None) -> int:
-    """Play one session. From the terminal only argv is used. gui.py passes a Control (events,
-    pause, stop); the tests also pass their own hands and brain so that no game is needed."""
-    global LAST_LOG
+    """Play one session; returns 0 when it ended normally and 1 when it stopped (always with a message).
+    From the terminal only argv is used. gui.py passes a Control (events, pause, stop); the tests also
+    pass their own hands and brain so that no game is needed."""
+    global _CURRENT_LOG, _CURRENT_HANDS
+    _CURRENT_LOG = _CURRENT_HANDS = None
+    control = control or Control()
+    try:
+        return _play(argv, control, hands, brain)
+    except SystemExit:
+        raise                              # --help or a bad option: argparse says so itself
+    except KeyboardInterrupt:
+        raise
+    except Exception as e:                 # anything else is a stop, not a crash
+        return _crash_stop(e, control, hands)
+
+
+def _play(argv, control: Control, hands, brain) -> int:
+    global LAST_LOG, _CURRENT_LOG, _CURRENT_HANDS
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=99, help="stop after this many battles")
     ap.add_argument("--simple", action="store_true", help="use the old simple shop rules")
@@ -205,8 +262,7 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
                     help="if no run is open, start a CASUAL Pantra run (never Ranked) and pick a trainer")
     args = ap.parse_args(argv)
 
-    control = control or Control()
-    h = hands or hands_mod.Hands(dry_run=False)
+    h = _CURRENT_HANDS = hands or hands_mod.Hands(dry_run=False)
     if brain is None and not args.simple:
         if Brain is None:
             print("decision engine unavailable:", _ENGINE_ERROR)
@@ -214,7 +270,7 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
             return 1
         brain = Brain(learned=args.learned)
     log_path = hands_mod.LOG_DIR / f"run_{datetime.now():%Y%m%d_%H%M%S}.jsonl"
-    LAST_LOG = log_path
+    LAST_LOG = _CURRENT_LOG = log_path
 
     def log(kind: str, **data) -> None:
         with open(log_path, "a", encoding="utf-8") as f:

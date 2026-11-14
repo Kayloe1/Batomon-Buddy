@@ -322,9 +322,11 @@ class SessionTests(Quiet):
             with mock.patch("sys.stderr", io.StringIO()):
                 s.start()
                 events = self.events_until(s, "finished")
-            self.assertIsNone(events[-1][1]["code"])
-            (text,) = [d["text"] for k, d in events if k == "error"]
+            # play.main turns any crash into a normal stop (message, note, beep), so it returns 1
+            self.assertEqual(events[-1][1]["code"], 1)
+            (text,) = [d["why"] for k, d in events if k == "needs_you"]
             self.assertIn(expected, text)
+            self.assertEqual([k for k, d in events if k == "error"], [])
 
     def test_the_game_window_missing_is_reported(self):
         s = gui.Session([], runner=lambda argv, **kw: (_ for _ in ()).throw(RuntimeError("Batomon Showdown window not found")))

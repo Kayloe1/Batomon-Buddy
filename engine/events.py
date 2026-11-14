@@ -67,8 +67,8 @@ def _with_unit(s: RunState, unit) -> RunState | None:
 
 def _level_up(u):
     sp = u.species
-    if sp is None or u.level >= 4:
-        return None
+    if sp is None or u.level >= min(4, data.MAX_READABLE_LEVEL):
+        return None                       # never make a level the reader cannot read yet
     d = u.stat_dict()
     lo, hi = sp.stats(u.level), sp.stats(u.level + 1)
     for k, v in hi.items():
@@ -134,8 +134,15 @@ def best_target(planner: Planner, s: RunState, effect: str | None):
             why = f"+{m.group(1)} Shock helps it most in the simulator"
     if unit is None:
         owned = [u for _, _, u in s.owned()]
-        unit = max(owned, key=power, default=None)
         why = "it is my strongest monster, and boosts belong on the carry"
+        if _has(effect, "Level up a monster"):
+            # nothing the simulator likes: still never a monster that would reach an unreadable level
+            low = [u for u in owned if u.level < data.MAX_READABLE_LEVEL]
+            if low:
+                owned = low
+            else:
+                why = "all my monsters are at the highest level I can read, so the bot will stop at the level-4 label"
+        unit = max(owned, key=power, default=None)
     return unit, why
 
 
