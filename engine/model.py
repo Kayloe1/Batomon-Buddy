@@ -491,6 +491,8 @@ def item_is_worth_using(s: RunState, card: Card) -> bool:
     """Items the planner may use. Unmodelled paid items are skipped."""
     if card.name in AVOID_ITEMS:
         return False
+    if card.name == "Ultra Candy" and data.MAX_READABLE_LEVEL < 4:
+        return False            # it makes a level 4, which the reader cannot read yet (see data.MAX_READABLE_LEVEL)
     if card.name == "Red Coin":
         # money for a life: only when that life cannot change where the next loss leaves you
         return s.lives >= 8 and s.day <= 4

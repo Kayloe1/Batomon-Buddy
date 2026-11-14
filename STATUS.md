@@ -53,7 +53,12 @@ in git (`git add -f`) so the lesson can be repeated.
 ## Limits
 - **Window size:** templates only fit a 2560 x 1440 game picture. At another size the reader reports a problem.
 - **Level 4** is not read (the label font only knows 1 to 3, and its colour was never captured): the bot stops.
-  Events and Ultra Candy can make one.
+  Stopgap: the engine never makes one (`engine.data.MAX_READABLE_LEVEL = 3`: no level-up event on a level 3,
+  no Ultra Candy). A level 4 that arrives anyway stops the run with a message saying so. When one is
+  captured, teach the label and set that constant to 4.
+- **Any unexpected error** (a covering window, a bug, the mouse-corner emergency stop) ends the session as a
+  normal stop: a note in the log and `last_stop.txt`, a `crash_*.png`, a beep and the red box. `batch.py` exits
+  with 1 when it stopped for help and 0 when every run finished.
 - **Fonts are never complete.** A glyph, name or screen met for the first time stops the run until it is taught.
 - Names with unknown letters resolve when exactly one known name fits. `reader.near_miss_name` (a look-alike
   letter such as K read as H) is unfinished and always answers "no match".

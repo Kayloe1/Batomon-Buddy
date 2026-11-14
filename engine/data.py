@@ -40,6 +40,11 @@ def income(day: int) -> int:
     return 30 if day <= 1 else 25 + 5 * day
 
 
+# The highest monster level the reader can read. A level-4 label's colour and digit have never been
+# captured (reader.LEVEL_FILLS, the "level" font), so the bot must not CREATE a level 4 (events, Ultra
+# Candy): the run would stop at the first unreadable label. Raise this to 4 once that is taught.
+MAX_READABLE_LEVEL = 3
+
 REROLL_PRICE = 3
 SHOP_MONSTERS = 4
 TEAM_SLOTS = 6

@@ -1142,7 +1142,8 @@ def _read_battle_slot(pic: np.ndarray, side: int, i: int, problems: list[str]) -
         # a team slot, 2026-11-13), not a monster
         return None
     if level is None:
-        problems.append(f"{where}: cannot read level ('{level_text}')")
+        problems.append(f"{where}: cannot read level ('{level_text}'); a level-4 monster would look like this "
+                        f"(its label was never captured: keep this capture and teach it)")
     if any(b["value"] is None for b in badges):
         problems.append(f"{where}: cannot read a stat badge")
     name, dist = match_battle_sprite(pic, box, mirrored=side == 1)
@@ -1442,7 +1443,8 @@ def _read_owned_slot(pic: np.ndarray, box: Box, where: str, problems: list[str])
         # a team slot, 2026-11-13), not a monster
         return None
     if level is None:
-        problems.append(f"{where}: cannot read level ('{level_text}')")
+        problems.append(f"{where}: cannot read level ('{level_text}'); a level-4 monster would look like this "
+                        f"(its label was never captured: keep this capture and teach it)")
     if any(b["value"] is None for b in badges):
         problems.append(f"{where}: cannot read a stat badge")
     name, dist = match_sprite(rgb)
