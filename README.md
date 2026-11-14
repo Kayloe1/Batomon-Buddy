@@ -14,6 +14,7 @@ understand. See `STATUS.md` for what works today and `docs/decision-engine.md` f
 | `capture.py` | Saves a timestamped PNG of the client area to `captures/` |
 | `glyphs.py` | Reads the game's pixel fonts with glyph templates |
 | `reader.py` | `read_state(image)`: which screen is showing and everything on it (shop, events, trinkets, battle, Stats window) |
+| `stop_lessons.py` | The red box's **Teach it**: type what an unreadable shop text says and the reader learns it (no coding session); saved in `data/user_lessons.json` |
 | `teach.py` | Adds glyphs and monster sprites from labelled captures to `templates/` (never wipes what is there; `--rebuild` starts from nothing, with a `.bak` kept) |
 | `hands.py` | Mouse actions (shop actions, battle, confirm, events, gifts, trinkets, starting a Casual run), each one checked afterwards |
 | `play.py` | The main loop: plays the open run with the decision engine and logs everything; stops on anything unclear |

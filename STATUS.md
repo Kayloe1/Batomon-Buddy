@@ -45,7 +45,19 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   does not mind if it continues a Ranked run by accident.
 
 ## How to add what the reader does not know yet
-When `play.py` stops with "cannot read", the capture is saved as `captures\unread_*.png`. Look at it, add
+**Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
+stop with a capture, press **Teach it**. The window shows the part of the picture the bot could not read
+and what it made of it; type what the game says (`Kickrane $40`, `DAY 9`, `Rank 4  67% 30% 3% 0% 0%`, ...)
+and press Teach. Nothing changes unless the number of characters fits the picture and the capture then
+reads as typed; a letter that contradicts one the bot is sure of (it read K as H) needs a second click,
+"Teach anyway". The glyphs are used at once (press Start again); the answer is saved in
+`data\user_lessons.json`, which `teach.py` replays, so `teach.py --rebuild` does not lose it. Without the
+window: `python stop_lessons.py [capture]`. It cannot teach sprites, level labels, stat badges, event or
+trinket lines, or new screens, and a name missing from `data\names.json`; the window says so, and
+"Copy this for Claude" is still the way for those. (The button was built and tested without a screen;
+the logic is covered by `tests\test_stop_lessons.py`, the window itself has had no live run yet.)
+
+**Anything else:** the capture is saved as `captures\unread_*.png`. Look at it, add
 an entry with the true text to `LESSONS` in `teach.py`, run `teach.py`, then
 `reader.py <capture> --expect` to make it a test (check the printed values by eye first). Keep the capture
 in git (`git add -f`) so the lesson can be repeated.
@@ -69,7 +81,10 @@ in git (`git add -f`) so the lesson can be repeated.
 - The real-opponent pool is thin late in a run: days 10 to 14 have 13 recorded teams between them.
 
 ## Next steps
-1. Teach what the next stops show; consider a way to teach from the red box without a coding session.
+1. Teach what the next stops show. The red box now has **Teach it** for shop-screen text (see above):
+   use it on the next stops and note which kinds of stop it could not handle. Sprites, level labels, stat
+   badges and event / trinket lines are the obvious next kinds to add. First live use of the button is
+   still to do.
 2. Level 4: capture one, teach the label and its colour.
 3. Settle the Day 3 simulator gap (do heals count while heavily poisoned?) with a logged battle.
 4. Keep recording opponents; re-run `python -m engine.opponents` and `python -m train.learn` as late-day

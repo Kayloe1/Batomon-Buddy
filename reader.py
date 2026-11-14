@@ -405,7 +405,7 @@ _store: glyphs.GlyphStore | None = None
 def store() -> glyphs.GlyphStore:
     global _store
     if _store is None:
-        _store = glyphs.GlyphStore()
+        _store = glyphs.GlyphStore(glyphs.TEMPLATE_FILE)      # looked up now, so a test can point it elsewhere
     return _store
 
 
