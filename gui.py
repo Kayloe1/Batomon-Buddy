@@ -328,6 +328,83 @@ MODES = {
 }
 
 
+class TeachDialog:
+    """A window that shows the text the bot could not read and asks what it says.
+
+    All the work is in stop_lessons.py (tested without a screen); this only shows and asks. A letter
+    that contradicts one the bot is sure of turns the button into "Teach anyway".
+    """
+
+    def __init__(self, parent: tk.Tk, capture, on_done=None) -> None:
+        import base64
+        import io
+        import stop_lessons
+        self.stop_lessons, self.capture, self.on_done = stop_lessons, capture, on_done
+        self.override = False
+        self.top = tk.Toplevel(parent)
+        self.top.title("Teach the bot what it cannot read")
+        self.entries: dict[str, tk.StringVar] = {}
+        self.pictures = []                              # tk drops an image nobody holds on to
+        try:
+            items = stop_lessons.items_for(capture)
+            rest = stop_lessons.unteachable(capture)
+        except Exception as e:                          # an unreadable file must not take the window down
+            items, rest = [], [f"the capture could not be read: {e}"]
+        pad = {"padx": "8p", "pady": "3p"}
+        if not items:
+            ttk.Label(self.top, wraplength=520, justify="left", text=(
+                "Nothing on this capture can be taught here.\n" + "\n".join(rest) +
+                "\n\nPress 'Copy this for Claude' in the red box and tell Claude.")).grid(row=0, column=0, **pad)
+            ttk.Button(self.top, text="Close", command=self.top.destroy).grid(row=1, column=0, **pad)
+            return
+        ttk.Label(self.top, wraplength=520, justify="left", text=(
+            "The bot could not read the text below. Type what the game really shows, exactly. "
+            "Nothing is changed unless it fits the picture.")).grid(row=0, column=0, columnspan=2, **pad)
+        row = 1
+        for item in items:
+            ttk.Label(self.top, text=item.label, font=("TkDefaultFont", 10, "bold")).grid(
+                row=row, column=0, columnspan=2, sticky="w", **pad)
+            buf = io.BytesIO()
+            item.picture.save(buf, "PNG")
+            img = tk.PhotoImage(data=base64.b64encode(buf.getvalue()))
+            self.pictures.append(img)
+            tk.Label(self.top, image=img, bg="#222").grid(row=row + 1, column=0, columnspan=2, sticky="w", **pad)
+            ttk.Label(self.top, text=f"The bot reads: {item.guess or '(nothing)'}").grid(
+                row=row + 2, column=0, sticky="w", **pad)
+            var = tk.StringVar()
+            self.entries[item.key] = var
+            ttk.Entry(self.top, textvariable=var, width=36).grid(row=row + 2, column=1, sticky="w", **pad)
+            ttk.Label(self.top, text=f"It says (like: {item.example})", foreground="#666").grid(
+                row=row + 3, column=1, sticky="w", padx="8p")
+            row += 4
+        if rest:
+            ttk.Label(self.top, wraplength=520, justify="left", foreground="#a00",
+                      text="Also stuck, and not teachable here (tell Claude): " + "; ".join(rest)).grid(
+                row=row, column=0, columnspan=2, sticky="w", **pad)
+            row += 1
+        self.message = tk.StringVar()
+        ttk.Label(self.top, textvariable=self.message, wraplength=520, justify="left").grid(
+            row=row, column=0, columnspan=2, sticky="w", **pad)
+        bar = ttk.Frame(self.top)
+        bar.grid(row=row + 1, column=0, columnspan=2, sticky="e", **pad)
+        self.go = ttk.Button(bar, text="Teach", command=self.teach)
+        self.go.pack(side="left", padx="4p")
+        ttk.Button(bar, text="Close", command=self.top.destroy).pack(side="left")
+
+    def teach(self) -> None:
+        answers = {key: var.get() for key, var in self.entries.items()}
+        try:
+            r = self.stop_lessons.apply(self.capture, answers, override=self.override)
+        except Exception as e:
+            self.message.set(f"Nothing was changed: {e}")
+            return
+        self.message.set(r.message)
+        self.override = r.override_needed
+        self.go.configure(text="Teach anyway" if self.override else "Teach")
+        if not self.override and self.on_done:
+            self.on_done(r.message)
+
+
 class App:
     POLL_MS = 100
 
@@ -374,6 +451,8 @@ class App:
         self.banner_buttons = tk.Frame(self.banner, bg=RED)
         self.open_button = ttk.Button(self.banner_buttons, text="Open the capture", command=self.open_capture)
         self.copy_button = ttk.Button(self.banner_buttons, text="Copy this for Claude", command=self.copy_stop)
+        self.teach_button = ttk.Button(self.banner_buttons, text="Teach it", command=self.teach)
+        self.teach_button.pack(side="left", padx=(0, "6p"))
         self.open_button.pack(side="left", padx=(0, "6p"))
         self.copy_button.pack(side="left")
         self.banner_title.grid(row=0, column=0, sticky="ew", padx="8p", pady=("6p", 0))
@@ -543,6 +622,19 @@ class App:
         except OSError as e:
             self.mode_text.set(f"Could not open {path}: {e}")
 
+    def teach(self) -> None:
+        """Teach the reader what the capture of this stop shows, by typing it: no coding session."""
+        if self.session is not None and self.session.running:
+            return                                      # the bot is still working; teach after it has stopped
+        path = hands_mod.CAPTURE_DIR / self.capture if self.capture else None
+        if path is None or not path.exists():
+            messagebox.showinfo("Teach it", "The capture of this stop is not there to teach from.")
+            return
+        TeachDialog(self.root, path, on_done=self._taught)
+
+    def _taught(self, message: str) -> None:
+        self.mode_text.set(message)
+
     def copy_stop(self) -> None:
         self.root.clipboard_clear()
         self.root.clipboard_append(self._copy_text)
@@ -670,6 +762,10 @@ class App:
                         (self.banner_buttons, kind != "info")):
             w.grid() if show else w.grid_remove()
         self.open_button.configure(text="Open the capture" if capture else "Open the captures folder")
+        if kind == "needs" and capture:                 # a stop on something unreadable can be taught here
+            self.teach_button.pack(side="left", padx=(0, "6p"), before=self.open_button)
+        else:
+            self.teach_button.pack_forget()
         self.banner.grid(row=0, column=0, sticky="ew")
         if kind != "info":
             self._call_attention()

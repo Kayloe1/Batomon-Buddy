@@ -267,7 +267,9 @@ def main(lessons: list | None = None, rebuild: bool = False) -> None:
     nothing is saved unless every lesson went through. A lesson whose screenshot is missing is skipped
     with a warning. `--rebuild` is the old behaviour (start empty), still with the backup.
     """
-    lessons = LESSONS if lessons is None else lessons
+    if lessons is None:
+        import stop_lessons          # lessons typed into the control window's "Teach it" (data/user_lessons.json)
+        lessons = LESSONS + stop_lessons.load_user_lessons()
     path = glyphs.TEMPLATE_FILE
     # Sprites are NOT wiped: hands.py saves new ones while playing (it knows what it
     # just bought), and those cannot be rebuilt from the lessons here.
