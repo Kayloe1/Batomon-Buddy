@@ -189,7 +189,6 @@ def report(paths: list[Path]) -> dict:
             s["log"] = p.name
             runs.append(s)
             allrecs += recs
-    from collections import Counter as C
     seen = names_seen(allrecs)
     try:
         sys.path.insert(0, str(ROOT))

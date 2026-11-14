@@ -18,7 +18,8 @@ python -m unittest tests.test_train
   `engine/growth.py` and the battle simulator (about 1 ms per battle). Opponents are snapshots, as in the real game,
   from three sources: ghost teams (`engine/opponents.py`), a self-play league (teams earlier generations of the
   learner built on that day) and **real recorded teams** (`data/opponents_recorded.jsonl`), which get
-  30% of fights on any day that has some. None are recorded yet, so training is not anchored to real players yet.
+  30% of fights on any day that has some. 70 are recorded as of 2026-11-14 (days 10-14 have only 13 between
+  them), so training is anchored to real players on the early days and thinly on the late ones.
 - `train/policy.py` `FastPolicy(Theta)`: buys the card with the highest value if it clears a day-dependent threshold,
   sells the weakest monster to make room only for a clearly better one, rerolls within a cap and a money reserve,
   lays out the team with the positional rules. 19 numbers; `w_sim` weights the simulator's estimate of how much a

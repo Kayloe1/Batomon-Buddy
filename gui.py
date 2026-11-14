@@ -27,11 +27,37 @@ import threading
 import traceback
 from datetime import datetime
 
-import play                      # play imports hands and window; window makes the process DPI aware,
-import hands as hands_mod        # which has to happen before the first Tk window exists
-import window
+def _startup_failed() -> None:
+    """The heavy modules failed to load (a damaged data table, a missing package...). Started from the
+    .bat there is no console, so without this nothing at all would show: no window, no message.
+    Writes logs\\startup_error.txt and shows the error in a message box, then exits."""
+    import ctypes
+    from pathlib import Path
+    text = traceback.format_exc()
+    try:
+        log_dir = Path(__file__).resolve().parent / "logs"
+        log_dir.mkdir(exist_ok=True)
+        (log_dir / "startup_error.txt").write_text(f"{datetime.now():%Y-%m-%d %H:%M:%S}\n{text}", encoding="utf-8")
+    except OSError:
+        pass
+    short = text.strip().splitlines()[-1] if text.strip() else "unknown error"
+    try:
+        ctypes.windll.user32.MessageBoxW(
+            0, f"Batomon Buddy could not start.\n\n{short}\n\nThe full error is in logs\\startup_error.txt. "
+               f"Tell Claude what it says.", "Batomon Buddy", 0x10)
+    except Exception:
+        print(text, file=sys.stderr)
+    sys.exit(1)
 
-import tkinter as tk
+
+try:
+    import play                      # play imports hands and window; window makes the process DPI aware,
+    import hands as hands_mod        # which has to happen before the first Tk window exists
+    import window
+    import tkinter as tk
+except Exception:
+    _startup_failed()
+
 from tkinter import font as tkfont
 from tkinter import messagebox, ttk
 

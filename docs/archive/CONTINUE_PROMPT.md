@@ -1,3 +1,5 @@
+> **Archived 2026-11-14.** This is the hand-over prompt from the very first sessions. It is out of date: the folder is now `Batomon Buddy`, and steps 2 to 4 below (reading, hands, simulator, decision engine) are done. See ../../STATUS.md for the current state. The game rules and agreed safety rules below are still accurate.
+
 # Prompt for the next AI: continue the Batomon Showdown bot
 
 Paste everything below into the AI you want to continue with, and give it access to this folder (`batomon-bot` on the Desktop).

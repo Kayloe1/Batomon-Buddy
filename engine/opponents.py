@@ -189,8 +189,11 @@ def load_recorded() -> dict[int, list[dict]]:
     if RECORDED.exists():
         for line in RECORDED.read_text(encoding="utf-8").splitlines():
             if line.strip():
-                rec = json.loads(line)
-                out.setdefault(int(rec["day"]), []).append(rec)
+                try:
+                    rec = json.loads(line)
+                    out.setdefault(int(rec["day"]), []).append(rec)
+                except (ValueError, KeyError, TypeError):
+                    continue          # a half-written line (power cut) must not stop the bot from starting
     return out
 
 

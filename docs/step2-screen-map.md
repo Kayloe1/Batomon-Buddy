@@ -124,4 +124,6 @@ Monster Ranger starts with one Uncommon monster (Electranade), $30, 300 HP, shop
 - Red Coin appears to trade 1 life for $20 (seen once).
 
 ## Still to map
-The main menu, a won run, level 4, whether LOCK carries a shop over to the next day, the bench when the team is full, what the flag and arrow marks on team slots mean.
+Level 4 (its "LV." label colour and digit have never been captured: the reader stops on one), whether LOCK carries a shop over to the next day (not confirmed here), what the flag and arrow marks on team slots mean.
+
+Mapped since this page was written (see `overnight-play-notes.md` and `reader.py`): the main menu (with and without a run open), the Continue panel, a won run ("champion" end screen), the OVERFLOW screen (team and bench full), "Select a target", Cash In, the "Take All" trinket choice, and "Rank Max".

@@ -136,20 +136,12 @@ class RunState:
 
 # ------------------------------------------------------------------ moves ----
 
-def card_price(s: RunState, card: Card) -> int:
-    price = card.price
-    if card.kind == "monster" and s.trainer == "Bug Catcher" and not s.bug_discount_used:
-        sp = data.species(card.name)
-        if sp and sp.is_bug:
-            # the reader already shows the discounted price on the card; do not
-            # discount twice. The flag only records that today's discount is spent.
-            pass
-    return price
-
+# The price on a card is final: the reader already shows Bug Catcher's discounted price, so nothing
+# is discounted here (RunState.bug_discount_used only records that today's discount is spent).
 
 def can_buy(s: RunState, i: int) -> bool:
     card = s.shop[i]
-    if card is None or card.name is None or card_price(s, card) > s.money:
+    if card is None or card.name is None or card.price > s.money:
         return False
     if card.kind == "item":
         return s.items_left > 0
@@ -166,7 +158,7 @@ def buy(s: RunState, i: int) -> RunState:
     if card.kind == "item":
         return use_item(s, i)
     t = s.copy()
-    price = card_price(t, card)
+    price = card.price
     t.money -= price
     t.shop[i] = None
     t.bought.append(card.name)
@@ -573,7 +565,8 @@ def unit_from_reader(slot: dict | None, price_hint: int | None = None) -> Unit |
     name = slot.get("name")
     level = slot.get("level") or 1
     stats = _stats_from_badges(slot.get("stats"))
-    if name is None and any(v for k, v in stats.items() if k != "multicast")             and not (level == 1 and {k: v for k, v in stats.items() if v and k != "multicast"} == {"damage": 1}):
+    real = {k: v for k, v in stats.items() if v and k != "multicast"}
+    if name is None and real and not (level == 1 and real == {"damage": 1}):
         name = data.STAND_IN          # unknown monster (not the Dragon Egg: Lv1, 1 damage, left unnamed)
     sp = data.species(name)
     if sp and "multicast" not in stats:
@@ -599,9 +592,8 @@ def from_reader(state: dict, memory: dict | None = None) -> RunState:
     """
     memory = memory or {}
     same_turn = memory.get("turn_day") == state.get("day")        # what happened earlier today
-    paid = memory.get("paid", {})
-    team = [unit_from_reader(s, paid.get(f"team{i}")) for i, s in enumerate(state.get("team") or [None] * 6)]
-    bench = [unit_from_reader(s, paid.get(f"bench{i}")) for i, s in enumerate(state.get("bench") or [None] * 4)]
+    team = [unit_from_reader(s) for s in state.get("team") or [None] * 6]
+    bench = [unit_from_reader(s) for s in state.get("bench") or [None] * 4]
     return RunState(
         day=state.get("day") or 1, lives=state.get("lives") or 1, badges=state.get("badges") or 0,
         money=state.get("money") or 0, rank=state.get("shop_rank") or state.get("day") or 1,

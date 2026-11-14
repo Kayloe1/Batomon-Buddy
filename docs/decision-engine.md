@@ -96,7 +96,10 @@ valuable next step for the engine.
 - **Trainer**: Ed's own record per trainer from the Batopedia (runs won / played,
   smoothed), avoiding Mad Scientist (replaces the team mid-run) and Gentleman (no cheap
   monsters to merge).
-- **Events**: still the last choice, because the reader does not read event texts yet.
+- **Events** (`engine/events.py`): the reader reads each choice's effect line; every choice is scored on the
+  same scale as shop decisions (money, trinket gifts, level-ups and shiny in the simulator, a small fixed
+  guess for effects the data does not know), plus a bonus or veto from `knowledge.EVENT_EFFECT_NOTES`.
+  If no choice can be read, the last one is taken. "Select a target" screens are answered the same way.
 
 ## Numbers and where they come from
 
@@ -108,12 +111,12 @@ for planning ahead (tomorrow's HP) and for offline runs:
 | Number | Source |
 |---|---|
 | Trainer HP days 1-8 | November runs (step2 screen map) |
-| Trainer HP day 9+ | the simulator's table; not seen in November, check when a run gets there |
+| Trainer HP days 9-14 | seen on the opponent bars in the runs of 2026-11-12 to 11-14; day 15+ is extrapolated (x1.4 a day) |
 | Lives per loss (1, 1, 2, 2, then 3) | November runs, days 2-8 |
 | Income ($30, then $25 + $5 x day) | November: $40 on day 1 with Rich Lady's $10, $35 on day 2 |
 | Shop odds ranks 1-10 | November runs; ranks 11-13 extrapolated, live play reads them |
 | HP +25% after the rescue | November runs (twice) |
-| Lv3 = two Lv2 | assumption, to check in a run |
+| Lv3 = two Lv2 | seen in later runs (Lv3 monsters on the team) |
 
 Qualitative lessons from the September notes are used: positions (behind = left, in
 front = right, above, adjacent is orthogonal), amplifier pieces, eggs stay on the bench,
@@ -168,5 +171,8 @@ Offline, same 12 seeds and shops (items included for both): old engine 0 of 12 r
 
 ## Speed
 
-About 5-20 s per shop decision on one core (more late in a run, when there is more money
-and more candidates). A whole offline run takes 2-4 minutes.
+Measured from the real logs of 2026-11-13/14 (285 decisions, 6 runs): the median shop decision took
+about 2 s and none took more than 5 s, because results are cached between consecutive decisions.
+Thinking was about 15% of a run's time (battle waits 33%, clicking and checking about a fifth, reading the
+Stats window 12%). A decision from a cold start on a late, trinket-heavy board can take much longer
+(6-28 s seen when replaying old boards in a fresh process). A whole offline run takes 2-4 minutes.

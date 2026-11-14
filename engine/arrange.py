@@ -72,7 +72,6 @@ def heuristic_layout(units: list[Unit]) -> tuple[list[Unit | None], list[Unit | 
     fielders = [u for u in pool if not bench_only(u)]
     team: list[Unit | None] = [None] * 6
     chosen = fielders[:6]
-    rest = [u for u in pool if u not in chosen or chosen.count(u) < 1]
     rest = [u for u in pool if not any(u is c for c in chosen)]
     if not chosen:
         return team, rest
