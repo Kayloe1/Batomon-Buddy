@@ -27,7 +27,7 @@ from dataclasses import dataclass, field, replace
 import knowledge
 
 from . import data, model
-from .arrange import heuristic_layout, improve, power
+from .arrange import bench_only, heuristic_layout, improve, power
 from .evaluate import Evaluator, team_key
 from .model import BENCH, TEAM, RunState, Unit
 
@@ -262,7 +262,10 @@ class Planner:
         # on the best arrangement so far (a merge of two fielded copies frees a second team slot)
         for i in movers:
             team, bench = best_t, best_b
-            if bench[i] is None or bench[i].name is None:
+            if bench[i] is None or bench[i].name is None or bench_only(bench[i]):
+                # bench-only monsters (eggs, Dirgefin) are never fielded by arrange_full/improve;
+                # fielding one here credited a buy or sale with a team that never battles
+                # (2026-11-13 day 7: Dirgefin, then a sale spree each "gaining" +0.65)
                 continue
             for j in range(6):
                 if team[j] is not None and team[j].name is None:
@@ -279,7 +282,7 @@ class Planner:
             j = best_t.index(None)
             best_fill = None
             for i, u in enumerate(best_b):
-                if u is None or u.name is None:
+                if u is None or u.name is None or bench_only(u):
                     continue
                 t2, b2 = list(best_t), list(best_b)
                 t2[j], b2[i] = u, None

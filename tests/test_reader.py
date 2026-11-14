@@ -327,3 +327,26 @@ class CrownInEmptySlot(unittest.TestCase):
         st = reader.read_state(Image.open(p))
         self.assertEqual(st["problems"], [])
         self.assertIsNone(st["team"][1])
+
+
+class TooltipOverLock(unittest.TestCase):
+    """A hovered shop card's 'RIGHT CLICK TO INSPECT' tooltip crosses the LOCK button (2026-11-13)."""
+
+    def test_lock_still_read(self):
+        from PIL import Image
+        s = reader.read_state(Image.open(ROOT / "captures" / "shop_tooltip_over_lock.png"))
+        self.assertEqual(s["screen"], "shop")
+        self.assertIs(s["locked"], False)
+        self.assertEqual([p for p in s["problems"] if "lock" in p], [])
+
+
+class HoveringSprites(unittest.TestCase):
+    """Team and bench monsters bob a few px; matching slides the saved sprite (2026-11-13)."""
+
+    def test_shifted_monsters_are_named(self):
+        from PIL import Image
+        s = reader.read_state(Image.open(ROOT / "captures" / "shop_chef_day9.png"))
+        self.assertEqual(s["team"][4]["name"], "Runerock")     # unnamed before (43 unshifted)
+        self.assertEqual(s["bench"][3]["name"], "Stingarde")   # unnamed before (35)
+        s = reader.read_state(Image.open(ROOT / "captures" / "shop_day11_hp.png"))
+        self.assertEqual(s["team"][3]["name"], "Joltail")      # unnamed before (43)

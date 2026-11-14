@@ -45,6 +45,7 @@ REROLL_PRICE: Box = (60, 1320, 360, 1410)
 # Buttons (for the hands)
 REROLL_BUTTON: Box = (24, 1200, 392, 1416)
 LOCK_BUTTON: Box = (1840, 1076, 2050, 1142)
+LOCK_LABEL_ROWS = (10, 44)      # rows 1086-1120 of the picture, inside LOCK_BUTTON
 BATTLE_BUTTON: Box = (2168, 1200, 2536, 1416)
 SELL_BAR: Box = (496, 1256, 2064, 1416)   # drag a monster here to sell it
 
@@ -820,6 +821,22 @@ def sprite_patch(slot_rgb: np.ndarray) -> np.ndarray:
     return slot_rgb[36:140, 40:200]
 
 
+SPRITE_HOVER = 10    # px: team and bench monsters bob in place (Runerock: 4 px sideways, 1 up)
+
+
+def _shifted_distance(patch: np.ndarray, tpl: np.ndarray) -> float:
+    """Mean colour difference between a slot's sprite and a saved one, at the best offset
+    within SPRITE_HOVER px. Owned monsters hover, so the same monster read a moment apart
+    scored 35 unshifted and 0.0 shifted (Runerock, 2026-11-13). The template's inner part
+    (border of SPRITE_HOVER px left off) slides over the patch; the score is over that part."""
+    m = SPRITE_HOVER
+    inner = np.ascontiguousarray(tpl[m:-m, m:-m], dtype=np.float32)
+    res = cv2.matchTemplate(np.ascontiguousarray(patch, dtype=np.float32), inner, cv2.TM_SQDIFF)
+    y, x = np.unravel_index(int(np.argmin(res)), res.shape)
+    part = patch[y:y + inner.shape[0], x:x + inner.shape[1]]
+    return float(np.abs(part - inner).mean())
+
+
 def match_sprite(slot_rgb: np.ndarray) -> tuple[str | None, float]:
     """Name the monster in a team/bench slot from the saved sprites.
 
@@ -832,7 +849,7 @@ def match_sprite(slot_rgb: np.ndarray) -> tuple[str | None, float]:
     for name, tpl in _sprite_templates():
         if tpl.shape != patch.shape:
             continue
-        d = float(np.abs(patch - tpl).mean())
+        d = _shifted_distance(patch, tpl)
         by_name[name] = min(d, by_name.get(name, 1e9))
     if not by_name:
         return None, 1e9
@@ -1523,7 +1540,9 @@ def read_shop(pic: np.ndarray) -> dict:
     else:
         state["reroll_price"] = number("reroll", "$")
     # The button says LOCK (label 92 px wide) or, when the shop is locked, UNLOCK (138 px).
-    label = glyphs.white(crop(pic, LOCK_BUTTON)).any(axis=0)
+    # Only the label's own rows (1091-1116): hovering a shop card puts a "RIGHT CLICK TO INSPECT"
+    # tooltip from row 1122 down across the button, which read as a 209 px label (2026-11-13).
+    label = glyphs.white(crop(pic, LOCK_BUTTON)[LOCK_LABEL_ROWS[0]:LOCK_LABEL_ROWS[1]]).any(axis=0)
     cols = np.nonzero(label)[0]
     width = int(cols.max() - cols.min()) if len(cols) else 0
     state["locked"] = False if 82 <= width <= 102 else True if 128 <= width <= 148 else None

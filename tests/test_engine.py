@@ -157,6 +157,20 @@ class Planning(unittest.TestCase):
         plan = p.decide(s)
         self.assertEqual(plan.actions[-1].kind, "battle")
 
+    def test_place_never_fields_a_bench_only_monster(self):
+        # 2026-11-13 day 7: place() fielded a freshly bought Dirgefin (arrange_full never does), so a
+        # buy and then each sale was credited with a team that never battles, and the bot sold its team
+        p = small_planner()
+        s = RunState(day=7, money=0, shop=[None] * 5)
+        s.team = [new_unit(n, 10) for n in ("Coalem", "Pebbler", "Cordycant", "Mosslug", "Formiqueen", "Runerock")]
+        s.bench[0] = new_unit("Dirgefin", 25)
+        s.bench[1] = new_unit("Plunderbird", 20)
+        team, bench = p.place(s, list(s.team), list(s.bench))
+        self.assertNotIn("Dirgefin", [u.name for u in team if u])
+        t = model.sell(s, TEAM, 0)                   # an emptied team slot is not refilled with it either
+        team, bench = p.place(t, [None] + list(s.team[1:]), list(s.bench))
+        self.assertNotIn("Dirgefin", [u.name for u in team if u])
+
     def test_unknown_monster_is_never_sold(self):
         p = small_planner()
         s = RunState(day=2, money=0, shop=[card("Formiqueen"), None, None, None, None])

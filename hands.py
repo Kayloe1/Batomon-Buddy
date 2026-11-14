@@ -125,6 +125,19 @@ def check_reroll(before: dict, after: dict) -> str | None:
     return None
 
 
+def unnamed_owned(state: dict) -> int:
+    """How many team and bench monsters on a shop read have no name."""
+    return sum(1 for key in ("team", "bench") for m in (state.get(key) or [])
+               if m and m.get("name") is None)
+
+
+def _read_rank(state: dict) -> tuple[int, int]:
+    """Order reads of one moment: a non-shop screen as it is, else fewest problems, then fewest unnamed."""
+    if state.get("screen") != "shop":
+        return (0, 0)
+    return (len(state.get("problems") or []), unnamed_owned(state))
+
+
 # ------------------------------------------------------------------ hands ----
 
 class Hands:
@@ -142,13 +155,24 @@ class Hands:
             return {"screen": "minimized", "problems": ["game window is minimized"]}
         # A shine sweeps across shop cards of monsters you already own and can cut
         # through their text, so a shop that does not read cleanly is read again.
+        # An owned monster's idle animation can also push its sprite match just past
+        # the limit for one frame (Runerock, 2026-11-13: 39 instead of its usual 33), and
+        # the engine then plans with an unknown stand-in in its place (it sold a Spinarai
+        # for a Dracana it did not buy once Runerock was named again). So a shop with an
+        # unnamed owned monster is read again too, and the read naming the most is kept.
+        best = None
         for attempt in range(4):
             img = window.capture_client(self.hwnd)
-            self.last_image = img
             state = reader.read_state(img)
-            if state["screen"] != "shop" or not state["problems"]:
+            if best is None or _read_rank(state) < _read_rank(best[1]):
+                best = (img, state)
+            if state["screen"] != "shop":
+                break
+            if not state["problems"] and (not unnamed_owned(state) or attempt >= 2):
                 break
             time.sleep(0.45)
+        img, state = best
+        self.last_image = img
         if save_if_unreadable and state["problems"]:
             CAPTURE_DIR.mkdir(exist_ok=True)
             path = CAPTURE_DIR / f"unread_{datetime.now():%Y%m%d_%H%M%S_%f}.png"

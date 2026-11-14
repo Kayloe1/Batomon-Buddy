@@ -151,3 +151,44 @@ class CoveredGame(unittest.TestCase):
         h, sent = self.hands_with(None)
         h._click(reader.STATS_CLOSE)
         self.assertEqual(sent[:3], ["move", "down", "up"])
+
+
+class LookRereadsUnnamed(unittest.TestCase):
+    """A one-frame sprite miss on an owned monster is read again (Runerock, 2026-11-13)."""
+
+    def _look(self, reads):
+        from unittest import mock
+        calls = []
+
+        def fake_read(img):
+            calls.append(img)
+            return copy.deepcopy(reads[min(len(calls) - 1, len(reads) - 1)])
+
+        h = hands.Hands.__new__(hands.Hands)
+        h.hwnd = 1
+        with mock.patch.object(window, "is_minimized", return_value=False), \
+             mock.patch.object(window, "capture_client", side_effect=lambda hwnd: object()), \
+             mock.patch.object(reader, "read_state", side_effect=fake_read), \
+             mock.patch.object(hands.time, "sleep"):
+            state = h.look(save_if_unreadable=False)
+        return state, len(calls)
+
+    def _shop(self, name):
+        s = copy.deepcopy(BEFORE)
+        s["problems"] = []
+        s["team"][0] = {"name": name, "level": 1, "stats": []}
+        return s
+
+    def test_unnamed_then_named_keeps_named(self):
+        state, n = self._look([self._shop(None), self._shop("Runerock")])
+        self.assertEqual(state["team"][0]["name"], "Runerock")
+        self.assertEqual(n, 2)
+
+    def test_named_first_read_is_not_repeated(self):
+        state, n = self._look([self._shop("Runerock")])
+        self.assertEqual(n, 1)
+
+    def test_truly_unknown_monster_stops_after_three_reads(self):
+        state, n = self._look([self._shop(None)])
+        self.assertIsNone(state["team"][0]["name"])
+        self.assertEqual(n, 3)
