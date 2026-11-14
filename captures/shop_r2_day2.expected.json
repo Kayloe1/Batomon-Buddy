@@ -1,0 +1,155 @@
+{
+ "screen": "shop",
+ "lives": 10,
+ "day": 2,
+ "badges": 1,
+ "badges_goal": 10,
+ "trainer": "Monster Ranger",
+ "trainer_hp": 500,
+ "money": 35,
+ "shop_rank": 2,
+ "shop_odds": {
+  "Common": 90,
+  "Uncommon": 10,
+  "Rare": 0,
+  "Super Rare": 0,
+  "Legendary": 0
+ },
+ "reroll_price": 3,
+ "locked": false,
+ "shop": [
+  {
+   "name": "Electranade",
+   "price": 25,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "shock",
+     "color": "#ffce00"
+    }
+   ],
+   "rarity": "Uncommon",
+   "greyed": false,
+   "raw": "?lectranade"
+  },
+  {
+   "name": "Stingarde",
+   "price": 10,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 150,
+     "raw": "150",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Stingarde"
+  },
+  {
+   "name": "Magmite",
+   "price": 15,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 40,
+     "raw": "40",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    },
+    {
+     "value": 4,
+     "raw": "4",
+     "stat": "burn",
+     "color": "#ff9c31"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Magmite"
+  },
+  {
+   "name": "Pebbler",
+   "price": 15,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Pebbler"
+  },
+  {
+   "name": "Green Stone",
+   "price": 0,
+   "kind": "item",
+   "stats": [],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Green Stone"
+  }
+ ],
+ "team": [
+  null,
+  null,
+  null,
+  {
+   "name": "Pebbler",
+   "level": 1,
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    }
+   ]
+  },
+  {
+   "name": "Velocect",
+   "level": 1,
+   "stats": [
+    {
+     "value": 15,
+     "raw": "15",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 2,
+     "raw": "x2",
+     "stat": "multicast",
+     "color": "#218ca5"
+    }
+   ]
+  },
+  {
+   "name": "Electranade",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "shock",
+     "color": "#ffce00"
+    }
+   ]
+  }
+ ],
+ "bench": [
+  null,
+  null,
+  null,
+  null
+ ],
+ "problems": []
+}

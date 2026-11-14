@@ -613,7 +613,9 @@ def from_reader(state: dict, memory: dict | None = None) -> RunState:
         items_left=0 if same_turn and memory.get("items_done") else 1,
         hp_today=state.get("trainer_hp"),
         odds=tuple(state["shop_odds"].get(r, 0) for r in data.RARITIES) if state.get("shop_odds") else None,
-        reroll_price=state.get("reroll_price") or data.REROLL_PRICE,
+        # 0 is a real price: the reader reads "FREE (3)" as 0 (Youngster). `or` used to turn it into $3.
+        reroll_price=data.REROLL_PRICE if state.get("reroll_price") is None else state["reroll_price"],
+        free_rerolls=1 if state.get("reroll_price") == 0 else 0,
         bought=list(memory.get("bought", [])) if same_turn else [],
         rerolls=int(memory.get("rerolls", 0)) if same_turn else 0,
     )

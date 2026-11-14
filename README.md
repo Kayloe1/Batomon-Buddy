@@ -12,7 +12,7 @@ It reads the screen and plays a run that is already open with simple rules; see 
 | `capture.py` | Saves a timestamped PNG of the client area to `captures/` |
 | `glyphs.py` | Reads the game's pixel fonts with glyph templates |
 | `reader.py` | `read_state(image)`: which screen is showing, and everything on the shop screen |
-| `teach.py` | Rebuilds `templates/` (glyphs and monster sprites) from labelled captures |
+| `teach.py` | Adds glyphs and monster sprites from labelled captures to `templates/` (never wipes what is there; `--rebuild` starts from nothing, with a `.bak` kept) |
 | `hands.py` | Mouse actions (buy, move, sell, reroll, lock, battle, confirm, event choice), each one checked afterwards |
 | `play.py` | Plays the open run with simple rules and logs everything; stops on anything unclear |
 | `gui.py` | The control window: Start, Pause / Resume, Stop, what the bot is thinking, and why it stopped |

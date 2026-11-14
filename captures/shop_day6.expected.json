@@ -1,0 +1,206 @@
+{
+ "screen": "shop",
+ "lives": 5,
+ "day": 6,
+ "badges": 3,
+ "badges_goal": 10,
+ "trainer": "Rich Lady",
+ "trainer_hp": 3800,
+ "money": 243,
+ "shop_rank": 8,
+ "shop_odds": {
+  "Common": 25,
+  "Uncommon": 30,
+  "Rare": 35,
+  "Super Rare": 10,
+  "Legendary": 0
+ },
+ "reroll_price": 3,
+ "locked": false,
+ "shop": [
+  {
+   "name": "Formiqueen",
+   "price": 25,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 60,
+     "raw": "60",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ],
+   "rarity": "Rare",
+   "greyed": false,
+   "raw": "Formiqueen"
+  },
+  {
+   "name": "Scorchimp",
+   "price": 10,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 5,
+     "raw": "5",
+     "stat": "damage",
+     "color": "#ff6f89"
+    },
+    {
+     "value": 5,
+     "raw": "5",
+     "stat": "burn",
+     "color": "#ff9c31"
+    }
+   ],
+   "rarity": "Common",
+   "greyed": false,
+   "raw": "Scorchimp"
+  },
+  {
+   "name": "Magmalith",
+   "price": 30,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 5,
+     "raw": "5",
+     "stat": "burn",
+     "color": "#ff9c31"
+    }
+   ],
+   "rarity": "Rare",
+   "greyed": false,
+   "raw": "Magmalith"
+  },
+  {
+   "name": "Craghorn",
+   "price": 25,
+   "kind": "monster",
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "shield",
+     "color": "#b8d0e8"
+    }
+   ],
+   "rarity": "Uncommon",
+   "greyed": false,
+   "raw": "Craghorn"
+  },
+  {
+   "name": "Recruiting Flyer",
+   "price": 90,
+   "kind": "item",
+   "stats": [],
+   "rarity": "Super Rare",
+   "greyed": false,
+   "raw": "Recruiting Flyer"
+  }
+ ],
+ "team": [
+  {
+   "name": "Brawlmantis",
+   "level": 1,
+   "stats": [
+    {
+     "value": 70,
+     "raw": "70",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ]
+  },
+  {
+   "name": "Venopuff",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 4,
+     "raw": "4",
+     "stat": "poison",
+     "color": "#845abd"
+    }
+   ]
+  },
+  {
+   "name": "Dribblet",
+   "level": 1,
+   "stats": [
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 20,
+     "raw": "20",
+     "stat": "heal",
+     "color": "#31c6f7"
+    }
+   ]
+  },
+  {
+   "name": "Electranade",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "shock",
+     "color": "#ffce00"
+    }
+   ]
+  },
+  {
+   "name": "Mosslug",
+   "level": 1,
+   "stats": [
+    {
+     "value": 25,
+     "raw": "25",
+     "stat": "damage",
+     "color": "#ef426b"
+    },
+    {
+     "value": 30,
+     "raw": "30",
+     "stat": "heal",
+     "color": "#31c6f7"
+    }
+   ]
+  },
+  {
+   "name": "Panbud",
+   "level": 1,
+   "stats": [
+    {
+     "value": 45,
+     "raw": "45",
+     "stat": "damage",
+     "color": "#ef426b"
+    }
+   ]
+  }
+ ],
+ "bench": [
+  null,
+  null,
+  null,
+  null
+ ],
+ "problems": []
+}

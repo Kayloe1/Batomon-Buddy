@@ -46,10 +46,22 @@ class Brain:
         self.memory = {"trinkets": [], "rescue_used": False, "last_lives": None, "last_day": None}
         self.save()
 
-    def observe_shop(self, state: dict) -> None:
-        """Keep track of the rescue: lives reaching 0 once gives one more life."""
-        last = self.memory.get("last_lives")
+    def observe_shop(self, state: dict) -> bool:
+        """Keep track of the rescue: lives reaching 0 once gives one more life.
+
+        Returns True when this shop belongs to a NEW run (the day or the badges went back), in which
+        case the memory of the old run (trinkets, rescue used...) was dropped first. Before, only the
+        bot's own trainer-pick screen did that, so a run started by hand inherited the last run's
+        trinkets."""
         day = state.get("day")
+        new_run = False
+        last_day, last_badges = self.memory.get("last_day"), self.memory.get("last_badges")
+        badges = state.get("badges")
+        if (last_day is not None and day is not None and day < last_day) or \
+                (last_badges is not None and badges is not None and badges < last_badges):
+            self.memory = {"trinkets": [], "rescue_used": False, "last_lives": None, "last_day": None}
+            new_run = True
+        last = self.memory.get("last_lives")
         if last is not None and self.memory.get("last_day") is not None and day == self.memory["last_day"] + 1:
             lost = data.lives_lost(self.memory["last_day"])
             # only after a LOST battle: a win leaves the lives as they were (2026-11-14: a day-10 win
@@ -62,6 +74,7 @@ class Brain:
             self.memory["last_day"], self.memory["last_lives"] = day, state["lives"]
             self.memory["last_badges"] = state.get("badges")
         self.save()
+        return new_run
 
     def note_action(self, kind: str, state: dict, index: int | None = None) -> None:
         """Remember what was done today (the screen does not show it): monsters bought are not sold

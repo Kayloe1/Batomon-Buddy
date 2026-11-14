@@ -118,6 +118,41 @@ class Model(unittest.TestCase):
         self.assertEqual(s.odds, (75, 25, 0, 0, 0))
         self.assertEqual(s.hp_today, 800)
 
+    def test_free_reroll_is_not_turned_into_three_dollars(self):
+        # the reader reports "FREE (3)" (Youngster) as reroll_price 0; `or` once turned that into $3
+        base = {"screen": "shop", "day": 1, "lives": 10, "badges": 0, "money": 30, "shop_rank": 1,
+                "shop": [None] * 5, "team": [None] * 6, "bench": [None] * 4}
+        free = model.from_reader({**base, "reroll_price": 0})
+        self.assertEqual((free.reroll_price, free.free_rerolls), (0, 1))
+        paid = model.from_reader({**base, "reroll_price": 3})
+        self.assertEqual((paid.reroll_price, paid.free_rerolls), (3, 0))
+        self.assertEqual(model.from_reader({**base, "reroll_price": None}).reroll_price, data.REROLL_PRICE)
+        self.assertEqual(model.reroll(free, random.Random(1)).money, 30)      # a free reroll costs nothing
+
+
+class RunMemory(unittest.TestCase):
+    """The engine's memory (trinkets, rescue) must not leak from one run into the next."""
+
+    def shop(self, day, badges, lives=10):
+        return {"screen": "shop", "day": day, "badges": badges, "lives": lives}
+
+    def test_a_new_run_forgets_the_old_one(self):
+        from engine import bot
+        brain = bot.Brain(pool_size=2)
+        brain.memory = {"trinkets": ["Giant Club"], "rescue_used": True, "last_lives": 3, "last_day": 9,
+                        "last_badges": 5}
+        self.assertTrue(brain.observe_shop(self.shop(1, 0)))          # day went back: another run
+        self.assertEqual(brain.memory["trinkets"], [])
+        self.assertFalse(brain.memory["rescue_used"])
+
+    def test_the_same_run_keeps_its_memory(self):
+        from engine import bot
+        brain = bot.Brain(pool_size=2)
+        brain.memory = {"trinkets": ["Giant Club"], "rescue_used": False, "last_lives": 8, "last_day": 4,
+                        "last_badges": 2}
+        self.assertFalse(brain.observe_shop(self.shop(5, 3, lives=8)))
+        self.assertEqual(brain.memory["trinkets"], ["Giant Club"])
+
 
 class Moves(unittest.TestCase):
     def apply(self, team, bench, actions):

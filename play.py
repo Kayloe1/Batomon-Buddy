@@ -292,7 +292,9 @@ def main(argv=None, control: Control | None = None, hands=None, brain=None) -> i
                         return stop(f"buy failed: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
                     continue
             else:
-                brain.observe_shop(state)
+                if brain.observe_shop(state):
+                    think([f"This looks like a NEW run (day {state['day']}, {state['badges']} badges): "
+                           f"I forgot the trinkets and rescue state of the previous run."])
                 last_shop_state = state
                 control.event("doing", what="thinking")
                 plan = brain.shop_plan(state)
