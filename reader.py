@@ -1052,6 +1052,68 @@ def learn_card_sprites(pic: np.ndarray, state: dict) -> list[Path]:
     return saved
 
 
+# Naming a shop card by its picture, when its name text has a letter the reader does not know or gets
+# wrong ("Hickrane" for Kickrane, 2026-11-14). Compared as brightness over the two outlines, so a
+# greyed-out card (too expensive) still matches its coloured template. Measured on 14 cards of 3 shop
+# captures: the right monster scored 0-11, every other monster 72 or more.
+CARD_NAME_SPRITE_MAX = 20.0      # a match must score at most this ...
+CARD_NAME_SPRITE_LEAD = 50.0     # ... and every other monster at least this
+
+
+def card_sprite_match(pic: np.ndarray, i: int) -> tuple[str | None, float]:
+    """The monster whose saved card sprite is the picture on shop card i, or None.
+
+    Only templates of exactly the same size are compared (the cut-out is the sprite's own outline, so
+    the same monster always cuts to the same size). A clear winner is required."""
+    cs = card_sprite(pic, i)
+    if cs is None or not CARD_SPRITE_DIR.exists():
+        return None, 1e9
+    rgb, mask = cs
+    lum = rgb.astype(np.float32).mean(axis=2)
+    by_name: dict[str, float] = {}
+    for p in CARD_SPRITE_DIR.glob("*.png"):
+        a = np.asarray(Image.open(p).convert("RGBA"))
+        if a.shape[:2] != rgb.shape[:2]:
+            continue
+        both = mask | (a[..., 3] > 127)
+        d = float(np.abs(a[..., :3].astype(np.float32).mean(axis=2) - lum)[both].mean())
+        name = p.stem.split("__")[0]
+        by_name[name] = min(d, by_name.get(name, 1e9))
+    if not by_name:
+        return None, 1e9
+    ranked = sorted(by_name.items(), key=lambda kv: kv[1])
+    best, best_d = ranked[0]
+    if best_d > CARD_NAME_SPRITE_MAX or (len(ranked) > 1 and ranked[1][1] < CARD_NAME_SPRITE_LEAD):
+        return None, best_d
+    return best, best_d
+
+
+def text_fits_name(raw: str, name: str) -> bool:
+    """Could `raw` (the name as read, "?" for an unknown glyph) be `name` with at most one letter read
+    wrong? Same length, at most one confident letter that disagrees, and most letters read and agreeing.
+    On its own this would be a guess; it is only used together with a picture match."""
+    a, b = raw.replace(" ", ""), name.replace(" ", "")
+    if not a or len(a) != len(b):
+        return False
+    # the card font draws capital I like lowercase l and capital O like zero
+    a, b = (t.replace("I", "l").replace("O", "0") for t in (a, b))
+    wrong = sum(x != y and x != glyphs.UNKNOWN for x, y in zip(a, b))
+    agree = sum(x == y for x, y in zip(a, b))
+    return wrong <= 1 and agree * 4 >= len(b) * 3
+
+
+def name_by_card_sprite(pic: np.ndarray, i: int, raw_name: str) -> str | None:
+    """A monster name for shop card i when two independent readings agree: its picture is that
+    monster's, and its text fits that name. Otherwise None (the run stops as before)."""
+    try:
+        name, _ = card_sprite_match(pic, i)
+    except Exception:                       # never let this turn a readable shop into a crash
+        return None
+    if name and name in MONSTER_NAMES and text_fits_name(raw_name, name):
+        return name
+    return None
+
+
 def _looks_like_sprite(rgb: np.ndarray, mask: np.ndarray) -> bool:
     """False for cut-outs that are not a whole monster: mostly black outline (the panel fill
     leaked into the sprite) or pure grey (a greyed-out card), which would make bad templates."""
@@ -1478,6 +1540,14 @@ def _read_shop_slot(pic: np.ndarray, i: int, masks: dict, problems: list[str],
         name = resolve(raw_name, ITEM_NAMES)
         if name:
             kind = "item"
+    name_from = None
+    if name is None:
+        name = name_by_card_sprite(pic, i, raw_name)
+        if name:
+            kind, name_from = "monster", "sprite"
+            if notes is not None:
+                notes.append(f"shop {i}: name '{raw_name}' taken as {name} (the card's picture is {name}'s "
+                             f"and the text fits it)")
     if name is None:
         name = near_miss_name(raw_name, MONSTER_NAMES + ITEM_NAMES)
         if name:
@@ -1501,6 +1571,8 @@ def _read_shop_slot(pic: np.ndarray, i: int, masks: dict, problems: list[str],
     greyed = bool(_near(text_rgb, CARD_GREY, 4).sum() >= 300)
     card = {"name": name, "price": price, "kind": kind, "stats": stats,
             "rarity": rarity, "greyed": greyed, "raw": raw_name}
+    if name_from:
+        card["name_from"] = name_from
     if kind == "monster" and shiny_tag_score(pic, i) >= SHINY_TAG_MIN:
         card["shiny"] = True
     return card

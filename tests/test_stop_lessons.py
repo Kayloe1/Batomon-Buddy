@@ -15,10 +15,14 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+import numpy as np  # noqa: E402
+from PIL import Image  # noqa: E402
+
 import glyphs  # noqa: E402
 import reader  # noqa: E402
 import stop_lessons  # noqa: E402
 import teach  # noqa: E402
+import window  # noqa: E402
 
 CAPTURE = ROOT / "captures" / "shop_kickrane_card.png"      # shop card 4 is "Kickrane $40"
 
@@ -38,8 +42,11 @@ class TeachFromAStop(unittest.TestCase):
             raw[font] = [e for e in raw[font] if e["label"] not in letters]
         self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
         self.user_lessons = tmp / "user_lessons.json"
+        no_card_sprites = tmp / "no_card_sprites"     # the person teaches here, not the card pictures
+        no_card_sprites.mkdir()
         for target, name, value in ((glyphs, "TEMPLATE_FILE", self.glyph_file),
-                                    (stop_lessons, "USER_LESSONS", self.user_lessons)):
+                                    (stop_lessons, "USER_LESSONS", self.user_lessons),
+                                    (reader, "CARD_SPRITE_DIR", no_card_sprites)):
             p = mock.patch.object(target, name, value)
             p.start()
             self.addCleanup(p.stop)
@@ -115,6 +122,81 @@ class TeachFromAStop(unittest.TestCase):
         other = ROOT / "captures" / "trainer_pick.png"
         self.assertEqual(stop_lessons.items_for(other), [])
         self.assertIn("trainer_pick", stop_lessons.unteachable(other)[0])
+
+
+class SelfTaughtCardNames(unittest.TestCase):
+    """The real stop of 2026-11-14 ("Hickrane"), solved without a person: the card's picture is
+    Kickrane's and the text fits Kickrane, so the bot names it and teaches itself the K."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        tmp = Path(self.tmp.name)
+        self.glyph_file = tmp / "glyphs.json"
+        raw = json.loads(glyphs.TEMPLATE_FILE.read_text(encoding="utf-8"))
+        raw["card"] = [e for e in raw["card"] if e["label"] != "K"]
+        self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
+        self.user_lessons = tmp / "user_lessons.json"
+        self.captures = tmp / "captures"
+        for target, name, value in ((glyphs, "TEMPLATE_FILE", self.glyph_file),
+                                    (stop_lessons, "USER_LESSONS", self.user_lessons),
+                                    (stop_lessons, "CAPTURE_DIR", self.captures)):
+            p = mock.patch.object(target, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+        reader.reload_templates()
+        self.addCleanup(reader.reload_templates)
+        self.image = Image.open(CAPTURE)
+
+    def test_the_card_is_named_by_its_picture_instead_of_stopping(self):
+        st = reader.read_state(self.image)
+        self.assertEqual(st["problems"], [])
+        card = st["shop"][4]
+        self.assertEqual((card["name"], card["price"], card["raw"], card.get("name_from")),
+                         ("Kickrane", 40, "Hickrane", "sprite"))
+        self.assertTrue(any("taken as Kickrane" in n for n in st["notes"]))
+        self.assertTrue(all(c.get("name_from") is None for c in st["shop"][:4]))   # read as before
+
+    def test_the_bot_then_teaches_itself_the_letter(self):
+        before = self.glyph_file.read_bytes()
+        lines = stop_lessons.self_teach_cards(self.image, reader.read_state(self.image))
+        self.assertEqual(len(lines), 1)
+        self.assertIn("Taught myself", lines[0])
+        self.assertNotEqual(self.glyph_file.read_bytes(), before)
+        card = reader.read_state(self.image)["shop"][4]
+        self.assertEqual((card["raw"], card.get("name_from")), ("Kickrane", None))   # read from the text now
+        saved = json.loads(self.user_lessons.read_text(encoding="utf-8"))
+        self.assertEqual(saved[0]["text"], {"shop4": "Kickrane|$40"})
+        self.assertEqual(len(list(self.captures.glob("self_taught_*.png"))), 1)      # kept for teach.py
+        # nothing left to teach: a second look does nothing
+        self.assertEqual(stop_lessons.self_teach_cards(self.image, reader.read_state(self.image)), [])
+
+    def test_without_a_picture_match_it_still_stops(self):
+        empty = Path(self.tmp.name) / "empty"
+        empty.mkdir()
+        with mock.patch.object(reader, "CARD_SPRITE_DIR", empty):
+            st = reader.read_state(self.image)
+        self.assertEqual(st["problems"], ["shop 4: unknown name 'Hickrane'"])
+
+    def test_a_picture_match_needs_text_that_fits(self):
+        pic = np.asarray(window.canonical_picture(self.image))
+        self.assertEqual(reader.card_sprite_match(pic, 4)[0], "Kickrane")
+        self.assertEqual(reader.name_by_card_sprite(pic, 4, "Hickrane"), "Kickrane")
+        self.assertIsNone(reader.name_by_card_sprite(pic, 4, "Mosslug"))
+        self.assertIsNone(reader.name_by_card_sprite(pic, 4, "Pickrage"))
+
+
+class TextFitsName(unittest.TestCase):
+    def test_rules(self):
+        f = reader.text_fits_name
+        self.assertTrue(f("Hickrane", "Kickrane"))          # one confident letter wrong
+        self.assertTrue(f("?ickrane", "Kickrane"))          # one unknown letter
+        self.assertTrue(f("Kickrane", "Kickrane"))
+        self.assertTrue(f("Rare Candy", "Rare Candy"))
+        self.assertFalse(f("Pickrage", "Kickrane"))         # two letters wrong
+        self.assertFalse(f("Kickran", "Kickrane"))          # wrong length
+        self.assertFalse(f("??c?rane", "Kickrane"))         # too little of it read
+        self.assertFalse(f("", "Kickrane"))
 
 
 class TypedFormsBecomeLessonText(unittest.TestCase):

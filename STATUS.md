@@ -57,6 +57,15 @@ trinket lines, or new screens, and a name missing from `data\names.json`; the wi
 "Copy this for Claude" is still the way for those. (The button was built and tested without a screen;
 the logic is covered by `tests\test_stop_lessons.py`, the window itself has had no live run yet.)
 
+**Shop card names the bot misreads, by itself (new, 2026-11-14):** when a card's name does not read (an
+unknown letter, or a letter read wrong, like K as H in "Hickrane"), the reader looks at the card's picture.
+If the picture is clearly one monster's saved card picture (`templates\card_sprites\`) and the text fits that
+name with at most one letter off, the card is named and the run goes on. The bot then teaches itself the
+letters with the same checks as **Teach it** (`stop_lessons.self_teach_cards`, saved in `data\user_lessons.json`
+with a `captures\self_taught_*.png`), and says so in the thinking log. Both have to agree: a picture with no
+saved match (a Shiny, a monster never seen in a shop) or text that is two letters off still stops. Checked on
+every saved shop capture: 131 cards named right by picture, none wrong. Not yet used in a live run.
+
 **Anything else:** the capture is saved as `captures\unread_*.png`. Look at it, add
 an entry with the true text to `LESSONS` in `teach.py`, run `teach.py`, then
 `reader.py <capture> --expect` to make it a test (check the printed values by eye first). Keep the capture

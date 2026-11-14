@@ -37,6 +37,7 @@ import window
 
 ROOT = Path(__file__).resolve().parent
 USER_LESSONS = ROOT / "data" / "user_lessons.json"
+CAPTURE_DIR = ROOT / "captures"
 
 # region key -> (what a person calls it, the box to show, an example of what to type)
 _BOXES = {
@@ -262,6 +263,29 @@ def apply(capture: Path | str, answers: dict[str, str], override: bool = False) 
     else:
         msg = "Taught. The bot reads the whole capture now: press Start again." + note
     return Result(not left, msg, left)
+
+
+def self_teach_cards(image: Image.Image, state: dict) -> list[str]:
+    """Teach the card font from shop cards the reader named by their picture (reader.name_by_card_sprite):
+    the picture says which monster it is, so the true text is known and no person needs to type it.
+
+    Uses apply() with all its checks (the marks must fit the text, the card must read back as taught,
+    otherwise everything is put back). The capture is kept in captures/ so teach.py can replay the lesson.
+    Returns lines for the thinking log; empty when there was nothing to teach."""
+    answers = {f"shop{i}": f"{c['name']} ${c['price']}" for i, c in enumerate(state.get("shop") or [])
+               if c and c.get("name_from") == "sprite" and c.get("price") is not None}
+    if not answers:
+        return []
+    capture = CAPTURE_DIR / f"self_taught_{datetime.now():%Y%m%d_%H%M%S_%f}.png"
+    capture.parent.mkdir(parents=True, exist_ok=True)
+    image.save(capture)
+    # override: the reader was sure of a wrong letter (H for K); the picture match is the second opinion
+    r = apply(capture, answers, override=True)
+    what = ", ".join(f"'{state['shop'][int(k[4:])]['raw']}' as {v}" for k, v in answers.items())
+    if r.message.startswith("Taught"):
+        return [f"Taught myself to read {what} (the card pictures told me the names; capture {capture.name})"]
+    capture.unlink(missing_ok=True)
+    return [f"Could not teach myself to read {what}: {r.message}"]
 
 
 def _remember(capture: Path, truths: dict[str, str]) -> None:
