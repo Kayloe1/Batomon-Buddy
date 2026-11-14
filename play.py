@@ -29,6 +29,7 @@ from datetime import datetime
 
 import hands as hands_mod
 import learn_monsters
+import stop_lessons
 
 try:
     from engine.explain import explain
@@ -346,6 +347,14 @@ def _play(argv, control: Control, hands, brain) -> int:
                 log("event_outcome", **pending_event, **event_outcome(pending_event.pop("_before"), state))
                 pending_event = None
             learn_sprites(h, state)
+            if not h.dry_run and getattr(h, "last_image", None) is not None:
+                try:
+                    lines = stop_lessons.self_teach_cards(h.last_image, state)
+                except Exception as e:          # never stop a run over this
+                    lines = [f"could not teach myself a card name: {type(e).__name__}: {e}"]
+                if lines:
+                    think(lines)
+                    log("self_teach", lines=lines)
             if not h.dry_run:
                 try:
                     lines = learn_monsters.learn_unknown(h, state, tried_unknown)
