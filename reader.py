@@ -200,6 +200,25 @@ STOLEN_CONFIRM: Box = (1080, 945, 1480, 1020)
 STOLEN_PROBES = [(1280, 1000, RED), (1280, 1030, (189, 41, 74)), (100, 1215, BLUE), (460, 1300, PINK)]
 
 
+def _edit_distance(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def _clean_new_name(raw: str, known: list[str] | None = None) -> bool:
+    """A shop name read letter for letter (no unknown glyph): a capital, then lower-case letters, and at
+    least two letters away from every known name (one letter off is a misread, like K read as H)."""
+    if not (len(raw) >= 4 and raw[0].isupper() and raw[1:].isalpha() and raw[1:].islower()):
+        return False
+    known = known if known is not None else MONSTER_NAMES + ITEM_NAMES
+    return all(_edit_distance(raw.lower(), k.lower()) >= 2 for k in known)
+
+
 def _is_two_card_box(pic: np.ndarray) -> bool:
     """The one-button trinket box with two cards side by side (a doubled Locked Box, 2026-11-15): the
     same Confirm as Cash In, but the middle of the screen is the gap between the cards."""
@@ -1655,6 +1674,14 @@ def _read_shop_slot(pic: np.ndarray, i: int, masks: dict, problems: list[str],
         price = fill_number(raw_price[1:], _list_cost(name, kind))
         if price is not None and notes is not None:
             notes.append(f"shop {i}: price '{raw_price}' completed to ${price}, the list price of {name}")
+    if name is None and _clean_new_name(raw_name):
+        # Every letter read with certainty, but the name is in no list: a monster from another region
+        # (the Smuggler brings them, 2026-11-15: "Lamplet"). It is kept as kind "unknown", which the
+        # engine never buys, instead of stopping the run.
+        name, kind, name_from = raw_name, "unknown", "new_name"
+        if notes is not None:
+            notes.append(f"shop {i}: '{raw_name}' is a name I do not know (a monster from another region?); "
+                         f"I leave that card alone")
     if name is None:
         problems.append(f"shop {i}: unknown name '{raw_name}'")
     if price is None:
