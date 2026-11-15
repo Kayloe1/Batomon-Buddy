@@ -131,8 +131,9 @@ SCREENS: dict[str, list[tuple[int, int, tuple[int, int, int]]]] = {
     "main_menu": [(900, 772, RED), (900, 924, RED), (900, 1076, RED), (900, 1228, RED),
                   (25, 1118, (21, 157, 216)), (25, 1238, (21, 157, 216))],
     # After Continue on the main menu: a panel with the saved run (mode, day, lives, badges, team) and
-    # Cancel / Confirm. The hamburger button top right is greyed out while it shows.
-    "continue_confirm": [(600, 1215, RED), (1900, 1215, RED), (850, 900, (231, 231, 231)), (1250, 850, (255, 255, 255)),
+    # Cancel / Confirm. The hamburger button top right is greyed out while it shows. (No probe on the
+    # trainer box: it is empty light grey only on day 0; a chosen trainer's portrait covers it, 2026-11-15.)
+    "continue_confirm": [(600, 1215, RED), (1900, 1215, RED), (1250, 850, (255, 255, 255)),
                          (2480, 110, (123, 123, 123)), (25, 1118, (21, 157, 216)), (25, 1238, (21, 157, 216))],
     # "Select a target": an event effect needs a monster. BENCH and MY TEAM panels sit in the middle,
     # Confirm (grey until a monster is clicked) and Back below them.
