@@ -1,0 +1,64 @@
+HOW TO READ THIS: each option gets a 'gain' = how much better the run looks after it
+(and the buys it leads to) than ending the turn now. It mixes the chance to win today,
+the next two days, money kept and progress to level-ups. Bigger is better.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 0: 'Lumijel' is a name I do not know (a monster from another region?); I leave that card alone
+  shop 3: 'Lumijel' is a name I do not know (a monster from another region?); I leave that card alone
+  shop 4: 'Lamplet' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 10 | $49 | 8 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   +0.00  buy Puffloon $30
+   -0.14  sell Noxnimbus to buy Geminiss
+   -0.14  sell Noxnimbus to buy Geminiss
+   -0.19  sell Noxnimbus
+   ... and 3 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 4: 'Pompummel' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 10 | $46 | 8 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.00  buy Blazewing $35
+   +0.00  buy Stalagrove $35
+   +0.00  buy Aster $40
+   +0.00  buy Celestia $30
+   ... and 3 weaker options
+Decision: reroll. It is a small improvement (+0.03).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+bench slot 3: hovered an unknown monster, but could not read its panel (None)
+
+--- Day 10 | $43 | 8 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  buy Frizzly $25
+   +0.00  buy Formiqueen $25
+   +0.00  buy Celestia $30
+   +0.00  buy Dribblet $10
+   ... and 4 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 0: 'Lumijel' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 10 | $40 | 8 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.06  buy Sirenade $40   <-- my choice
+   +0.05  buy Thorntail $35
+   +0.02  reroll
+   +0.00  buy Pebbler $15
+   -0.13  sell Noxnimbus
+   ... and 5 weaker options
+Decision: buy Sirenade $40. It is a small improvement (+0.06), ahead of 'buy Thorntail $35' (+0.05).
+

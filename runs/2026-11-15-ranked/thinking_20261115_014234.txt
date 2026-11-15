@@ -1,0 +1,318 @@
+HOW TO READ THIS: each option gets a 'gain' = how much better the run looks after it
+(and the buys it leads to) than ending the turn now. It mixes the chance to win today,
+the next two days, money kept and progress to level-ups. Bigger is better.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 0: 'Lumijel' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 10 | $0 | 8 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   -0.06  sell Sirenade
+   -0.19  sell Noxnimbus
+   -0.19  sell Noxnimbus
+   -0.36  sell Puffloon to buy Pebbler
+   -0.38  sell Saberhorn
+   ... and 2 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Saberhorn from bench slot 3 to team top left: this layout won the most simulated battles.
+Move Sirenade from bench slot 2 to team bottom left: this layout won the most simulated battles.
+Battle: expected win chance 81%.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 1: 'Emburn' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 11 | $95 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 47%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  reroll   <-- my choice
+   +0.00  buy Ironcore $40
+   +0.00  buy Shogapede $30
+   +0.00  buy Plunderbird $30
+   +0.00  buy Puffloon $30
+   ... and 5 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $92 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 47%.
+Options I weighed (gain compared with ending the turn now):
+   +0.27  reroll   <-- my choice
+   +0.00  buy Blazewing $35
+   +0.00  buy Mosslug $10
+   +0.00  buy Plunderbird $30
+   +0.00  buy Dirgefin $25
+   ... and 5 weaker options
+Decision: reroll. It is a clear improvement (+0.27).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 3: 'Rattleghast' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 11 | $89 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 47%.
+Options I weighed (gain compared with ending the turn now):
+   +0.30  reroll   <-- my choice
+   +0.16  sell Thorntail
+   +0.14  buy Celestia $30
+   +0.14  sell Cicadence
+   +0.14  sell Noxnimbus
+   ... and 5 weaker options
+Decision: reroll. It is a clear improvement (+0.30), ahead of 'sell Thorntail' (+0.16).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 3: 'Lumijel' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 11 | $86 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 47%.
+Options I weighed (gain compared with ending the turn now):
+   +0.12  reroll   <-- my choice
+   +0.00  buy Dirgefin $25
+   +0.00  buy Stalagrove $35
+   +0.00  buy Geminiss $50
+   +0.00  buy Sproach $26
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.12).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 0: 'Ginsage' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 11 | $83 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 47%.
+Options I weighed (gain compared with ending the turn now):
+   +0.33  sell Cicadence   <-- my choice
+   +0.28  reroll
+   +0.04  buy Shogapede $30
+   +0.04  buy Aristobat $25
+   +0.04  buy Thorntail $35
+   ... and 5 weaker options
+Decision: sell Cicadence. It is a clear improvement (+0.33), ahead of 'reroll' (+0.28).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 11 | $121 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 47%.
+Options I weighed (gain compared with ending the turn now):
+   +0.33  buy Thorntail $35   <-- my choice
+   +0.26  sell Sirenade
+   +0.11  reroll
+   +0.10  buy Aristobat $25
+   +0.10  buy Aristobat $25
+   ... and 4 weaker options
+Decision: buy Thorntail $35. It is a clear improvement (+0.33), ahead of 'sell Sirenade' (+0.26).
+
+Trinket choice between Link Cable, Mega Duplicator, Metal Bat: I took Link Cable because Link Cable +0.014; Mega Duplicator +0.008; Metal Bat +0.001. (now on 'shop')
+
+--- Day 11 | $86 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.23  buy Shogapede $30   <-- my choice
+   +0.23  buy Aristobat $25
+   +0.23  buy Aristobat $25
+   +0.15  sell Sirenade
+   +0.10  reroll
+   ... and 2 weaker options
+Decision: buy Shogapede $30. It is a clear improvement (+0.23), ahead of 'buy Aristobat $25' (+0.23).
+
+--- Day 11 | $56 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.12  buy Aristobat $25   <-- my choice
+   +0.12  buy Aristobat $25   <-- my choice
+   +0.05  sell Sirenade
+   +0.00  reroll
+   -0.23  sell Noxnimbus
+   ... and 1 weaker options
+Decision: buy Aristobat $25. It is a small improvement (+0.12), ahead of 'sell Sirenade' (+0.05).
+
+--- Day 11 | $31 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  buy Aristobat $25   <-- my choice
+   +0.03  reroll
+   -0.01  sell Sirenade
+   -0.28  sell Noxnimbus
+   -0.28  sell Noxnimbus
+Decision: buy Aristobat $25. It is a small improvement (+0.07), ahead of 'reroll' (+0.03).
+
+--- Day 11 | $6 | 8 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   -0.07  sell Sirenade
+   -0.36  sell Noxnimbus
+   -0.36  sell Noxnimbus
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Aristobat from bench slot 2 to team bottom left: this layout won the most simulated battles.
+Battle: expected win chance 69%.
+
+--- Day 12 | $106 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.19  sell Shogapede to buy Dracana   <-- my choice
+   +0.09  sell Noxnimbus to buy Dracana
+   +0.09  sell Noxnimbus to buy Dracana
+   +0.00  reroll
+   +0.00  sell Shogapede to buy Frizzly
+   ... and 17 weaker options
+Decision: sell Shogapede to buy Dracana. It is a clear improvement (+0.19), ahead of 'sell Noxnimbus to buy Dracana' (+0.09).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 12 | $121 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.26  reroll   <-- my choice
+   +0.19  buy Dracana $40
+   +0.00  buy Frizzly $25
+   +0.00  buy Stalagrove $35
+   +0.00  buy Noxalith $30
+   ... and 6 weaker options
+Decision: reroll. It is a clear improvement (+0.26), ahead of 'buy Dracana $40' (+0.19).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $118 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.71  buy Dryadell $45   <-- my choice
+   +0.07  reroll
+   +0.00  buy Celestia $30
+   +0.00  buy Clawnetic $45
+   +0.00  buy Berroon $20
+   ... and 6 weaker options
+Decision: buy Dryadell $45. It is a big improvement (+0.71), ahead of 'reroll' (+0.07).
+
+--- Day 12 | $73 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.01  sell Noxnimbus to buy Celestia
+   +0.01  sell Noxnimbus to buy Celestia
+   +0.01  sell Puffloon to buy Celestia
+   +0.01  sell Noxnimbus
+   ... and 13 weaker options
+Decision: reroll. It is a small improvement (+0.03), ahead of 'sell Noxnimbus to buy Celestia' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 2: 'Lumijel' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 12 | $70 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Noxnimbus to buy Plunderbird
+   +0.00  sell Noxnimbus to buy Plunderbird
+   +0.00  sell Puffloon to buy Plunderbird
+   +0.00  sell Noxnimbus to buy Cinderfly
+   +0.00  sell Noxnimbus to buy Cinderfly
+   ... and 13 weaker options
+Decision: spend the surplus: $70 in hand, $34 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 0: 'Ginsage' is a name I do not know (a monster from another region?); I leave that card alone
+  shop 2: 'Ginsage' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 12 | $67 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Noxnimbus to buy Pylong
+   +0.00  sell Noxnimbus to buy Pylong
+   +0.00  sell Puffloon to buy Pylong
+   +0.00  sell Noxnimbus to buy Brawlmantis
+   +0.00  sell Noxnimbus to buy Brawlmantis
+   ... and 10 weaker options
+Decision: spend the surplus: $67 in hand, $31 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+team slot 1: hovered an unknown monster, but could not read its panel (None)
+
+--- Day 12 | $64 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.09  sell Puffloon to buy Geminiss   <-- my choice
+   +0.09  sell Puffloon to buy Fumungus
+   +0.07  buy Sirenade $40
+   +0.07  sell Noxnimbus
+   +0.07  sell Noxnimbus
+   ... and 14 weaker options
+Decision: sell Puffloon to buy Geminiss. It is a small improvement (+0.09), ahead of 'sell Puffloon to buy Fumungus' (+0.09).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 12 | $109 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.09  buy Sirenade $40   <-- my choice
+   +0.09  buy Geminiss $50
+   +0.09  buy Fumungus $40
+   +0.07  buy Aegistruct $45
+   +0.07  sell Noxnimbus
+   ... and 6 weaker options
+Decision: buy Sirenade $40. It is a small improvement (+0.09), ahead of 'buy Geminiss $50' (+0.09).
+
+Trinket choice between Razor Beak, Upgrade Disc, Blitz Bell: I took Blitz Bell because Blitz Bell +0.024; Upgrade Disc +0.012; Razor Beak +0.000. (now on 'shop')
+
+--- Day 12 | $69 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   +0.00  buy Aegistruct $45
+   +0.00  buy Geminiss $50
+   +0.00  buy Fumungus $40
+   +0.00  sell Noxnimbus
+   ... and 3 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.00), ahead of 'buy Aegistruct $45' (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $66 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.00  buy Cherubble $25
+   +0.00  buy Lignite $30
+   +0.00  buy Brawlmantis $30
+   +0.00  buy Cicadence $25
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.03), ahead of 'buy Cherubble $25' (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+Reading note (carried on; tell Claude so the glyph can be taught):
+  shop 3: 'Emburn' is a name I do not know (a monster from another region?); I leave that card alone
+
+--- Day 12 | $63 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.05  reroll   <-- my choice
+   +0.00  buy Aegistruct $45
+   +0.00  buy Velocect $15
+   +0.00  buy Zephyrex $60
+   +0.00  sell Noxnimbus
+   ... and 3 weaker options
+Decision: reroll. It is a small improvement (+0.05), ahead of 'buy Aegistruct $45' (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $60 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.14  buy Cobrex $50   <-- my choice
+   +0.12  sell Noxnimbus
+   +0.12  sell Noxnimbus
+   +0.08  sell Aristobat
+   +0.03  reroll
+   ... and 4 weaker options
+Decision: buy Cobrex $50. It is a small improvement (+0.14), ahead of 'sell Noxnimbus' (+0.12).
+
+--- Day 12 | $10 | 5 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.02  sell Noxnimbus to buy Berroon
+   -0.02  sell Noxnimbus to buy Berroon
+   -0.02  sell Noxnimbus
+   -0.02  sell Noxnimbus
+   ... and 2 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Cobrex from bench slot 2 to team top right: this layout won the most simulated battles.
+Move Dryadell from bench slot 1 to team bottom middle: this layout won the most simulated battles.
+Move Dryadell from bench slot 1 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 88%.
+
+Ranked: the rank card showed at the end of the run (saved as rank_20261115_014839.png). I press Confirm. (now on 'run_over')
+

@@ -1,0 +1,1627 @@
+HOW TO READ THIS: each option gets a 'gain' = how much better the run looks after it
+(and the buys it leads to) than ending the turn now. It mixes the chance to win today,
+the next two days, money kept and progress to level-ups. Bigger is better.
+
+Trainer choice between Gentleman, Rich Lady, Youngster: Youngster. Reason: Youngster: Ed's record and fit with the plan (scores [-0.67, 0.17, 0.65]).
+
+--- Day 1 | $30 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 0%.
+Options I weighed (gain compared with ending the turn now):
+   +1.47  reroll   <-- my choice
+   +1.20  buy Joltail $15
+   +1.20  buy Velocect $15
+   +1.20  buy Joltail $15
+   +1.15  buy Magmite $15
+   ... and 1 weaker options
+Decision: reroll. It is a big improvement (+1.47), ahead of 'buy Joltail $15' (+1.20).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 1 | $30 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 0%.
+Options I weighed (gain compared with ending the turn now):
+   +1.91  buy Venopuff $15   <-- my choice
+   +1.91  buy Magmite $15
+   +1.91  use Fake Coin
+   +1.88  buy Pebbler $15
+   +1.39  reroll
+   ... and 1 weaker options
+Decision: buy Venopuff $15. It is a big improvement (+1.91), ahead of 'buy Magmite $15' (+1.91).
+
+--- Day 1 | $15 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 63%.
+Options I weighed (gain compared with ending the turn now):
+   +0.76  buy Magmite $15   <-- my choice
+   +0.76  use Fake Coin
+   +0.73  buy Pebbler $15
+   +0.38  reroll
+   +0.19  buy Joltail $15
+Decision: buy Magmite $15. It is a big improvement (+0.76), ahead of 'use Fake Coin' (+0.76).
+
+--- Day 1 | $0 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 97%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Fake Coin
+   +0.00  reroll
+Decision: spend the surplus: $0 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 1 | $0 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 97%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+Decision: spend the surplus: $0 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 1 | $0 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 97%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Cake
+Decision: use free Cake. It is free and can only help, so I use it before the battle.
+
+--- Day 1 | $0 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 98%.
+Nothing left in the shop makes the team better, so the turn ends here.
+Battle: expected win chance 98%.
+
+--- Day 2 | $35 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.95  use Voucher   <-- my choice
+   +0.76  buy Stingarde $10
+   +0.76  buy Bumblebolt $10
+   +0.76  buy Venopuff $15
+   +0.61  buy Pebbler $15
+   ... and 3 weaker options
+Decision: use Voucher. It is a big improvement (+0.95), ahead of 'buy Stingarde $10' (+0.76).
+
+--- Day 2 | $30 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 19%.
+Options I weighed (gain compared with ending the turn now):
+   +0.90  buy Pebbler $15   <-- my choice
+   +0.90  buy Pebbler $15   <-- my choice
+   +0.75  reroll
+   +0.72  buy Stingarde $10
+   +0.72  buy Venopuff $15
+   ... and 2 weaker options
+Decision: buy Pebbler $15. It is a big improvement (+0.90), ahead of 'reroll' (+0.75).
+
+--- Day 2 | $15 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 37%.
+Options I weighed (gain compared with ending the turn now):
+   +0.50  buy Pebbler $15   <-- my choice
+   +0.43  reroll
+   +0.32  buy Venopuff $15
+   +0.21  buy Stingarde $10
+   +0.15  sell Bumblebolt
+   ... and 1 weaker options
+Decision: buy Pebbler $15. It is a clear improvement (+0.50), ahead of 'reroll' (+0.43).
+
+--- Day 2 | $0 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 68%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.35  sell Bumblebolt
+   -0.64  sell Magmite
+Decision: spend the surplus: $0 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 2 | $0 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 68%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.35  sell Bumblebolt
+   -0.64  sell Magmite
+Decision: spend the surplus: $0 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 2 | $0 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 68%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.35  sell Bumblebolt
+   -0.64  sell Magmite
+Decision: spend the surplus: $0 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 2 | $0 | 10 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 68%.
+Options I weighed (gain compared with ending the turn now):
+   -0.35  sell Bumblebolt
+   -0.64  sell Magmite
+Nothing left in the shop makes the team better, so the turn ends here.
+Lock the shop: lock for Mosslug ($10): tomorrow's best buy, worth +0.580. I cannot pay for it today, but can tomorrow.
+Battle: expected win chance 68%.
+
+Event choices (same scale as shop decisions, bigger is better):
+   +0.81  Gain a foreign Rare monster. It can now appear in your shop.: average of the foreign Rare monsters I know (Cordycant, Dollhime, Kickrane, Pyrokami) added to the team; plus a bonus because a free Rare, and it can then appear in the shop   <-- my choice
+   +0.05  Gain Kaleidoscope: 'Kaleidoscope' is not in my data yet, so a small fixed guess [guess]
+   +0.05  Gain Fake Diamond: 'Fake Diamond' is not in my data yet, so a small fixed guess [guess]
+Decision: Gain a foreign Rare monster. It can now appear in your shop..
+(now on 'shop')
+
+Learned a new monster from its panel: Shikitsune (Rare, Ghost, 3.0 s, Deal 50 damage); its passive is not read yet (picture: captures/info_panels/Shikitsune_20261114_222800.png)
+
+--- Day 3 | $40 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.26  buy Mosslug $10   <-- my choice
+   +0.26  buy Spinarai $10
+   +0.26  buy Guardiant $15
+   +0.26  buy Scorchimp $10
+   +0.26  buy Venopuff $15
+   ... and 3 weaker options
+Decision: buy Mosslug $10. It is a clear improvement (+0.26), ahead of 'buy Spinarai $10' (+0.26).
+
+--- Day 3 | $30 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.24  buy Spinarai $10   <-- my choice
+   +0.24  buy Guardiant $15
+   +0.24  buy Scorchimp $10
+   +0.24  buy Venopuff $15
+   +0.06  reroll
+   ... and 2 weaker options
+Decision: buy Spinarai $10. It is a clear improvement (+0.24), ahead of 'buy Guardiant $15' (+0.24).
+
+--- Day 3 | $20 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.47  reroll   <-- my choice
+   +0.24  buy Venopuff $15
+   +0.03  sell Pebbler
+   +0.03  sell Pebbler
+   +0.00  buy Guardiant $15
+   ... and 1 weaker options
+Decision: reroll. It is a clear improvement (+0.47), ahead of 'buy Venopuff $15' (+0.24).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 3 | $20 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.25  reroll   <-- my choice
+   +0.12  buy Dribblet $10
+   +0.12  buy Bumblebolt $10
+   +0.09  buy Scorchimp $10
+   +0.03  use Red Coin
+   ... and 3 weaker options
+Decision: reroll. It is a clear improvement (+0.25), ahead of 'buy Dribblet $10' (+0.12).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 3 | $20 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.18  reroll   <-- my choice
+   +0.13  use Cake
+   +0.12  buy Spinarai $10
+   +0.12  buy Dribblet $10
+   +0.00  sell Bumblebolt to buy Gildshell
+   ... and 5 weaker options
+Decision: reroll. It is a clear improvement (+0.18), ahead of 'use Cake' (+0.13).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 3 | $20 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.24  reroll   <-- my choice
+   +0.11  sell Bumblebolt to buy Cinderfly
+   +0.09  buy Dribblet $10
+   +0.09  use Fake Coin
+   +0.05  sell Bumblebolt to buy Craghorn
+   ... and 7 weaker options
+Decision: reroll. It is a clear improvement (+0.24), ahead of 'sell Bumblebolt to buy Cinderfly' (+0.11).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 3 | $17 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.40  use Pom Berry   <-- my choice
+   +0.39  buy Pebbler $15
+   +0.06  reroll
+   +0.05  sell Pebbler
+   +0.05  sell Pebbler
+   ... and 3 weaker options
+Decision: use Pom Berry. It is a clear improvement (+0.40), ahead of 'buy Pebbler $15' (+0.39).
+
+--- Day 3 | $16 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 41%.
+Options I weighed (gain compared with ending the turn now):
+   +0.25  buy Pebbler $15   <-- my choice
+   +0.25  use Coupon
+   +0.03  buy Bumblebolt $10
+   +0.03  buy Spinarai $10
+   +0.02  sell Pebbler
+   ... and 3 weaker options
+Decision: buy Pebbler $15. It is a clear improvement (+0.25), ahead of 'use Coupon' (+0.25).
+
+Trinket choice between Plain Lure, Treasure Map, Boxing Glove: I took Boxing Glove because Boxing Glove +0.030; Treasure Map +0.010; Plain Lure +0.000. (now on 'shop')
+
+--- Day 3 | $1 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 53%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Coupon
+   -0.02  sell Bumblebolt
+   -0.29  sell Magmite
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Magmite from team bottom middle to team top left: this layout won the most simulated battles.
+Move Magmite from team bottom middle to team top middle: this layout won the most simulated battles.
+Move Venopuff from team bottom right to team top right: this layout won the most simulated battles.
+Move Mosslug from bench slot 1 to team bottom left: this layout won the most simulated battles.
+Move Mosslug from bench slot 1 to team bottom middle: this layout won the most simulated battles.
+Battle: expected win chance 53%.
+
+--- Day 4 | $46 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.29  sell Spinarai   <-- my choice
+   +0.29  sell Mosslug
+   +0.25  sell Pebbler
+   +0.24  buy Electranade $25
+   +0.19  buy Aristobat $25
+   ... and 4 weaker options
+Decision: sell Spinarai. It is a clear improvement (+0.29), ahead of 'sell Mosslug' (+0.29).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 4 | $51 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.29  buy Aristobat $25   <-- my choice
+   +0.29  buy Electranade $25
+   +0.29  use Gray Chip
+   +0.29  sell Mosslug
+   +0.25  sell Pebbler
+   ... and 3 weaker options
+Decision: buy Aristobat $25. It is a clear improvement (+0.29), ahead of 'buy Electranade $25' (+0.29).
+
+--- Day 4 | $26 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 66%.
+Options I weighed (gain compared with ending the turn now):
+   +0.26  reroll   <-- my choice
+   +0.13  buy Electranade $25
+   +0.13  use Gray Chip
+   +0.13  sell Mosslug
+   +0.10  sell Pebbler
+   ... and 4 weaker options
+Decision: reroll. It is a clear improvement (+0.26), ahead of 'buy Electranade $25' (+0.13).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 4 | $26 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 66%.
+Options I weighed (gain compared with ending the turn now):
+   +0.22  reroll   <-- my choice
+   +0.03  buy Scorchimp $10
+   +0.03  buy Scorchimp $10
+   +0.02  use Voucher
+   +0.00  buy Spinarai $10
+   ... and 3 weaker options
+Decision: reroll. It is a clear improvement (+0.22), ahead of 'buy Scorchimp $10' (+0.03).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 4 | $26 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 66%.
+Options I weighed (gain compared with ending the turn now):
+   +0.21  reroll   <-- my choice
+   +0.11  buy Magmite $15
+   +0.11  sell Mosslug
+   +0.03  sell Pebbler to buy Shikitsune
+   +0.03  sell Pebbler
+   ... and 3 weaker options
+Decision: reroll. It is a clear improvement (+0.21), ahead of 'buy Magmite $15' (+0.11).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 4 | $26 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 66%.
+Options I weighed (gain compared with ending the turn now):
+   +0.51  buy Runerock $20   <-- my choice
+   +0.21  reroll
+   +0.10  buy Venopuff $15
+   +0.10  sell Mosslug
+   +0.04  use Dowsing Rod
+   ... and 5 weaker options
+Decision: buy Runerock $20. It is a big improvement (+0.51), ahead of 'reroll' (+0.21).
+
+--- Day 4 | $6 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Mosslug
+   -0.17  sell Pebbler to buy Venopuff
+   -0.17  sell Pebbler
+   -0.23  sell Pebbler to buy Velocect
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Pebbler from team bottom right to team top left: this layout won the most simulated battles.
+Move Aristobat from bench slot 1 to team top right: this layout won the most simulated battles.
+Move Aristobat from bench slot 1 to team bottom left: this layout won the most simulated battles.
+Move Bumblebolt from team bottom middle to bench slot 3: this layout won the most simulated battles.
+Move Pebbler from team bottom right to team bottom middle: this layout won the most simulated battles.
+Move Runerock from bench slot 2 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 88%.
+
+--- Day 5 | $56 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.16  buy Dracana $40   <-- my choice
+   +0.16  sell Mosslug
+   +0.16  use Cake
+   +0.15  buy Bumblebolt $10
+   +0.13  sell Bumblebolt
+   ... and 5 weaker options
+Decision: buy Dracana $40. It is a clear improvement (+0.16), ahead of 'sell Mosslug' (+0.16).
+
+--- Day 5 | $16 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Decision: sell Mosslug: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 5 | $21 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.04  use Cake   <-- my choice
+   +0.04  buy Bumblebolt $10
+   +0.04  buy Panbud $10
+   +0.02  reroll
+   +0.01  buy Pebbler $15
+   ... and 3 weaker options
+Decision: use Cake. It is a small improvement (+0.04), ahead of 'buy Bumblebolt $10' (+0.04).
+
+--- Day 5 | $21 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  buy Bumblebolt $10   <-- my choice
+   +0.03  buy Panbud $10
+   +0.03  buy Magmite $15
+   +0.03  sell Bumblebolt
+   +0.02  reroll
+   ... and 3 weaker options
+Decision: buy Bumblebolt $10. It is a small improvement (+0.03), ahead of 'buy Panbud $10' (+0.03).
+
+--- Day 5 | $11 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Panbud $10   <-- my choice
+   +0.00  sell Magmite to buy Pebbler
+   +0.00  reroll
+   -0.28  sell Pebbler
+   -0.28  sell Pebbler to buy Magmite
+   ... and 3 weaker options
+Decision: buy Panbud $10. It is about the same as doing nothing (+0.00), ahead of 'sell Magmite to buy Pebbler' (+0.00).
+
+--- Day 5 | $1 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   -0.28  sell Pebbler
+   -0.28  sell Pebbler to buy Magmite
+   -0.36  sell Runerock
+Decision: reroll. It is about the same as doing nothing (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 5 | $1 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.06  sell Pebbler to buy Runerock   <-- my choice
+   +0.00  reroll
+   -0.00  sell Pebbler
+   -0.31  sell Pebbler to buy Dribblet
+   -0.36  sell Runerock to buy Dribblet
+   ... and 1 weaker options
+Decision: sell Pebbler to buy Runerock. It is a small improvement (+0.06), ahead of 'reroll' (+0.00).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 5 | $24 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.19  buy Runerock $20   <-- my choice
+   +0.19  sell Magmite
+   +0.02  reroll
+   +0.00  buy Dribblet $10
+   -0.00  sell Runerock
+   ... and 3 weaker options
+Decision: buy Runerock $20. It is a clear improvement (+0.19), ahead of 'sell Magmite' (+0.19).
+
+--- Day 5 | $4 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Magmite to buy Dribblet
+   +0.00  sell Magmite
+   -0.00  reroll
+   -0.06  sell Shikitsune to buy Dribblet
+   -0.12  sell Venopuff to buy Dribblet
+   ... and 1 weaker options
+Decision: spend the surplus: $4 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 5 | $4 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.04  sell Magmite to buy Bumblebolt   <-- my choice
+   +0.04  sell Shikitsune to buy Bumblebolt
+   +0.04  sell Magmite
+   +0.03  sell Venopuff to buy Bumblebolt
+   +0.03  sell Venopuff
+   ... and 3 weaker options
+Decision: sell Magmite to buy Bumblebolt. It is a small improvement (+0.04), ahead of 'sell Shikitsune to buy Bumblebolt' (+0.04).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 5 | $12 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.33  sell Shikitsune to buy Noxnimbus   <-- my choice
+   +0.27  sell Aristobat to buy Noxnimbus
+   +0.07  sell Shikitsune to buy Venopuff
+   +0.07  sell Shikitsune
+   +0.04  sell Shikitsune to buy Guardiant
+   ... and 6 weaker options
+Decision: sell Shikitsune to buy Noxnimbus. It is a clear improvement (+0.33), ahead of 'sell Aristobat to buy Noxnimbus' (+0.27).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 5 | $30 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.49  buy Noxnimbus $25   <-- my choice
+   +0.46  sell Venopuff
+   +0.42  sell Aristobat
+   +0.24  buy Noxalith $30
+   +0.17  buy Venopuff $15
+   ... and 3 weaker options
+Decision: buy Noxnimbus $25. It is a clear improvement (+0.49), ahead of 'sell Venopuff' (+0.46).
+
+--- Day 5 | $5 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 66%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.09  sell Venopuff to buy Bumblebolt
+   -0.09  sell Venopuff
+   -0.11  sell Aristobat to buy Venopuff
+   -0.11  sell Aristobat
+   ... and 2 weaker options
+Decision: spend the surplus: $5 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 5 | $5 | 9 lives | 3 badges ---
+Chance to win today's battle with the team as it is: 66%.
+Options I weighed (gain compared with ending the turn now):
+   -0.09  sell Venopuff to buy Bumblebolt
+   -0.09  sell Venopuff
+   -0.16  sell Aristobat to buy Bumblebolt
+   -0.16  sell Aristobat
+   -0.17  sell Aristobat to buy Pebbler
+   ... and 1 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Noxnimbus from team bottom middle to team top left: this layout won the most simulated battles.
+Move Aristobat from team top right to team top middle: this layout won the most simulated battles.
+Move Noxnimbus from team bottom middle to team top right: this layout won the most simulated battles.
+Move Runerock from team bottom right to team bottom middle: this layout won the most simulated battles.
+Move Dracana from bench slot 2 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 66%.
+
+Event choices (same scale as shop decisions, bigger is better):
+   +0.05  Increase shop rank by 2: an effect I cannot model yet, so a small fixed guess [guess]
+   +0.05  Gain GoId Bar: 'GoId Bar' is not in my data yet, so a small fixed guess [guess]
+   +0.39  Gain Wishwash: Wishwash added to the team in the simulator   <-- my choice
+Decision: Gain Wishwash.
+(now on 'shop')
+
+bench slot 2: hovered an unknown monster, but could not read its panel (None)
+
+--- Day 6 | $60 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Decision: sell Bumblebolt: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 6 | $65 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Decision: sell Bumblebolt: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 6 | $70 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.13  reroll   <-- my choice
+   +0.06  use Pom Berry
+   +0.05  buy Panbud $10
+   +0.05  buy Venopuff $15
+   +0.05  sell Unknown Rare
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.13), ahead of 'use Pom Berry' (+0.06).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 6 | $70 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Decision: sell Panbud: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 6 | $75 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.05  reroll   <-- my choice
+   +0.02  use Feast
+   +0.00  buy Frizzly $25
+   +0.00  buy Scorchimp $10
+   +0.00  buy Spinarai $10
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.05), ahead of 'use Feast' (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 6 | $75 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.04  use Basic Candy   <-- my choice
+   +0.03  buy Venopuff $15
+   +0.03  buy Pyronade $25
+   +0.03  buy Plunderbird $30
+   +0.03  buy Bumblebolt $10
+   ... and 4 weaker options
+Decision: use Basic Candy. It is a small improvement (+0.04), ahead of 'buy Venopuff $15' (+0.03).
+
+--- Day 6 | $45 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  buy Venopuff $15   <-- my choice
+   +0.03  buy Pyronade $25
+   +0.03  buy Plunderbird $30
+   +0.03  buy Bumblebolt $10
+   +0.03  buy Magmite $15
+   ... and 4 weaker options
+Decision: buy Venopuff $15. It is a small improvement (+0.03), ahead of 'buy Pyronade $25' (+0.03).
+
+--- Day 6 | $30 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  reroll   <-- my choice
+   +0.00  buy Pyronade $25
+   +0.00  buy Plunderbird $30
+   +0.00  buy Bumblebolt $10
+   +0.00  buy Magmite $15
+   ... and 3 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 6 | $30 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.06  reroll   <-- my choice
+   +0.00  buy Dribblet $10
+   +0.00  buy Cicadence $25
+   +0.00  buy Pyronade $25
+   +0.00  buy Gildshell $25
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.06).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 6 | $27 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.06  reroll   <-- my choice
+   +0.01  buy Cherubble $25
+   +0.01  sell Runerock
+   +0.00  buy Joltail $15
+   +0.00  sell Dracana to buy Aster
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.06), ahead of 'buy Cherubble $25' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 6 | $24 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Dracana to buy Plunderbird
+   +0.00  sell Dracana to buy Gildshell
+   +0.00  buy Velocect $15
+   +0.00  sell Dracana to buy Cinderfly
+   +0.00  buy Magmite $15
+   ... and 10 weaker options
+Decision: spend the surplus: $24 in hand, $3 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 6 | $21 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.13  sell Dracana to buy Cherubble   <-- my choice
+   +0.13  buy Venopuff $15
+   +0.13  sell Dracana to buy Cicadence
+   +0.02  sell Runerock
+   +0.01  sell Runerock to buy Cherubble
+   ... and 10 weaker options
+Decision: sell Dracana to buy Cherubble. It is a small improvement (+0.13), ahead of 'buy Venopuff $15' (+0.13).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 6 | $41 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.13  buy Cherubble $25   <-- my choice
+   +0.13  buy Venopuff $15
+   +0.13  buy Spinarai $10
+   +0.13  buy Cicadence $25
+   +0.05  reroll
+   ... and 4 weaker options
+Decision: buy Cherubble $25. It is a small improvement (+0.13), ahead of 'buy Venopuff $15' (+0.13).
+
+--- Day 6 | $16 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.13  buy Venopuff $15   <-- my choice
+   +0.04  sell Runerock
+   +0.01  sell Unknown Rare
+   +0.00  buy Spinarai $10
+   +0.00  sell Runerock to buy Cicadence
+   ... and 5 weaker options
+Decision: buy Venopuff $15. It is a small improvement (+0.13), ahead of 'sell Runerock' (+0.04).
+
+Trinket choice between Wood Sword, Quick Bell, Plain Lure: I took Quick Bell because Quick Bell +0.012; Wood Sword +0.009; Plain Lure +0.000. (now on 'shop')
+
+--- Day 6 | $1 | 9 lives | 4 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   -0.09  sell Runerock to buy Spinarai
+   -0.09  sell Runerock
+   -0.12  sell Unknown Rare to buy Spinarai
+   -0.12  sell Unknown Rare
+   -0.22  sell Noxnimbus to buy Spinarai
+   ... and 1 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move a monster from bench slot 2 to team top right: this layout won the most simulated battles.
+Move a monster from bench slot 2 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 81%.
+
+team slot 3: hovered an unknown monster, but could not read its panel (None)
+
+--- Day 7 | $61 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  sell Runerock
+   +0.00  buy Guardiant $15
+   +0.00  buy Velocect $15
+   +0.00  buy Pebbler $15
+   ... and 4 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.02), ahead of 'sell Runerock' (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 7 | $61 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Runerock   <-- my choice
+   +0.00  buy Shogapede $30
+   +0.00  buy Thorntail $35
+   +0.00  buy Dribblet $10
+   +0.00  buy Plunderbird $30
+   ... and 4 weaker options
+Decision: sell Runerock. It is about the same as doing nothing (+0.00).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 7 | $71 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Shogapede $30
+   +0.00  buy Thorntail $35
+   +0.00  buy Dribblet $10
+   +0.00  buy Plunderbird $30
+   +0.00  use Coupon
+   ... and 4 weaker options
+Decision: spend the surplus: $71 in hand, $47 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 7 | $71 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.05  reroll   <-- my choice
+   +0.02  buy Velocect $15
+   +0.02  buy Velocect $15
+   +0.00  buy Shogapede $30
+   +0.00  buy Brawlmantis $30
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.05), ahead of 'buy Velocect $15' (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 7 | $71 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.17  buy Velocect $15   <-- my choice
+   +0.17  buy Noxnimbus $25
+   +0.17  buy Electranade $25
+   +0.17  buy Guardiant $15
+   +0.17  use Coupon
+   ... and 4 weaker options
+Decision: buy Velocect $15. It is a clear improvement (+0.17), ahead of 'buy Noxnimbus $25' (+0.17).
+
+--- Day 7 | $56 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.17  buy Noxnimbus $25   <-- my choice
+   +0.17  buy Electranade $25
+   +0.17  use Coupon
+   +0.13  buy Guardiant $15
+   +0.04  sell Cherubble
+   ... and 3 weaker options
+Decision: buy Noxnimbus $25. It is a clear improvement (+0.17), ahead of 'buy Electranade $25' (+0.17).
+
+--- Day 7 | $31 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +0.13  buy Electranade $25   <-- my choice
+   +0.13  use Coupon
+   +0.13  sell Unknown Rare
+   +0.02  reroll
+   +0.00  buy Guardiant $15
+   ... and 2 weaker options
+Decision: buy Electranade $25. It is a small improvement (+0.13), ahead of 'use Coupon' (+0.13).
+
+--- Day 7 | $6 | 9 lives | 5 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Unknown Rare to buy Guardiant
+   +0.00  use Coupon
+   +0.00  sell Unknown Rare
+   -0.13  sell Cherubble to buy Guardiant
+   -0.13  sell Cherubble
+   ... and 2 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Electranade from bench slot 3 to team top right: this layout won the most simulated battles.
+Move Cherubble from bench slot 2 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 50%.
+
+bench slot 3: hovered an unknown monster, but could not read its panel (None)
+
+--- Day 8 | $71 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  reroll   <-- my choice
+   +0.01  use Black Sludge
+   +0.00  buy Joltail $15
+   +0.00  buy Brawlmantis $30
+   +0.00  buy Runerock $20
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.08), ahead of 'use Black Sludge' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $71 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  buy Frizzly $25
+   +0.00  buy Cicadence $25
+   +0.00  buy Cicadence $25
+   +0.00  use Lucky Coin
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $71 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Noxalith $30
+   +0.00  buy Frizzly $25
+   +0.00  buy Humbolt $25
+   +0.00  buy Pebbler $15
+   +0.00  sell Velocect
+   ... and 5 weaker options
+Decision: use Green Ticket (shop of one rarity). It is free and can only help, so I use it before the battle.
+
+--- Day 8 | $71 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  buy Berroon $20
+   +0.00  buy Plunderbird $30
+   +0.00  buy Shogapede $30
+   +0.00  buy Runerock $20
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $71 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Puffloon $30
+   +0.00  buy Shikitsune $35
+   +0.00  buy Mosslug $10
+   +0.00  buy Lignite $30
+   +0.00  buy Shikitsune $35
+   ... and 6 weaker options
+Decision: spend the surplus: $71 in hand, $45 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 8 | $68 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  buy Cherubble $25   <-- my choice
+   +0.07  sell Velocect
+   +0.07  sell Unknown Rare
+   +0.03  sell Noxnimbus
+   +0.00  buy Plunderbird $30
+   ... and 6 weaker options
+Decision: buy Cherubble $25. It is a small improvement (+0.07), ahead of 'sell Velocect' (+0.07).
+
+--- Day 8 | $43 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.06  reroll   <-- my choice
+   +0.00  sell Velocect to buy Plunderbird
+   +0.00  sell Velocect to buy Pebbler
+   +0.00  sell Velocect to buy Magmite
+   +0.00  sell Velocect to buy Spinarai
+   ... and 13 weaker options
+Decision: reroll. It is a small improvement (+0.06).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $40 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.00  sell Velocect to buy Celestia
+   +0.00  sell Velocect to buy Stingarde
+   +0.00  sell Velocect to buy Noxalith
+   +0.00  sell Velocect to buy Pebbler
+   ... and 16 weaker options
+Decision: reroll. It is a small improvement (+0.03).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $37 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  sell Velocect to buy Fumungus   <-- my choice
+   +0.00  sell Velocect to buy Stingarde
+   +0.00  sell Velocect to buy Shikitsune
+   +0.00  sell Velocect to buy Prismagon
+   +0.00  sell Velocect to buy Panbud
+   ... and 16 weaker options
+Decision: sell Velocect to buy Fumungus. It is about the same as doing nothing (+0.01).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 8 | $45 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  reroll   <-- my choice
+   +0.01  buy Fumungus $40
+   +0.00  buy Stingarde $10
+   +0.00  buy Shikitsune $35
+   +0.00  buy Prismagon $45
+   ... and 5 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.01), ahead of 'buy Fumungus $40' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $42 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.06  reroll   <-- my choice
+   +0.03  buy Electranade $25
+   +0.03  sell Unknown Rare
+   +0.00  buy Puffloon $30
+   +0.00  buy Pebbler $15
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.06), ahead of 'buy Electranade $25' (+0.03).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $39 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.09  reroll   <-- my choice
+   +0.01  sell Electranade
+   +0.00  buy Scorchimp $10
+   +0.00  buy Puffloon $30
+   +0.00  buy Pyronade $25
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.09), ahead of 'sell Electranade' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $36 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  reroll   <-- my choice
+   +0.00  buy Boomagon $30
+   +0.00  buy Stalagrove $35
+   +0.00  buy Noxalith $30
+   +0.00  buy Cinderfly $25
+   ... and 5 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $33 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  reroll   <-- my choice
+   +0.00  buy Stingarde $10
+   +0.00  buy Cinderfly $25
+   +0.00  buy Gildshell $25
+   +0.00  buy Craghorn $25
+   ... and 7 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 8 | $30 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Boomagon $30
+   +0.00  buy Spinarai $10
+   +0.00  buy Gildshell $25
+   +0.00  buy Dirgefin $25
+   +0.00  sell Unknown Rare
+   ... and 7 weaker options
+Decision: spend the surplus: $30 in hand, $4 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 8 | $27 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.10  buy Cherubble $25   <-- my choice
+   +0.10  sell Unknown Rare
+   +0.06  sell Noxnimbus
+   +0.01  sell Electranade
+   +0.00  sell Noxnimbus
+   ... and 11 weaker options
+Decision: buy Cherubble $25. It is a small improvement (+0.10), ahead of 'sell Unknown Rare' (+0.10).
+
+Trinket choice between Topaz Amulet, Silver Watch, Ancient Plume: I took Silver Watch because Silver Watch +0.020; Topaz Amulet +0.015; Ancient Plume +0.000. (now on 'shop')
+
+--- Day 8 | $2 | 9 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 50%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Unknown Rare
+   -0.04  sell Noxnimbus
+   -0.08  sell Electranade
+   -0.10  sell Noxnimbus
+Nothing left in the shop makes the team better, so the turn ends here.
+Battle: expected win chance 50%.
+
+Event choices (same scale as shop decisions, bigger is better):
+   -1.00  (unreadable): could not read this choice
+   +0.05  Gain Mysterious Gem: 'Mysterious Gem' is not in my data yet, so a small fixed guess [guess]
+   +0.24  Gain Dryad's Charm: trinket Dryad's Charm in the simulator   <-- my choice
+Decision: Gain Dryad's Charm.
+(now on 'shop')
+
+--- Day 9 | $72 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.05  reroll   <-- my choice
+   +0.00  buy Velocect $15
+   +0.00  buy Noxalith $30
+   +0.00  buy Coalem $45
+   +0.00  buy Dracana $40
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.05).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 9 | $72 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Dryadell $45
+   +0.00  buy Cicadence $25
+   +0.00  buy Noxalith $30
+   +0.00  buy Puffloon $30
+   +0.00  use Mystic Pearl
+   ... and 5 weaker options
+Decision: spend the surplus: $72 in hand, $44 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 9 | $72 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.16  use Purple Gift   <-- my choice
+   +0.05  reroll
+   +0.00  buy Stalagrove $35
+   +0.00  buy Pyronade $25
+   +0.00  buy Craghorn $25
+   ... and 5 weaker options
+Decision: use Purple Gift. It is a clear improvement (+0.16), ahead of 'reroll' (+0.05).
+
+Trinket choice between Repeater Charm: I took Repeater Charm because Repeater Charm +0.000. (now on 'shop')
+
+--- Day 9 | $32 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  sell Unknown Rare to buy Stalagrove
+   +0.00  buy Pyronade $25
+   +0.00  buy Craghorn $25
+   +0.00  buy Panbud $10
+   ... and 7 weaker options
+Decision: reroll. It is a small improvement (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 9 | $32 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.10  reroll   <-- my choice
+   +0.00  sell Unknown Rare to buy Thorntail
+   +0.00  sell Unknown Rare to buy Thorntail
+   +0.00  buy Frizzly $25
+   +0.00  buy Cinderfly $25
+   ... and 9 weaker options
+Decision: reroll. It is a small improvement (+0.10).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 9 | $29 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  buy Pebbler $15
+   +0.00  sell Unknown Rare to buy Plunderbird
+   +0.00  sell Unknown Rare to buy Dracana
+   +0.00  buy Venopuff $15
+   ... and 11 weaker options
+Decision: reroll. It is a small improvement (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 9 | $26 | 6 lives | 6 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Berroon $20
+   +0.00  sell Unknown Rare to buy Shikitsune
+   +0.00  sell Unknown Rare to buy Stalagrove
+   +0.00  buy Humbolt $25
+   +0.00  sell Unknown Rare
+   ... and 8 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Battle: expected win chance 38%.
+
+--- Day 10 | $101 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 28%.
+Decision: sell Noxnimbus: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 10 | $114 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 28%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  reroll   <-- my choice
+   +0.05  buy Prismagon $45
+   +0.05  buy Electranade $25
+   +0.05  buy Formiqueen $25
+   +0.05  buy Magmalith $30
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.08), ahead of 'buy Prismagon $45' (+0.05).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 10 | $114 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 28%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  reroll   <-- my choice
+   +0.00  buy Thorntail $35
+   +0.00  buy Shogapede $30
+   +0.00  buy Formiqueen $25
+   +0.00  buy Cherubble $25
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.08).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 10 | $114 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 28%.
+Options I weighed (gain compared with ending the turn now):
+   +0.11  buy Coalem $45   <-- my choice
+   +0.11  buy Cherubble $25
+   +0.11  buy Fumungus $40
+   +0.11  buy Craghorn $25
+   +0.11  use Gold Powder
+   ... and 4 weaker options
+Decision: buy Coalem $45. It is a small improvement (+0.11), ahead of 'buy Cherubble $25' (+0.11).
+
+--- Day 10 | $69 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 28%.
+Options I weighed (gain compared with ending the turn now):
+   +0.10  buy Cherubble $25   <-- my choice
+   +0.10  buy Fumungus $40
+   +0.10  buy Craghorn $25
+   +0.10  use Gold Powder
+   +0.10  sell Unknown Rare
+   ... and 3 weaker options
+Decision: buy Cherubble $25. It is a small improvement (+0.10), ahead of 'buy Fumungus $40' (+0.10).
+
+--- Day 10 | $44 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 28%.
+Options I weighed (gain compared with ending the turn now):
+   +0.10  buy Fumungus $40   <-- my choice
+   +0.10  sell Unknown Rare
+   +0.08  sell Electranade
+   +0.00  buy Craghorn $25
+   +0.00  use Gold Powder
+   ... and 2 weaker options
+Decision: buy Fumungus $40. It is a small improvement (+0.10), ahead of 'sell Unknown Rare' (+0.10).
+
+--- Day 10 | $4 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Unknown Rare
+   +0.00  reroll
+   -0.02  sell Electranade
+   -0.21  sell Noxnimbus
+Decision: spend the surplus: $4 in hand, $0 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 10 | $4 | 6 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 38%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Unknown Rare to buy Guardiant
+   +0.00  sell Unknown Rare
+   -0.02  sell Electranade
+   -0.13  sell Electranade to buy Guardiant
+   -0.21  sell Noxnimbus
+   ... and 1 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Fumungus from bench slot 4 to team bottom left: this layout won the most simulated battles.
+Battle: expected win chance 38%.
+
+--- Day 11 | $84 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  sell Cherubble to buy Prismagon   <-- my choice
+   +0.01  sell Unknown Rare to buy Prismagon
+   +0.01  sell Cherubble to buy Prismagon   <-- my choice
+   +0.01  sell Unknown Rare to buy Prismagon
+   +0.01  sell Coalem
+   ... and 15 weaker options
+Decision: sell Cherubble to buy Prismagon. It is about the same as doing nothing (+0.01), ahead of 'sell Unknown Rare to buy Prismagon' (+0.01).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 11 | $97 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  sell Coalem   <-- my choice
+   +0.08  sell Unknown Rare
+   +0.08  sell Venopuff
+   +0.05  sell Electranade
+   +0.05  sell Fumungus
+   ... and 6 weaker options
+Decision: sell Coalem. It is a small improvement (+0.08), ahead of 'sell Unknown Rare' (+0.08).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 11 | $120 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  use Pom Berry   <-- my choice
+   +0.08  buy Prismagon $45
+   +0.08  buy Prismagon $45
+   +0.08  sell Unknown Rare
+   +0.08  sell Venopuff
+   ... and 5 weaker options
+Decision: use Pom Berry. It is a small improvement (+0.08), ahead of 'buy Prismagon $45' (+0.08).
+
+--- Day 11 | $119 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.35  reroll   <-- my choice
+   +0.08  buy Prismagon $45
+   +0.08  buy Prismagon $45
+   +0.08  sell Unknown Rare
+   +0.08  sell Venopuff
+   ... and 4 weaker options
+Decision: reroll. It is a clear improvement (+0.35), ahead of 'buy Prismagon $45' (+0.08).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $119 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   +0.00  buy Puffloon $30
+   +0.00  buy Pylong $40
+   +0.00  buy Aegistruct $45
+   +0.00  buy Mosslug $10
+   ... and 5 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $119 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.02  reroll   <-- my choice
+   +0.00  buy Pylong $40
+   +0.00  buy Coalem $45
+   +0.00  buy Shikitsune $35
+   +0.00  buy Brawlmantis $30
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.02).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $119 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.38  reroll   <-- my choice
+   +0.22  use Lootbox
+   +0.05  buy Stalagrove $35
+   +0.05  buy Celestia $30
+   +0.05  buy Electranade $25
+   ... and 5 weaker options
+Decision: reroll. It is a clear improvement (+0.38), ahead of 'use Lootbox' (+0.22).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $116 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.92  sell Electranade   <-- my choice
+   +0.92  buy Boomagon $30
+   +0.92  buy Spinarai $10
+   +0.92  buy Cobrex $50
+   +0.92  buy Magmalith $30
+   ... and 5 weaker options
+Decision: sell Electranade. It is a big improvement (+0.92), ahead of 'buy Boomagon $30' (+0.92).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 11 | $129 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Decision: sell Unknown Rare: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 11 | $149 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.95  buy Boomagon $30   <-- my choice
+   +0.95  buy Spinarai $10
+   +0.95  buy Cobrex $50
+   +0.95  buy Magmalith $30
+   +0.95  use Fake Coin
+   ... and 4 weaker options
+Decision: buy Boomagon $30. It is a big improvement (+0.95), ahead of 'buy Spinarai $10' (+0.95).
+
+--- Day 11 | $119 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.95  buy Spinarai $10   <-- my choice
+   +0.95  buy Cobrex $50
+   +0.95  buy Magmalith $30
+   +0.95  use Fake Coin
+   +0.93  sell Venopuff
+   ... and 3 weaker options
+Decision: buy Spinarai $10. It is a big improvement (+0.95), ahead of 'buy Cobrex $50' (+0.95).
+
+--- Day 11 | $109 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 12%.
+Options I weighed (gain compared with ending the turn now):
+   +0.95  buy Cobrex $50   <-- my choice
+   +0.95  buy Magmalith $30
+   +0.95  use Fake Coin
+   +0.94  sell Venopuff
+   +0.89  sell Runerock
+   ... and 2 weaker options
+Decision: buy Cobrex $50. It is a big improvement (+0.95), ahead of 'buy Magmalith $30' (+0.95).
+
+--- Day 11 | $59 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  reroll   <-- my choice
+   +0.00  buy Magmalith $30
+   +0.00  use Fake Coin
+   -0.06  sell Runerock
+   -0.44  sell Venopuff
+   ... and 1 weaker options
+Decision: reroll. It is a small improvement (+0.07).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $56 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  reroll   <-- my choice
+   +0.00  use Shiny Pebble
+   +0.00  buy Humbolt $25
+   +0.00  buy Noxalith $30
+   +0.00  buy Noxalith $30
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.08), ahead of 'use Shiny Pebble' (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $53 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.20  reroll   <-- my choice
+   +0.17  use Rare Candy
+   +0.00  buy Blazewing $35
+   +0.00  buy Dracana $40
+   +0.00  buy Onsetra $50
+   ... and 4 weaker options
+Decision: reroll. It is a clear improvement (+0.20), ahead of 'use Rare Candy' (+0.17).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $50 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   +0.00  buy Frizzly $25
+   +0.00  buy Venopuff $15
+   +0.00  buy Frizzly $25
+   +0.00  buy Shikitsune $35
+   ... and 3 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $47 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Aegistruct $45
+   +0.00  buy Dribblet $10
+   +0.00  buy Brawlmantis $30
+   +0.00  buy Brawlmantis $30
+   +0.00  use Focus Pill
+   ... and 4 weaker options
+Decision: spend the surplus: $47 in hand, $35 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 11 | $44 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 62%.
+Options I weighed (gain compared with ending the turn now):
+   +0.21  sell Runerock   <-- my choice
+   +0.19  buy Fumungus $40
+   +0.19  sell Venopuff
+   +0.06  reroll
+   +0.06  use Basic Candy
+   ... and 4 weaker options
+Decision: sell Runerock. It is a clear improvement (+0.21), ahead of 'buy Fumungus $40' (+0.19).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 11 | $74 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.39  buy Spinarai $10   <-- my choice
+   +0.39  sell Venopuff
+   +0.39  buy Cherubble $25
+   +0.39  buy Craghorn $25
+   +0.38  use Basic Candy
+   ... and 4 weaker options
+Decision: buy Spinarai $10. It is a clear improvement (+0.39), ahead of 'sell Venopuff' (+0.39).
+
+--- Day 11 | $64 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 56%.
+Options I weighed (gain compared with ending the turn now):
+   +0.39  sell Venopuff   <-- my choice
+   +0.39  buy Fumungus $40
+   +0.34  sell Noxnimbus
+   +0.04  use Basic Candy
+   +0.01  sell Fumungus
+   ... and 3 weaker options
+Decision: sell Venopuff. It is a clear improvement (+0.39), ahead of 'buy Fumungus $40' (+0.39).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 11 | $87 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 59%.
+Options I weighed (gain compared with ending the turn now):
+   +0.39  use Basic Candy   <-- my choice
+   +0.35  buy Cherubble $25
+   +0.35  buy Fumungus $40
+   +0.35  buy Craghorn $25
+   +0.29  sell Noxnimbus
+   ... and 2 weaker options
+Decision: use Basic Candy. It is a clear improvement (+0.39), ahead of 'buy Cherubble $25' (+0.35).
+
+--- Day 11 | $57 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 59%.
+Options I weighed (gain compared with ending the turn now):
+   +0.36  buy Fumungus $40   <-- my choice
+   +0.29  sell Noxnimbus
+   +0.07  reroll
+   +0.00  buy Cherubble $25
+   +0.00  buy Craghorn $25
+   ... and 2 weaker options
+Decision: buy Fumungus $40. It is a clear improvement (+0.36), ahead of 'sell Noxnimbus' (+0.29).
+
+--- Day 11 | $17 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   +0.00  sell Cherubble to buy Craghorn
+   +0.00  sell Cherubble to buy Galvanine
+   -0.22  sell Noxnimbus to buy Cherubble
+   -0.22  sell Noxnimbus to buy Craghorn
+   ... and 4 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $14 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll   <-- my choice
+   +0.00  sell Cherubble to buy Celestia
+   +0.00  buy Scorchimp $10
+   +0.00  sell Cherubble to buy Magmalith
+   +0.00  sell Cherubble to buy Humbolt
+   ... and 5 weaker options
+Decision: reroll. It is about the same as doing nothing (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 11 | $11 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  sell Cherubble to buy Boomagon   <-- my choice
+   +0.00  reroll
+   +0.00  sell Cherubble to buy Magmalith
+   +0.00  sell Cherubble to buy Lignite
+   +0.00  sell Cherubble to buy Dryadell
+   ... and 3 weaker options
+Decision: sell Cherubble to buy Boomagon. It is a small improvement (+0.03), ahead of 'reroll' (+0.00).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 11 | $49 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  buy Boomagon $30   <-- my choice
+   +0.01  reroll
+   +0.00  buy Magmalith $30
+   +0.00  buy Lignite $30
+   +0.00  buy Dryadell $45
+   ... and 3 weaker options
+Decision: buy Boomagon $30. It is a small improvement (+0.03), ahead of 'reroll' (+0.01).
+
+--- Day 11 | $19 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.05  sell Noxnimbus
+   -0.05  sell Aristobat
+   -0.33  sell Noxnimbus to buy Humbolt
+   -0.33  sell Noxnimbus to buy Lignite
+   ... and 4 weaker options
+Decision: spend the surplus: $19 in hand, $7 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 11 | $16 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.05  sell Noxnimbus
+   -0.05  sell Aristobat
+   -0.33  sell Noxnimbus to buy Pyronade
+   -0.34  sell Noxnimbus to buy Cinderfly
+   ... and 4 weaker options
+Decision: spend the surplus: $16 in hand, $4 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 11 | $13 | 3 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  reroll
+   -0.05  sell Noxnimbus
+   -0.05  sell Aristobat
+   -0.20  sell Noxnimbus to buy Runerock
+   -0.20  sell Noxnimbus to buy Runerock
+   ... and 4 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Fumungus from bench slot 3 to team top left: this layout won the most simulated battles.
+Move Fumungus from team bottom left to team top middle: this layout won the most simulated battles.
+Move Spinarai from team bottom middle to team top right: this layout won the most simulated battles.
+Move Cobrex from bench slot 2 to team bottom left: this layout won the most simulated battles.
+Move Fumungus from bench slot 3 to team bottom middle: this layout won the most simulated battles.
+Move Cobrex from bench slot 2 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 69%.
+
+Event choices (same scale as shop decisions, bigger is better):
+   +0.19  Get a Super Rare trinket gift: a Super Rare trinket gift (the planner's value of that gift); plus a bonus because a trinket keeps working for the rest of the run
+   +0.17  Gain a random level 2 Super Rare monster: average of 4 sample level 2 Super Rare monsters added to the team
+   +0.26  Gain Mysterious Charm: Mysterious Charm (+25% HP) in the simulator   <-- my choice
+Decision: Gain Mysterious Charm.
+(now on 'shop')
+
+--- Day 12 | $98 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Decision: sell Spinarai: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 12 | $103 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.09  buy Aegistruct $45   <-- my choice
+   +0.09  buy Aegistruct $45   <-- my choice
+   +0.07  use Lootbox
+   +0.02  reroll
+   +0.00  buy Zephyrex $60
+   ... and 5 weaker options
+Decision: buy Aegistruct $45. It is a small improvement (+0.09), ahead of 'use Lootbox' (+0.07).
+
+--- Day 12 | $58 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.11  reroll   <-- my choice
+   +0.09  buy Aegistruct $45
+   +0.07  sell Boomagon
+   +0.07  sell Boomagon
+   +0.00  use Lootbox
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.11), ahead of 'buy Aegistruct $45' (+0.09).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $58 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.00  use Gold Powder
+   +0.00  buy Mosslug $10
+   +0.00  buy Thorntail $35
+   +0.00  buy Dracana $40
+   ... and 5 weaker options
+Decision: reroll. It is a small improvement (+0.03), ahead of 'use Gold Powder' (+0.00).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $58 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Celestia $30
+   +0.00  buy Cherubble $25
+   +0.00  buy Shogapede $30
+   +0.00  buy Cherubble $25
+   +0.00  use Coffee
+   ... and 5 weaker options
+Decision: spend the surplus: $58 in hand, $32 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 12 | $58 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.01  use Basic Candy
+   +0.00  buy Dryadell $45
+   +0.00  buy Craghorn $25
+   +0.00  buy Dryadell $45
+   ... and 7 weaker options
+Decision: reroll. It is a small improvement (+0.03), ahead of 'use Basic Candy' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $55 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.11  reroll   <-- my choice
+   +0.00  buy Blixie $55
+   +0.00  buy Plunderbird $30
+   +0.00  buy Lignite $30
+   -0.02  sell Boomagon to buy Draconarch
+   ... and 6 weaker options
+Decision: reroll. It is a small improvement (+0.11).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $52 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.05  reroll   <-- my choice
+   +0.00  buy Berroon $20
+   +0.00  buy Dracana $40
+   +0.00  buy Scorchimp $10
+   +0.00  buy Pyronade $25
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.05).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 12 | $49 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.39  sell Boomagon to buy Stellagon   <-- my choice
+   +0.39  sell Boomagon to buy Stellagon   <-- my choice
+   +0.39  sell Boomagon
+   +0.39  sell Boomagon
+   +0.09  buy Aegistruct $45
+   ... and 9 weaker options
+Decision: sell Boomagon to buy Stellagon. It is a clear improvement (+0.39), ahead of 'sell Boomagon' (+0.39).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 12 | $64 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Decision: sell Boomagon: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 12 | $79 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 69%.
+Options I weighed (gain compared with ending the turn now):
+   +0.41  buy Stellagon $50   <-- my choice
+   +0.41  use Coffee
+   +0.21  reroll
+   +0.20  sell Fumungus
+   +0.09  buy Aegistruct $45
+   ... and 3 weaker options
+Decision: buy Stellagon $50. It is a clear improvement (+0.41), ahead of 'use Coffee' (+0.41).
+
+--- Day 12 | $29 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Coffee
+   +0.00  reroll
+   -0.09  sell Fumungus to buy Aegistruct
+   -0.09  sell Fumungus
+   -0.19  sell Fumungus to buy Clawnetic
+   ... and 3 weaker options
+Decision: spend the surplus: $29 in hand, $3 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 12 | $26 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  use Apex Bait   <-- my choice
+   +0.00  buy Frizzly $25
+   +0.00  reroll
+   -0.19  sell Fumungus to buy Blazewing
+   -0.19  sell Fumungus to buy Ironcore
+   ... and 6 weaker options
+Decision: use Apex Bait. It is about the same as doing nothing (+0.01).
+
+--- Day 12 | $6 | 1 lives | 7 badges ---
+Chance to win today's battle with the team as it is: 75%.
+Options I weighed (gain compared with ending the turn now):
+   -0.19  sell Fumungus to buy Frizzly
+   -0.19  sell Fumungus to buy Cinderfly
+   -0.19  sell Fumungus
+   -0.50  sell Fumungus to buy Frizzly
+   -0.50  sell Fumungus to buy Cinderfly
+   ... and 1 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Cobrex from team bottom left to team top left: this layout won the most simulated battles.
+Move Fumungus from team top middle to bench slot 3: this layout won the most simulated battles.
+Move Spinarai from team top right to team top middle: this layout won the most simulated battles.
+Move Cobrex from team bottom left to team top right: this layout won the most simulated battles.
+Move a monster from bench slot 3 to team bottom left: this layout won the most simulated battles.
+Move Stellagon from bench slot 2 to team bottom middle: this layout won the most simulated battles.
+Battle: expected win chance 75%.
+
+Ranked: the rank card showed at the end of the run (saved as rank_20261114_225901.png). I press Confirm. (now on 'run_over')
+

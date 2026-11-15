@@ -1,0 +1,219 @@
+HOW TO READ THIS: each option gets a 'gain' = how much better the run looks after it
+(and the buys it leads to) than ending the turn now. It mixes the chance to win today,
+the next two days, money kept and progress to level-ups. Bigger is better.
+
+Trainer choice between Smuggler, Burglar, Masked Man: Burglar. Reason: Burglar: Ed's record and fit with the plan (scores [0.25, 0.43, 0.12]).
+
+--- Day 1 | $30 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 0%.
+Options I weighed (gain compared with ending the turn now):
+   +1.36  buy Mosslug $10   <-- my choice
+   +1.08  buy Stingarde $10
+   +1.08  buy Velocect $15
+   +1.08  use Green Stone
+   +1.05  reroll
+   ... and 1 weaker options
+Decision: buy Mosslug $10. It is a big improvement (+1.36), ahead of 'buy Stingarde $10' (+1.08).
+
+--- Day 1 | $20 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 43%.
+Options I weighed (gain compared with ending the turn now):
+   +0.66  reroll   <-- my choice
+   +0.49  buy Velocect $15
+   +0.49  use Green Stone
+   +0.35  buy Stingarde $10
+   +0.27  buy Joltail $15
+Decision: reroll. It is a big improvement (+0.66), ahead of 'buy Velocect $15' (+0.49).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 1 | $17 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 43%.
+Options I weighed (gain compared with ending the turn now):
+   +0.61  buy Magmite $15   <-- my choice
+   +0.61  buy Magmite $15   <-- my choice
+   +0.61  use Fake Coin
+   +0.38  buy Dribblet $10
+   +0.30  reroll
+   ... and 1 weaker options
+Decision: buy Magmite $15. It is a big improvement (+0.61), ahead of 'use Fake Coin' (+0.61).
+
+--- Day 1 | $2 | 10 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Fake Coin
+Nothing left in the shop makes the team better, so the turn ends here.
+Battle: expected win chance 81%.
+
+--- Day 2 | $37 | 9 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 9%.
+Options I weighed (gain compared with ending the turn now):
+   +1.93  use Voucher   <-- my choice
+   +1.76  buy Runerock $20
+   +1.76  buy Mosslug $10
+   +1.65  sell Magmite
+   +1.60  buy Spinarai $10
+   ... and 3 weaker options
+Decision: use Voucher. It is a big improvement (+1.93), ahead of 'buy Runerock $20' (+1.76).
+
+--- Day 2 | $32 | 9 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 19%.
+Options I weighed (gain compared with ending the turn now):
+   +1.80  buy Runerock $20   <-- my choice
+   +1.80  buy Mosslug $10
+   +1.80  sell Magmite
+   +1.58  buy Stingarde $10
+   +1.15  sell Mosslug
+   ... and 2 weaker options
+Decision: buy Runerock $20. It is a big improvement (+1.80), ahead of 'buy Mosslug $10' (+1.80).
+
+--- Day 2 | $12 | 9 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 91%.
+Options I weighed (gain compared with ending the turn now):
+   +0.38  buy Mosslug $10   <-- my choice
+   +0.38  sell Magmite
+   +0.34  buy Spinarai $10
+   +0.16  buy Stingarde $10
+   -0.01  reroll
+   ... and 1 weaker options
+Decision: buy Mosslug $10. It is a clear improvement (+0.38), ahead of 'sell Magmite' (+0.38).
+
+--- Day 2 | $2 | 9 lives | 0 badges ---
+Chance to win today's battle with the team as it is: 91%.
+Options I weighed (gain compared with ending the turn now):
+   -0.01  sell Magmite to buy Spinarai
+   -0.01  sell Magmite
+   -0.09  sell Craghorn to buy Spinarai
+   -0.09  sell Craghorn
+   -0.17  sell Magmite to buy Stingarde
+   ... and 1 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Battle: expected win chance 91%.
+
+Event choices (same scale as shop decisions, bigger is better):
+   +0.52  Gain a foreign Rare monster. It can now appear in your shop.: average of the foreign Rare monsters I know (Cordycant, Dollhime, Kickrane, Pyrokami) added to the team; plus a bonus because a free Rare, and it can then appear in the shop   <-- my choice
+   +0.05  Gain Kaleidoscope: 'Kaleidoscope' is not in my data yet, so a small fixed guess [guess]
+   +0.05  Gain Fake Diamond: 'Fake Diamond' is not in my data yet, so a small fixed guess [guess]
+Decision: Gain a foreign Rare monster. It can now appear in your shop..
+(now on 'shop')
+
+--- Day 3 | $42 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 73%.
+Options I weighed (gain compared with ending the turn now):
+   +0.24  reroll   <-- my choice
+   +0.17  buy Velocect $15
+   +0.17  buy Venopuff $15
+   +0.17  use Coupon
+   +0.14  buy Frizzly $25
+   ... and 3 weaker options
+Decision: reroll. It is a clear improvement (+0.24), ahead of 'buy Velocect $15' (+0.17).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 3 | $39 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 73%.
+Options I weighed (gain compared with ending the turn now):
+   +0.70  sell Mosslug   <-- my choice
+   +0.70  sell Mosslug   <-- my choice
+   +0.44  buy Venopuff $15
+   +0.44  buy Panbud $10
+   +0.44  use Green Stone
+   ... and 3 weaker options
+Decision: sell Mosslug. It is a big improvement (+0.70), ahead of 'buy Venopuff $15' (+0.44).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 3 | $44 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 44%.
+Options I weighed (gain compared with ending the turn now):
+   +1.32  buy Noxnimbus $25   <-- my choice
+   +1.26  sell Mosslug
+   +1.21  sell Magmite
+   +1.18  buy Venopuff $15
+   +1.18  use Green Stone
+   ... and 3 weaker options
+Decision: buy Noxnimbus $25. It is a big improvement (+1.32), ahead of 'sell Mosslug' (+1.26).
+
+--- Day 3 | $19 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 60%.
+Options I weighed (gain compared with ending the turn now):
+   +1.17  sell Mosslug   <-- my choice
+   +1.00  sell Magmite
+   +0.96  buy Venopuff $15
+   +0.96  use Green Stone
+   +0.26  buy Mosslug $10
+   ... and 2 weaker options
+Decision: sell Mosslug. It is a big improvement (+1.17), ahead of 'sell Magmite' (+1.00).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 3 | $24 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 29%.
+Options I weighed (gain compared with ending the turn now):
+   +1.71  buy Venopuff $15   <-- my choice
+   +1.71  use Green Stone
+   +1.49  sell Magmite
+   +0.72  reroll
+   +0.67  sell Runerock
+   ... and 2 weaker options
+Decision: buy Venopuff $15. It is a big improvement (+1.71), ahead of 'use Green Stone' (+1.71).
+
+--- Day 3 | $9 | 9 lives | 1 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Green Stone
+   +0.00  reroll
+   -0.02  sell Craghorn to buy Mosslug
+   -0.02  sell Craghorn to buy Panbud
+   -0.21  sell Magmite to buy Mosslug
+   ... and 5 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Noxnimbus from team top middle to bench slot 1: this layout won the most simulated battles.
+Move Runerock from team top right to team top middle: this layout won the most simulated battles.
+Move a monster from bench slot 1 to team top right: this layout won the most simulated battles.
+Battle: expected win chance 94%.
+
+--- Day 4 | $54 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 84%.
+Options I weighed (gain compared with ending the turn now):
+   +0.22  buy Runerock $20   <-- my choice
+   +0.22  buy Brawlmantis $30
+   +0.22  buy Berroon $20
+   +0.22  buy Dirgefin $25
+   +0.22  use Fake Coin
+   ... and 3 weaker options
+Decision: buy Runerock $20. It is a clear improvement (+0.22), ahead of 'buy Brawlmantis $30' (+0.22).
+
+--- Day 4 | $34 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Options I weighed (gain compared with ending the turn now):
+   +0.14  reroll   <-- my choice
+   +0.01  sell Magmite
+   +0.00  buy Brawlmantis $30
+   +0.00  buy Berroon $20
+   +0.00  buy Dirgefin $25
+   ... and 2 weaker options
+Decision: reroll. It is a small improvement (+0.14), ahead of 'sell Magmite' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 4 | $31 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Options I weighed (gain compared with ending the turn now):
+   +0.08  reroll   <-- my choice
+   +0.01  sell Magmite
+   +0.00  buy Plunderbird $30
+   +0.00  buy Guardiant $15
+   +0.00  buy Boomagon $30
+   ... and 3 weaker options
+Decision: reroll. It is a small improvement (+0.08), ahead of 'sell Magmite' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 4 | $28 | 9 lives | 2 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Options I weighed (gain compared with ending the turn now):
+   +0.22  buy Runerock $20   <-- my choice
+   +0.22  use Gray Chip
+   +0.22  sell Magmite
+   +0.10  reroll
+   +0.03  buy Magmite $15
+   ... and 5 weaker options
+Decision: buy Runerock $20. It is a clear improvement (+0.22), ahead of 'use Gray Chip' (+0.22).
+
+Trinket choice between Rally Flag, Earth Crest, Fire Orb: I took Fire Orb because Fire Orb +0.010; Rally Flag +0.007; Earth Crest +0.000. (now on 'trinket_pick')
+

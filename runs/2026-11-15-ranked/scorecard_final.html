@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batomon Buddy scorecard</title><style>
+:root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#6b6a65; --line:#e3e1da; --win:#1f7a3a; --loss:#b3261e; --stop:#9a6700; }
+@media (prefers-color-scheme: dark) { :root { --bg:#161614; --fg:#ecebe6; --muted:#a3a29b; --line:#33322e;
+  --win:#5fc27c; --loss:#f08b84; --stop:#e0b252; } }
+body { background:var(--bg); color:var(--fg); font:15px/1.45 system-ui, sans-serif; margin:0; padding:16px; }
+main { max-width:1100px; margin:0 auto; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:24px 0 8px; }
+.muted { color:var(--muted); }
+.tiles { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.tile { border:1px solid var(--line); border-radius:8px; padding:8px 12px; min-width:120px; }
+.tile b { display:block; font-size:22px; }
+.wrap { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; font-size:14px; }
+th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:600; }
+.won { color:var(--win); font-weight:600; } .lost { color:var(--loss); font-weight:600; }
+.stopped, .unfinished { color:var(--stop); font-weight:600; }
+td.why { max-width:340px; color:var(--muted); }
+</style></head>
+<body><main>
+<h1>Batomon Buddy scorecard</h1>
+<p class="muted">Made 2026-11-15 06:20 from 105 log(s).
+A run is won at 10 badges. "Stops" counts the times the bot stopped to ask for help during the run.
+Rank before and after is not read from the game yet.</p>
+<h2>Ranked</h2>
+<div class="tiles">
+<div class="tile"><span class="muted">Runs</span><b>23</b></div>
+<div class="tile"><span class="muted">Finished</span><b>23</b></div>
+<div class="tile"><span class="muted">Won (10 badges)</span><b>7</b></div>
+<div class="tile"><span class="muted">Average badges</span><b>7.4</b></div>
+<div class="tile"><span class="muted">Times it stopped for help</span><b>11</b></div>
+</div>
+<div class="wrap"><table><tr><th>Started</th><th>Mode</th><th>Trainer</th><th>Result</th><th>Badges</th><th>Last day</th><th>Lives lost on day</th><th>Stops</th><th>Last stop</th></tr>
+<tr><td>2026-11-15 05:53</td><td>Ranked</td><td>Bug Catcher</td><td class="lost">lost</td><td>9</td><td>14</td><td>8, 10, 11</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 05:23</td><td>Ranked</td><td>Gamer</td><td class="lost">lost</td><td>9</td><td>15</td><td>2, 3, 10, 13</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 04:49</td><td>Ranked</td><td>Monster Ranger</td><td class="lost">lost</td><td>8</td><td>14</td><td>1, 2, 9, 10, 11</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 04:29</td><td>Ranked</td><td>Swim Coach</td><td class="lost">lost</td><td>4</td><td>9</td><td>5, 6, 7</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 04:02</td><td>Ranked</td><td>Scavenger</td><td class="lost">lost</td><td>7</td><td>12</td><td>7, 8, 9</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 03:42</td><td>Ranked</td><td>Burglar</td><td class="lost">lost</td><td>5</td><td>10</td><td>3, 7, 8, 9</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 03:22</td><td>Ranked</td><td>Twins</td><td class="lost">lost</td><td>5</td><td>10</td><td>3, 5, 8, 9</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 03:02</td><td>Ranked</td><td>Bug Catcher</td><td class="lost">lost</td><td>3</td><td>9</td><td>1, 2, 6, 7, 8</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 02:34</td><td>Ranked</td><td>Scavenger</td><td class="lost">lost</td><td>8</td><td>13</td><td>5, 8, 9</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 02:11</td><td>Ranked</td><td>Monster Ranger</td><td class="won">won</td><td>10</td><td>11</td><td>5</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 01:48</td><td>Ranked</td><td>Gamer</td><td class="lost">lost</td><td>4</td><td>10</td><td>2, 3, 7, 8</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-15 01:03</td><td>Ranked</td><td>Smuggler</td><td class="won">won</td><td>10</td><td>12</td><td>4, 11</td><td>4</td><td class="why">buy card 2 failed: state after the action not read cleanly: shop 0: unknown name &#x27;Lumi?el&#x27; (capture: unread_20261115_013857_414679.png)</td></tr>
+<tr><td>2026-11-15 00:29</td><td>Ranked</td><td>Scavenger</td><td class="won">won</td><td>10</td><td>13</td><td>6, 7</td><td>1</td><td class="why">after Cash In: now on &#x27;unknown&#x27; (capture: stuck_20261115_005359.png)</td></tr>
+<tr><td>2026-11-15 00:05</td><td>Ranked</td><td>Youngster</td><td class="won">won</td><td>10</td><td>11</td><td>7</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-14 23:21</td><td>Ranked</td><td>Burglar</td><td class="lost">lost</td><td>8</td><td>13</td><td>1, 8, 11, 12</td><td>2</td><td class="why">after Confirm on the stolen trinket: not on the trinket_stolen screen (trinket_pick) (capture: None)</td></tr>
+<tr><td>2026-11-14 23:00</td><td>Ranked</td><td>Twins</td><td class="won">won</td><td>10</td><td>11</td><td>8</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-14 22:25</td><td>Ranked</td><td>Youngster</td><td class="lost">lost</td><td>7</td><td>12</td><td>2, 8, 10, 11</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-14 21:48</td><td>Ranked</td><td>Swim Coach</td><td class="won">won</td><td>10</td><td>14</td><td>2, 3, 10, 12</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-14 21:26</td><td>Ranked</td><td>Musician</td><td class="lost">lost</td><td>4</td><td>10</td><td>2, 3, 5, 7</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-14 20:57</td><td>Ranked</td><td>Shopkeeper</td><td class="lost">lost</td><td>9</td><td>12</td><td>4, 8</td><td>1</td><td class="why">reroll failed: state after the action not read cleanly: money: cannot read &#x27;$8?&#x27; (capture: unread_20261114_211129_606118.png)</td></tr>
+<tr><td>2026-11-14 20:29</td><td>Ranked</td><td>Swim Coach</td><td class="lost">lost</td><td>6</td><td>11</td><td>5, 8, 9</td><td>0</td><td class="why">-</td></tr>
+<tr><td>2026-11-14 19:51</td><td>Ranked</td><td>Youngster</td><td class="won">won</td><td>10</td><td>11</td><td>10</td><td>1</td><td class="why">after picking a trinket: now on &#x27;event&#x27;</td></tr>
+<tr><td>2026-11-14 19:15</td><td>Ranked</td><td>Lucky Girl</td><td class="lost">lost</td><td>5</td><td>12</td><td>1, 3, 10</td><td>2</td><td class="why">after CONFIRM: now on &#x27;unknown&#x27; (capture: stuck_20261114_194622.png)</td></tr>
+</table></div>
+<h2>Casual and runs started by hand</h2>
+<div class="tiles">
+<div class="tile"><span class="muted">Runs</span><b>11</b></div>
+<div class="tile"><span class="muted">Finished</span><b>8</b></div>
+<div class="tile"><span class="muted">Won (10 badges)</span><b>1</b></div>
+<div class="tile"><span class="muted">Average badges</span><b>6.2</b></div>
+<div class="tile"><span class="muted">Times it stopped for help</span><b>59</b></div>
+</div>
+<div class="wrap"><table><tr><th>Started</th><th>Mode</th><th>Trainer</th><th>Result</th><th>Badges</th><th>Last day</th><th>Lives lost on day</th><th>Stops</th><th>Last stop</th></tr>
+<tr><td>2026-11-14 12:09</td><td>Casual</td><td>Monster Ranger</td><td class="lost">lost</td><td>6</td><td>11</td><td>2, 6, 9, 10</td><td>2</td><td class="why">overflow: now on &#x27;overflow&#x27; (capture: stuck_20261114_190351.png)</td></tr>
+<tr><td>2026-11-14 11:27</td><td>?</td><td>Bug Catcher</td><td class="won">won</td><td>10</td><td>14</td><td>3, 4, 9, 12</td><td>4</td><td class="why">rank bar: cannot read &#x27;?ank?a?*1%*2%*20%*47%*30%&#x27; (capture: unread_20261114_120031_191501.png)</td></tr>
+<tr><td>2026-11-13 20:13</td><td>Casual</td><td>Shopkeeper</td><td class="stopped">stopped</td><td>3</td><td>7</td><td>2, 5, 6</td><td>5</td><td class="why">stopped from the control window</td></tr>
+<tr><td>2026-11-13 11:53</td><td>Casual</td><td>Swim Coach</td><td class="lost">lost</td><td>9</td><td>11</td><td>10</td><td>5</td><td class="why">no run is open; use --new-run to start a Casual run</td></tr>
+<tr><td>2026-11-13 08:41</td><td>Casual</td><td>Bug Catcher</td><td class="lost">lost</td><td>8</td><td>13</td><td>6, 8, 9</td><td>6</td><td class="why">after the title screen: now on &#x27;title&#x27; (capture: stuck_20261113_115150.png)</td></tr>
+<tr><td>2026-11-12 21:02</td><td>Casual</td><td>Chemist</td><td class="lost">lost</td><td>4</td><td>10</td><td>1, 4, 7</td><td>2</td><td class="why">after the event: now on &#x27;unknown&#x27; (capture: stuck_20261112_211945.png)</td></tr>
+<tr><td>2026-11-12 14:30</td><td>?</td><td>Musician</td><td class="stopped">stopped</td><td>9</td><td>13</td><td>1, 3, 12</td><td>9</td><td class="why">no run is open; use --new-run to start a Casual run</td></tr>
+<tr><td>2026-11-12 13:26</td><td>Casual</td><td>Chemist</td><td class="lost">lost</td><td>6</td><td>11</td><td>8, 9, 10</td><td>3</td><td class="why">after Continue: now on &#x27;unknown&#x27; (capture: stuck_20261112_142949.png)</td></tr>
+<tr><td>2026-11-12 08:54</td><td>?</td><td>Chef</td><td class="lost">lost</td><td>6</td><td>11</td><td>-</td><td>6</td><td class="why">screen &#x27;unknown&#x27; cannot be read yet (capture: unread_20261112_132556_932872.png)</td></tr>
+<tr><td>2026-11-11 10:49</td><td>?</td><td>Monster Ranger</td><td class="lost">lost</td><td>1</td><td>7</td><td>3, 4, 5</td><td>10</td><td class="why">screen &#x27;unknown&#x27; cannot be read yet (capture: unread_20261112_084842_304088.png)</td></tr>
+<tr><td>2026-11-11 10:33</td><td>?</td><td>Rich Lady</td><td class="stopped">stopped</td><td>3</td><td>8</td><td>-</td><td>7</td><td class="why">after CONFIRM: now on &#x27;unknown&#x27; (capture: stuck_20261111_104447.png)</td></tr>
+</table></div>
+</main></body></html>

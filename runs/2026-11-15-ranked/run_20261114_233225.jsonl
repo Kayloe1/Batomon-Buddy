@@ -1,0 +1,3 @@
+{"time": "2026-11-14T23:32:25", "kind": "session", "new_run": true, "ranked": true, "days": 99, "decide": "planner"}
+{"time": "2026-11-14T23:32:25", "kind": "trinket_stolen", "trinkets": ["Rally Flag"], "ok": false, "message": "not on the trinket_stolen screen (trinket_pick)"}
+{"time": "2026-11-14T23:32:25", "kind": "stop", "why": "after Confirm on the stolen trinket: not on the trinket_stolen screen (trinket_pick) (capture: None)", "state": null}
