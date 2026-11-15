@@ -139,7 +139,16 @@ def load_species() -> dict[str, Species]:
         base_rows = list(csv.DictReader(f))
     with open(DATA / "batomon_pantra_levels.csv", newline="", encoding="utf-8") as f:
         level_rows = {r["name"]: r for r in csv.DictReader(f)}
+    jl = DATA / "jinto_monsters_levels.csv"
+    if jl.exists():
+        with open(jl, newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                level_rows.setdefault(r["name"], r)
     rows = [dict(r) for r in base_rows]
+    jinto = DATA / "jinto_monsters.csv"
+    if jinto.exists():
+        with open(jinto, newline="", encoding="utf-8") as f:
+            rows += [dict(r) for r in csv.DictReader(f)]
     foreign = DATA / "foreign_monsters.csv"
     if foreign.exists():
         with open(foreign, newline="", encoding="utf-8") as f:
