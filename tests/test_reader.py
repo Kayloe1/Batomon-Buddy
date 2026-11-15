@@ -425,3 +425,19 @@ class Specks(unittest.TestCase):
         self.assertTrue(reader.drop_specks(m)[19, 41])
         m[37:40, 40:43] = True                                # under the text: dropped
         self.assertFalse(reader.drop_specks(m)[38, 41])
+
+
+class NewNames(unittest.TestCase):
+    """2026-11-15 (Smuggler): 'Lamplet' read letter for letter but is in no list."""
+
+    def test_a_clean_new_name_is_an_unknown_card_not_a_stop(self):
+        self.assertTrue(reader._clean_new_name("Lamplet"))
+        for raw in ("Lamp?et", "La", "lamplet", "LAMPLET", "Lamp let", "Lamp1et", "Hickrane"):
+            self.assertFalse(reader._clean_new_name(raw), raw)
+
+    def test_the_engine_never_buys_an_unknown_card(self):
+        from engine import model
+        st = json.loads((CAPTURES / "capture_20261111_101154_435562.expected.json").read_text(encoding="utf-8"))
+        st["shop"][0] = {"name": "Lamplet", "price": 3, "kind": "unknown", "stats": [], "rarity": None}
+        s = model.from_reader(st)
+        self.assertFalse(model.can_buy(s, 0))

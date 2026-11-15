@@ -150,7 +150,7 @@ def act(h, a):
 # the wait at the top of the loop accepts them all.
 AFTER_WAIT = {"shop", "result", "event", "gift_box", "trinket_pick", "take_one_confirm", "trainer_pick", "select_target",
               "overflow", "cash_in", "run_over", "new_run", "main_menu", "main_menu_continue",
-              "continue_confirm", "title", "stats", "rank_result", "trainer_ability"}
+              "continue_confirm", "title", "stats", "rank_result", "trainer_ability", "trinket_stolen"}
 
 def end_badges(h, state: dict, frames: int = 6) -> tuple[int | None, list]:
     """The badges on the end-of-run screen: the most counted over a few frames. On a won run confetti
@@ -584,6 +584,19 @@ def _play(argv, control: Control, hands, brain) -> int:
             played = True
             if not r.ok:
                 return stop(f"after picking a trainer: {r.message} "
+                            f"(capture: {(r.after or {}).get('saved_capture')})", r.after)
+        elif screen == "trinket_stolen":
+            # Burglar: one more trinket from the same gift, shown with a Confirm button
+            h.last_image.save(hands_mod.CAPTURE_DIR / f"trinket_stolen_{datetime.now():%Y%m%d_%H%M%S}.png")
+            stolen = [t for t in (state.get("trinkets") or []) if t]
+            r = h.confirm_stolen()
+            if brain and stolen:
+                brain.memory["trinkets"].extend(stolen)
+                brain.save()
+            think([f"Stolen! (Burglar): I also got {', '.join(stolen) or 'a trinket I could not read'}. ({r.message})"])
+            log("trinket_stolen", trinkets=stolen, ok=r.ok, message=r.message)
+            if not r.ok:
+                return stop(f"after Confirm on the stolen trinket: {r.message} "
                             f"(capture: {(r.after or {}).get('saved_capture')})", r.after)
         elif screen == "trainer_ability":
             # Mysterious Mask: a second trainer's ability for the rest of the run. Chosen like a trainer

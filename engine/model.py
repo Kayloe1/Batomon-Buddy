@@ -143,6 +143,8 @@ def can_buy(s: RunState, i: int) -> bool:
     card = s.shop[i]
     if card is None or card.name is None or card.price > s.money:
         return False
+    if card.kind not in ("monster", "item"):     # "unknown": a name in no list (another region), never bought
+        return False
     if card.kind == "item":
         return s.items_left > 0
     if s.free_slots() > 0:

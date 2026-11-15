@@ -86,6 +86,24 @@ class NewScreens(unittest.TestCase):
         self.assertEqual(state("title_screen.png")["screen"], "title")
         self.assertEqual(state("title_screen.png")["problems"], [])
 
+    def test_stolen_trinket(self):
+        # Burglar (2026-11-15, stuck_20261114_232733.png): one card, "Stolen!" above it, Confirm under it.
+        # Rebuilt from a single-card trinket pick; it read as a trinket pick with Take All before.
+        pic = np.asarray(window.canonical_picture(Image.open(CAP / "trinket_pick_single.png"))).copy()
+        names = [t for t in reader.read_state(Image.fromarray(pic))["trinkets"] if t]
+        pic[192:228, 1208:1348] = (255, 211, 14)
+        pic[940:1020, 1068:1492] = (239, 66, 107)
+        pic[1020:1044, 1068:1492] = (189, 41, 74)
+        pic[1196:1318, 20:396] = (49, 198, 247)
+        pic[1290:1310, 452:470] = (255, 74, 107)
+        st = reader.read_state(Image.fromarray(pic))
+        self.assertEqual(st["screen"], "trinket_stolen")
+        self.assertEqual([t for t in st["trinkets"] if t], names)
+        pic[192:228, 1208:1348] = (255, 239, 98)            # the text shimmers (2026-11-15)
+        self.assertEqual(reader.read_state(Image.fromarray(pic))["screen"], "trinket_stolen")
+        x0, y0, x1, y1 = reader.STOLEN_CONFIRM
+        self.assertGreater(reader._near(pic[y0:y1, x0:x1], (239, 66, 107), 40).mean(), 0.9)
+
     def test_trainer_ability_choice(self):
         # Mysterious Mask (2026-11-15, stuck_20261114_201501.png): the trainer cards 28 px higher, a blue
         # HIDE bottom left, a pink-framed banner. Rebuilt from a trainer pick capture.
@@ -116,6 +134,16 @@ class NewScreens(unittest.TestCase):
 
     def test_cash_in(self):
         self.assertEqual(state("cash_in_fake_diamond.png")["screen"], "cash_in")
+
+    def test_two_trinket_cards_with_one_button_are_the_same_screen(self):
+        # doubled Locked Box (Scavenger, 2026-11-15, stuck_20261115_005359.png): two cards, the Cash In button
+        pic = np.asarray(window.canonical_picture(Image.open(CAP / "cash_in_fake_diamond.png"))).copy()
+        pic[150:950, 600:1960] = (42, 42, 42)
+        for x0 in (636, 1308):
+            pic[236:888, x0:x0 + 616] = (212, 124, 0)
+            pic[300:880, x0 + 4:x0 + 612] = (255, 255, 255)
+            pic[580:620, x0 + 10:x0 + 606] = (231, 231, 231)
+        self.assertEqual(reader.read_state(Image.fromarray(pic))["screen"], "cash_in")
 
     def test_a_common_trinket_box_with_one_button_is_the_same_screen(self):
         # Locked Box (2026-11-15): same card and button, grey (112, 112, 122) header instead of blue

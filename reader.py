@@ -191,6 +191,48 @@ OVERFLOW_SLOT: Box = (1548, 710, 1788, 894)
 # cards like the trainer pick, 28 px higher, over the dimmed shop, with HIDE (blue) bottom left and a
 # pink-framed banner. Checked before "event", whose probes it also matches.
 TRAINER_ABILITY_DY = -28
+
+# "Stolen!" (the Burglar's ability after a trinket pick, 2026-11-15): one trinket card in the middle with a
+# red Confirm right under it, a yellow "Stolen!" above it, "You stole a trinket!" in the banner. Checked
+# before "trinket_pick", whose Take All probes the Confirm button covers.
+STOLEN_CONFIRM: Box = (1080, 945, 1480, 1020)
+# The "Stolen!" text shimmers from (255, 211, 14) to (255, 239, 98), so it is tested by _is_stolen, not a probe.
+STOLEN_PROBES = [(1280, 1000, RED), (1280, 1030, (189, 41, 74)), (100, 1215, BLUE), (460, 1300, PINK)]
+
+
+def _edit_distance(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def _clean_new_name(raw: str, known: list[str] | None = None) -> bool:
+    """A shop name read letter for letter (no unknown glyph): a capital, then lower-case letters, and at
+    least two letters away from every known name (one letter off is a misread, like K read as H)."""
+    if not (len(raw) >= 4 and raw[0].isupper() and raw[1:].isalpha() and raw[1:].islower()):
+        return False
+    known = known if known is not None else MONSTER_NAMES + ITEM_NAMES
+    return all(_edit_distance(raw.lower(), k.lower()) >= 2 for k in known)
+
+
+def _is_two_card_box(pic: np.ndarray) -> bool:
+    """The one-button trinket box with two cards side by side (a doubled Locked Box, 2026-11-15): the
+    same Confirm as Cash In, but the middle of the screen is the gap between the cards."""
+    steady = [(1152, 1020, RED), (1408, 1046, RED), (25, 1315, (22, 22, 23)),
+              (940, 300, (255, 255, 255)), (1620, 300, (255, 255, 255)),
+              (940, 600, (231, 231, 231)), (1620, 600, (231, 231, 231))]
+    return all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in steady)
+
+
+def _is_stolen(pic: np.ndarray) -> bool:
+    if not all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in STOLEN_PROBES):
+        return False
+    r, g, b = (pic[195:226, 1215:1341].reshape(-1, 3).astype(int).T)
+    return bool(((r >= 240) & (g >= 200) & (g <= 245) & (b <= 110)).mean() > 0.05)
 SCREENS = {"trainer_ability": [(820, 200, (255, 189, 8)), (1483, 200, (255, 189, 8)), (2146, 200, (255, 189, 8)),
                                (100, 1215, BLUE), (460, 1300, PINK)], **SCREENS}
 
@@ -634,9 +676,13 @@ def detect_screen(pic: np.ndarray) -> str:
         return "blank"                    # fade between screens
     if _is_new_run(pic):
         return "new_run"
+    if _is_stolen(pic):
+        return "trinket_stolen"
     for name, points in SCREENS.items():
         if all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in points):
             return name
+    if _is_two_card_box(pic):
+        return "cash_in"
     if is_stats_window(pic):
         return "stats"                    # scrolled: its header and scrollbar look different
     return "unknown"
@@ -1628,6 +1674,14 @@ def _read_shop_slot(pic: np.ndarray, i: int, masks: dict, problems: list[str],
         price = fill_number(raw_price[1:], _list_cost(name, kind))
         if price is not None and notes is not None:
             notes.append(f"shop {i}: price '{raw_price}' completed to ${price}, the list price of {name}")
+    if name is None and _clean_new_name(raw_name):
+        # Every letter read with certainty, but the name is in no list: a monster from another region
+        # (the Smuggler brings them, 2026-11-15: "Lamplet"). It is kept as kind "unknown", which the
+        # engine never buys, instead of stopping the run.
+        name, kind, name_from = raw_name, "unknown", "new_name"
+        if notes is not None:
+            notes.append(f"shop {i}: '{raw_name}' is a name I do not know (a monster from another region?); "
+                         f"I leave that card alone")
     if name is None:
         problems.append(f"shop {i}: unknown name '{raw_name}'")
     if price is None:
@@ -1771,7 +1825,7 @@ def read_state(image: Image.Image) -> dict:
         state.update(read_select_target(pic))
     elif state["screen"] == "gift_box":
         state["problems"] = []
-    elif state["screen"] == "trinket_pick":
+    elif state["screen"] in ("trinket_pick", "trinket_stolen"):
         state.update(read_trinket_pick(pic))
     elif state["screen"] == "trainer_pick":
         state.update(read_trainer_pick(pic))

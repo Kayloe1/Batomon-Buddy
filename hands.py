@@ -765,6 +765,11 @@ class Hands:
         """Click the gift box that appears when a monster levels up; the trinket choice follows."""
         return self._press_and_wait("open gift", "gift_box", reader.GIFT_BOX, {"trinket_pick"}, 20)
 
+    def confirm_stolen(self) -> Result:
+        """"Stolen!" (Burglar): press Confirm under the stolen trinket."""
+        return self._press_and_wait("confirm stolen trinket", "trinket_stolen", reader.STOLEN_CONFIRM,
+                                    {"shop", "gift_box", "overflow", "event", "cash_in", "trainer_ability"}, 20)
+
     def pick_trainer_ability(self, k: int) -> Result:
         """"Choose a trainer to gain their ability" (Mysterious Mask): click trainer card k (0 = left)."""
         return self._press_and_wait(f"pick trainer ability {k}", "trainer_ability", reader.trainer_ability_card(k),
@@ -778,7 +783,7 @@ class Hands:
         place = places[k] if k < len(places) else k
         # a new day's monster (Swim Coach: a Water monster each day) can arrive with team and bench full
         return self._press_and_wait(f"pick trinket {k}", "trinket_pick", reader.trinket_card(place),
-                                    {"shop", "gift_box", "overflow", "trainer_ability"}, 20)
+                                    {"shop", "gift_box", "overflow", "trainer_ability", "trinket_stolen"}, 20)
 
     def take_all_trinkets(self) -> Result:
         """Press "Take All" under the trinket cards: every offered trinket is kept."""
@@ -786,7 +791,8 @@ class Hands:
         if state.get("screen") == "trinket_pick" and not state.get("take_all"):
             return self._log("take all trinkets", Result(False, "no Take All button on this trinket choice", state))
         return self._press_and_wait("take all trinkets", "trinket_pick", reader.TAKE_ALL,
-                                    {"shop", "gift_box", "overflow", "event", "cash_in", "trainer_ability"}, 20)
+                                    {"shop", "gift_box", "overflow", "event", "cash_in", "trainer_ability",
+                                     "trinket_stolen"}, 20)
 
     def cancel_take_one(self) -> Result:
         """Press Cancel on "Are you sure you want to take one trinket rather than all?"."""
