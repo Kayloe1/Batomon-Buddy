@@ -315,3 +315,24 @@ class OverflowTwice(unittest.TestCase):
     def test_the_shop_still_counts_as_done(self):
         r = self.hands_on([self.screen("Venopuff", "Saberhorn"), {"screen": "shop", "problems": []}]).resolve_overflow(0)
         self.assertTrue(r.ok, r.message)
+
+
+
+class EndBadges(unittest.TestCase):
+    """2026-11-15: confetti hid one gold coin in one frame of a won run (9 read, 10 shown)."""
+
+    def test_the_most_over_a_few_frames(self):
+        import play
+        reads = iter([{"screen": "run_over", "badges": b} for b in (10, 9, 10, 10, 10)])
+        h = types_ns(dry_run=False, look=lambda save_if_unreadable=True: next(reads))
+        old = play.time.sleep
+        play.time.sleep = lambda s: None
+        self.addCleanup(lambda: setattr(play.time, "sleep", old))
+        badges, seen = play.end_badges(h, {"screen": "run_over", "badges": 9})
+        self.assertEqual(badges, 10)
+        self.assertEqual(seen[0], 9)
+
+
+def types_ns(**kw):
+    import types
+    return types.SimpleNamespace(**kw)

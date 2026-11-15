@@ -404,3 +404,24 @@ class HoveringSprites(unittest.TestCase):
         self.assertEqual(s["bench"][3]["name"], "Stingarde")   # unnamed before (35)
         s = reader.read_state(Image.open(ROOT / "captures" / "shop_day11_hp.png"))
         self.assertEqual(s["team"][3]["name"], "Joltail")      # unnamed before (43)
+
+
+class Specks(unittest.TestCase):
+    """2026-11-15: a sprite's head under the money digits read "$8" as "$8?"."""
+
+    def test_a_speck_below_the_text_is_dropped_and_the_money_reads(self):
+        import numpy as np
+        st = reader.read_state(Image.open(CAPTURES / "capture_20261111_101154_435562.png"))
+        pic = np.asarray(window.canonical_picture(Image.open(CAPTURES / "capture_20261111_101154_435562.png"))).copy()
+        x0, y0, x1, y1 = reader.MONEY
+        pic[1152:1155, 1308:1312] = 255                      # the 4x3 blob on the box's bottom edge
+        self.assertEqual(reader.read_state(Image.fromarray(pic))["money"], st["money"])
+
+    def test_a_speck_inside_the_rows_is_kept(self):
+        import numpy as np
+        m = np.zeros((40, 60), bool)
+        m[5:35, 5:15] = True
+        m[18:21, 40:43] = True                                # level with the text: may be part of a glyph
+        self.assertTrue(reader.drop_specks(m)[19, 41])
+        m[37:40, 40:43] = True                                # under the text: dropped
+        self.assertFalse(reader.drop_specks(m)[38, 41])
