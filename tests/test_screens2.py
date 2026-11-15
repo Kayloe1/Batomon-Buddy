@@ -86,6 +86,19 @@ class NewScreens(unittest.TestCase):
         self.assertEqual(state("title_screen.png")["screen"], "title")
         self.assertEqual(state("title_screen.png")["problems"], [])
 
+    def test_ranked_rank_card(self):
+        # 2026-11-15, measured on stuck_20261114_194622.png (Rank Up!, Silver 8): rebuilt from its colours
+        pic = np.full((1440, 2560, 3), (20, 54, 52), np.uint8)
+        pic[308:988, 996:1596] = (231, 231, 231)
+        pic[312:984, 1000:1592] = (156, 156, 173)
+        pic[320:975, 1008:1584] = (231, 231, 231)
+        pic[350:960, 1030:1560] = (255, 255, 255)
+        pic[1040:1136, 1032:1560] = (239, 66, 107)
+        pic[1136:1160, 1032:1560] = (189, 41, 74)
+        self.assertEqual(reader.read_state(Image.fromarray(pic))["screen"], "rank_result")
+        x0, y0, x1, y1 = reader.RANK_CONFIRM
+        self.assertGreater(reader._near(pic[y0:y1, x0:x1], (239, 66, 107), 40).mean(), 0.9)
+
     def test_cash_in(self):
         self.assertEqual(state("cash_in_fake_diamond.png")["screen"], "cash_in")
 
