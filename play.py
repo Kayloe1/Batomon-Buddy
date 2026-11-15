@@ -149,7 +149,7 @@ def act(h, a):
 # the wait at the top of the loop accepts them all.
 AFTER_WAIT = {"shop", "result", "event", "gift_box", "trinket_pick", "take_one_confirm", "trainer_pick", "select_target",
               "overflow", "cash_in", "run_over", "new_run", "main_menu", "main_menu_continue",
-              "continue_confirm", "title", "stats"}
+              "continue_confirm", "title", "stats", "rank_result"}
 
 LAST_LOG = None          # path of the log of the latest main() call (batch.py reads it)
 
@@ -282,6 +282,8 @@ def _play(argv, control: Control, hands, brain) -> int:
 
     think_path = log_path.with_name(log_path.name.replace("run_", "thinking_").replace(".jsonl", ".txt"))
     control.event("start", log=log_path.name, thinking=think_path.name)
+    log("session", new_run=args.new_run, ranked=args.ranked, days=args.days,
+        decide="simple" if args.simple else "learned" if args.learned else "planner")
 
     def think(lines: list[str]) -> None:
         """Say what the bot is thinking: on screen and in logs\\thinking_<time>.txt."""
@@ -483,6 +485,16 @@ def _play(argv, control: Control, hands, brain) -> int:
             log("title", ok=r.ok, message=r.message)
             if not r.ok:
                 return stop(f"after the title screen: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
+        elif screen == "rank_result":
+            # Ranked, end of the run: the rank card (kept as a picture; the rank is not read yet)
+            pic_name = f"rank_{datetime.now():%Y%m%d_%H%M%S}.png"
+            h.last_image.save(hands_mod.CAPTURE_DIR / pic_name)
+            r = h.confirm_rank()
+            think([f"Ranked: the rank card showed at the end of the run (saved as {pic_name}). I press Confirm. ({r.message})"])
+            log("rank_result", capture=pic_name, ok=r.ok, message=r.message)
+            played = True
+            if not r.ok:
+                return stop(f"after Confirm on the rank card: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
         elif screen == "cash_in":
             h.last_image.save(hands_mod.CAPTURE_DIR / f"cash_in_{datetime.now():%Y%m%d_%H%M%S}.png")
             r = h.cash_in()

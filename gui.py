@@ -66,7 +66,7 @@ SCREENS = {
     "shop": "shop", "battle": "battle", "matchmaking": "looking for an opponent", "blank": "between two screens",
     "result": "battle result", "stats": "Stats window", "event": "event", "gift_box": "gift box",
     "trinket_pick": "trinket choice", "take_one_confirm": "take one or all?", "trainer_pick": "trainer choice", "select_target": "choosing a target",
-    "overflow": "team and bench full", "cash_in": "Cash In", "run_over": "end of the run",
+    "overflow": "team and bench full", "cash_in": "trinket box (Cash In / Open)", "rank_result": "Ranked: rank card", "run_over": "end of the run",
     "new_run": "New Run dialog", "main_menu": "main menu", "main_menu_continue": "main menu (a run is open)",
     "continue_confirm": "Continue panel", "title": "title screen", "minimized": "game window minimized",
     "unknown": "not recognised",
@@ -193,6 +193,7 @@ def action_text(kind: str, rec: dict) -> str | None:
         sold = rec.get("sold")
         return "sell " + (f"bench slot {sold + 1}" if isinstance(sold, int) else "the new monster") + " (no room)"
     return {"confirm": "CONFIRM on the result box", "gift": "open the gift box", "cash_in": "Cash In",
+            "rank_result": "Confirm on the rank card",
             "new_run": f"start a {(rec.get('mode') or 'casual').capitalize()} run",
             "continue_run": "Continue on the main menu",
             "confirm_continue": "Confirm on the Continue panel",

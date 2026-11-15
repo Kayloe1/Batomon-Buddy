@@ -131,8 +131,9 @@ SCREENS: dict[str, list[tuple[int, int, tuple[int, int, int]]]] = {
     "main_menu": [(900, 772, RED), (900, 924, RED), (900, 1076, RED), (900, 1228, RED),
                   (25, 1118, (21, 157, 216)), (25, 1238, (21, 157, 216))],
     # After Continue on the main menu: a panel with the saved run (mode, day, lives, badges, team) and
-    # Cancel / Confirm. The hamburger button top right is greyed out while it shows.
-    "continue_confirm": [(600, 1215, RED), (1900, 1215, RED), (850, 900, (231, 231, 231)), (1250, 850, (255, 255, 255)),
+    # Cancel / Confirm. The hamburger button top right is greyed out while it shows. (No probe on the
+    # trainer box: it is empty light grey only on day 0; a chosen trainer's portrait covers it, 2026-11-15.)
+    "continue_confirm": [(600, 1215, RED), (1900, 1215, RED), (1250, 850, (255, 255, 255)),
                          (2480, 110, (123, 123, 123)), (25, 1118, (21, 157, 216)), (25, 1238, (21, 157, 216))],
     # "Select a target": an event effect needs a monster. BENCH and MY TEAM panels sit in the middle,
     # Confirm (grey until a monster is clicked) and Back below them.
@@ -141,9 +142,16 @@ SCREENS: dict[str, list[tuple[int, int, tuple[int, int, int]]]] = {
     # Title screen: the logo and the dragon silhouette (the dark "PRESS ANY KEY TO START" label is not
     # always shown: it was missing on a fresh start, 2026-11-13, and the bot stopped there)
     "title": [(768, 240, (237, 103, 250)), (1408, 240, (67, 249, 245)), (1280, 739, (111, 49, 71))],
-    # "Cash In": a trinket dialog (blue header, white body) with one red button, shop dimmed behind it
-    "cash_in": [(1280, 255, (0, 132, 189)), (1280, 560, (255, 255, 255)), (1152, 1020, RED),
+    # A trinket dialog with one red button over the dimmed shop: "Cash In" (Fake Diamond) or "Open"
+    # (Locked Box after a lost battle, 2026-11-15). The header has the trinket's rarity colour (blue Rare,
+    # grey (112, 112, 122) Common), so it is not probed; the white body and the button are.
+    "cash_in": [(1280, 300, (255, 255, 255)), (1280, 560, (255, 255, 255)), (1152, 1020, RED),
                 (1408, 1046, RED), (25, 1315, (22, 22, 23))],
+    # Ranked, end of a run (2026-11-15): a card with a lavender frame over the dimmed end-of-run screen:
+    # the rank emblem, maybe "Rank Up!", the rank name ("Silver 8"), five stars; one red Confirm below
+    # the card. The text is not probed (a rank change without "Rank Up!" should show the same card).
+    "rank_result": [(1000, 450, (156, 156, 173)), (1012, 700, (231, 231, 231)), (1580, 700, (231, 231, 231)),
+                    (1290, 980, (156, 156, 173)), (1290, 1060, RED), (1400, 1150, (189, 41, 74))],
     # Battle: the two trainer portraits in the bottom corners (their frames do not move)
     "battle": [(30, 1160, (156, 156, 173)), (2530, 1160, (156, 156, 173)), (30, 1420, (255, 255, 255)),
                (2530, 1420, (255, 255, 255))],
@@ -244,6 +252,7 @@ TITLE_ANYWHERE: Box = (1180, 1300, 1380, 1400)     # empty sky under the label
 MAIN_MENU_NEW_RUN: Box = (845, 730, 1715, 815)        # only on the four-button menu
 MAIN_MENU_CONTINUE: Box = (845, 654, 1715, 738)       # only on the five-button menu
 CASH_IN_BUTTON: Box = (1088, 989, 1472, 1104)
+RANK_CONFIRM: Box = (1032, 1040, 1559, 1135)       # Confirm under the Ranked rank card
 RESULT_STATS: Box = (19, 330, 448, 451)
 STATS_CLOSE: Box = (2240, 125, 2310, 200)
 EVENT_CHOICE_COLUMN = 1500              # x that crosses every choice box
@@ -1699,7 +1708,8 @@ def read_state(image: Image.Image) -> dict:
     state: dict = {"screen": detect_screen(pic)}
     if state["screen"] == "shop":
         state.update(read_shop(pic))
-    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm"):
+    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm",
+                             "rank_result"):
         # recognised. The battle field is read with read_battle() only on request: it takes
         # a few seconds, too slow for every frame while waiting.
         state["problems"] = []            # recognised; nothing on them is read yet

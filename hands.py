@@ -596,7 +596,13 @@ class Hands:
     def confirm_result(self) -> Result:
         """Press CONFIRM on the result box; the next shop, an event or the end of the run follows."""
         return self._press_and_wait("confirm result", "result", reader.RESULT_CONFIRM,
-                                    {"shop", "event", "run_over", "gift_box", "trinket_pick", "cash_in", "overflow"}, 40)
+                                    {"shop", "event", "run_over", "gift_box", "trinket_pick", "cash_in", "overflow",
+                                     "rank_result"}, 40)
+
+    def confirm_rank(self) -> Result:
+        """Press Confirm under the Ranked rank card at the end of a run; the end-of-run screen follows."""
+        return self._press_and_wait("confirm rank", "rank_result", reader.RANK_CONFIRM,
+                                    {"run_over", "rank_result", "main_menu", "new_run"}, 30)
 
     def select_target(self, where: tuple[str, int]) -> Result:
         """On "Select a target": click the monster in ("team"|"bench", i), then Confirm.
@@ -624,7 +630,7 @@ class Hands:
             return self._log(name, Result(False, "Confirm stayed grey after clicking the monster", before, state, clicks))
         if state.get("screen") == "select_target":
             clicks += self._click(reader.TARGET_CONFIRM)
-        wanted = {"shop", "event", "gift_box", "trinket_pick", "cash_in", "run_over", "overflow"}
+        wanted = {"shop", "event", "gift_box", "trinket_pick", "cash_in", "run_over", "overflow", "rank_result"}
         after = self.wait_for(wanted, 40)
         return self._log(name, Result(after.get("screen") in wanted, f"now on '{after.get('screen')}'", before, after, clicks))
 
@@ -686,7 +692,8 @@ class Hands:
     def cash_in(self) -> Result:
         """Press "Cash In" on a trinket dialog (e.g. Fake Diamond after a loss: gain money)."""
         return self._press_and_wait("cash in", "cash_in", reader.CASH_IN_BUTTON,
-                                    {"shop", "event", "run_over", "gift_box", "trinket_pick", "cash_in", "overflow"}, 40)
+                                    {"shop", "event", "run_over", "gift_box", "trinket_pick", "cash_in", "overflow",
+                                     "rank_result"}, 40)
 
     def start_casual_run(self) -> Result:
         """Start a new CASUAL Pantra run (see start_run)."""
@@ -809,9 +816,33 @@ class Hands:
         clicks = self._drag(box, reader.SELL_BAR)
         if self.dry_run:
             return self._log(name, Result(True, "dry run: nothing sent", before, None, clicks))
-        after = self.wait_for({"shop"}, 20)
+        # Usually the shop follows. But a second monster can be waiting (2026-11-15: an event's Shiny,
+        # then Berroon): the overflow screen comes back with other monsters in it. That is a sale done
+        # too, once two reads in a row agree that the bench or the waiting monster changed.
+        start, seen, after = time.time(), None, before
+        while time.time() - start < 20:
+            after = self.look(save_if_unreadable=False)
+            if after.get("screen") == "shop":
+                after = self.wait_for({"shop"}, 10)
+                break
+            sig = _overflow_signature(after) if after.get("screen") == "overflow" else None
+            if sig is not None and sig != _overflow_signature(before) and not after.get("problems"):
+                if sig == seen:
+                    return self._log(name, Result(True, "sold; another monster is waiting in the overflow slot",
+                                                  before, after, clicks))
+                seen = sig
+            else:
+                seen = None
+            time.sleep(0.5)
         return self._log(name, Result(after.get("screen") == "shop", f"now on '{after.get('screen')}'",
                                       before, after, clicks))
+
+
+def _overflow_signature(state: dict) -> tuple:
+    """What the overflow screen holds: the bench and the waiting monster (name, level, stats)."""
+    def one(m):
+        return None if not m else (m.get("name"), m.get("level"), json.dumps(m.get("stats"), sort_keys=True))
+    return tuple(one(m) for m in (state.get("bench") or [])) + (one(state.get("overflow")),)
 
 
 def reader_free_slots(state: dict) -> int:

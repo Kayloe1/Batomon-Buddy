@@ -26,6 +26,7 @@ understand. See `STATUS.md` for what works today and `docs/decision-engine.md` f
 | `learn_monsters.py` | Hovers monsters the reader cannot name and learns them from the info panel |
 | `batch.py` | Plays several Casual runs back to back and prints a summary |
 | `report.py` | Statistics from the logs: results per run, unseen Batomon, shop odds, events |
+| `scorecard.py` | The scorecard page (`scorecard.bat`): one row per run, Ranked and Casual apart, written to `logs\scorecard.html` |
 | `tests/` | The test suite (`python -m unittest discover tests`, about a minute); needs the tracked screenshots |
 | `captures/` | Saved screenshots; a `.expected.json` beside one makes it a test. Only the ones tests need are in git |
 | `templates/` | Glyph and sprite templates (added to by `teach.py` and by play) |
