@@ -222,6 +222,14 @@ class Status:
         self.last_result: str | None = None
         self.last_ok: bool | None = None
         self.ended: str | None = None        # how the session ended when it did not need help
+        self.team: list = []                 # the 6 team places as last read: {"name", "level"} or None
+        self.bench: list = []                # the bench as last read, same shape
+        self.shop_rank: int | None = None    # the shop's tier ("Rank 4"; 14 = Rank Max), not the Ranked ladder
+        self.shop_odds: dict | None = None   # chance of each rarity in the shop, in percent
+        self.trainer_hp: int | None = None
+        self.why: str | None = None          # the bot's latest decision, in its own words (from the thinking lines)
+        self.results: list[tuple[int, bool]] = []   # (day, won) for every day finished in this session
+        self.started = datetime.now()
 
     def apply(self, kind: str, data: dict) -> None:
         if kind == "state":
@@ -230,13 +238,20 @@ class Status:
             if self.screen == "shop":
                 if s.get("day") != self.day:
                     self.win_now = None                  # yesterday's chance says nothing about today
-                for name in ("day", "lives", "badges", "badges_goal", "money", "trainer"):
+                for name in ("day", "lives", "badges", "badges_goal", "money", "trainer", "trainer_hp",
+                             "shop_rank", "shop_odds"):
                     if s.get(name) is not None:
                         setattr(self, name, s[name])
+                self.team = list(s.get("team") or [])
+                self.bench = [m for m in (s.get("bench") or []) if m]
         elif kind == "doing":
             self.doing = data.get("what")
         elif kind == "plan":
             self.win_now = data.get("win_now")
+        elif kind == "think":
+            for line in data.get("lines") or []:
+                if line.startswith("Decision:") or line.startswith("Nothing ") or "ends here" in line:
+                    self.why = line
         elif kind == "log":
             name, rec = data["record"], data["data"]
             what = action_text(name, rec)
@@ -246,6 +261,8 @@ class Status:
                 now_on = re.search(r"now on '(\w+)'", str(rec.get("message")))
                 if now_on:
                     self.screen = now_on.group(1)        # the hands say where it ended
+            if name == "day_result":
+                self.results.append((rec.get("day"), (rec.get("badges") or 0) > 0))
             if name == "run_over":
                 self.ended = "The run is over."
             elif name == "stop" and rec.get("why") == "day limit":
@@ -265,6 +282,31 @@ class Status:
             return DOING["battle"]
         text = "-" if self.screen is None else SCREENS.get(self.screen, self.screen)
         return f"{text} ({DOING.get(self.doing, self.doing)})" if self.doing else text
+
+    def team_names(self) -> list[str]:
+        """Six short texts, one per team place: "Joltail  Lv 2", or "empty"."""
+        out = []
+        for i in range(6):
+            m = self.team[i] if i < len(self.team) else None
+            out.append(f"{m['name']}  Lv {m.get('level', '?')}" if m and m.get("name") else "empty")
+        return out
+
+    def bench_line(self) -> str:
+        if not self.team and not self.bench:
+            return "-"
+        return ", ".join(f"{m['name']} Lv {m.get('level', '?')}" for m in self.bench if m.get("name")) or "empty"
+
+    def shop_line(self) -> str:
+        if self.shop_rank is None:
+            return "-"
+        rank = "Rank Max" if self.shop_rank >= 14 else f"Rank {self.shop_rank}"
+        odds = self.shop_odds or {}
+        shown = ", ".join(f"{k} {v}%" for k, v in odds.items() if v)
+        return rank + (f"   ({shown})" if shown else "")
+
+    def tally(self) -> str:
+        won = sum(1 for _, w in self.results if w)
+        return f"{len(self.results)} battles   {won} won   {len(self.results) - won} lost"
 
     def win_line(self) -> str:
         return "-" if self.win_now is None else f"{self.win_now:.0%}  (day {self.day}, with the team as it is)"
@@ -321,6 +363,8 @@ def place_beside_game(root: tk.Tk) -> None:
 # -------------------------------------------------------------- the window ----
 
 RED, CALM, AMBER, GREY = "#b3261e", "#1f5f8b", "#8a5a00", "#5f6368"
+BG, CARD, EDGE, SLOT, TRACK = "#eef1f7", "#ffffff", "#d3d9e6", "#eef2fa", "#dfe4ee"
+NAVY, INK, GOOD, GOLD = "#1f2a44", "#1b2333", "#2e7d32", "#d19a00"
 MODES = {
     "idle": "Not running.",
     "starting": "Getting ready (finding the game, loading the decision engine) ...",
@@ -429,19 +473,45 @@ class App:
         self._after = root.after(self.POLL_MS, self._tick)
 
     # -- building --
+    def _card(self, parent, title: str | None = None) -> tk.Frame:
+        """A white box with a thin border and, when given, a small grey heading."""
+        card = tk.Frame(parent, bg=CARD, highlightbackground=EDGE, highlightthickness=1)
+        if title:
+            tk.Label(card, text=title.upper(), bg=CARD, fg=GREY, font=self.f_tiny, anchor="w").pack(
+                fill="x", padx=10, pady=(6, 0))
+        return card
+
     def _build(self) -> None:
         root = self.root
         root.title("Batomon Buddy")
         root.protocol("WM_DELETE_WINDOW", self.close)
+        root.configure(bg=BG)
+        style = ttk.Style(root)
+        try:
+            style.theme_use("clam")                     # the one theme whose colours can all be set
+        except tk.TclError:
+            pass
+        style.configure(".", background=BG)
+        style.configure("TButton", padding=(14, 6))
+        style.configure("Go.TButton", padding=(18, 7), font=("TkDefaultFont", 10, "bold"))
+        style.configure("TLabelframe", background=BG)
+        style.configure("TLabelframe.Label", background=BG, foreground=GREY)
+        style.configure("TCheckbutton", background=BG)
+        style.configure("TRadiobutton", background=BG)
         base = tkfont.nametofont("TkDefaultFont")
+        size = base.cget("size")
         self.f_bold = base.copy()
         self.f_bold.configure(weight="bold")
         self.f_big = base.copy()
-        self.f_big.configure(size=base.cget("size") + 2, weight="bold")
+        self.f_big.configure(size=size + 2, weight="bold")
+        self.f_huge = base.copy()
+        self.f_huge.configure(size=size + 12, weight="bold")
+        self.f_tiny = base.copy()
+        self.f_tiny.configure(size=max(size - 2, 7), weight="bold")
         self.f_mono = tkfont.Font(family="Consolas", size=9)
         self.wrap = self.f_mono.measure("0") * 76          # width of the text column, in pixels
         root.columnconfigure(0, weight=1)
-        root.rowconfigure(4, weight=1)
+        root.rowconfigure(5, weight=1)
         P = {"padx": "6p", "pady": "3p"}
 
         # the box that says why the bot stopped (hidden until then)
@@ -463,9 +533,102 @@ class App:
         self.banner_capture.grid(row=2, column=0, sticky="ew", padx="8p")
         self.banner_buttons.grid(row=3, column=0, sticky="w", padx="8p", pady="6p")
 
+        # the title bar of the window: name on the left, what the bot is doing on the right
+        head = tk.Frame(root, bg=NAVY)
+        head.grid(row=1, column=0, sticky="ew")
+        head.columnconfigure(1, weight=1)
+        tk.Label(head, text="Batomon Buddy", bg=NAVY, fg="white", font=self.f_big).grid(
+            row=0, column=0, padx=12, pady=8)
+        self.mode_text = tk.StringVar()
+        self.mode_label = tk.Label(head, textvariable=self.mode_text, bg=NAVY, fg="#cfd8ee", anchor="e",
+                                   justify="right", wraplength=self.wrap - 150)
+        self.mode_label.grid(row=0, column=1, sticky="e", padx=12)
+
+        # the buttons
+        bar = tk.Frame(root, bg=BG)
+        bar.grid(row=2, column=0, sticky="ew", **P)
+        self.start_button = ttk.Button(bar, text="Start", style="Go.TButton", command=self.start)
+        self.pause_button = ttk.Button(bar, text="Pause", style="Go.TButton", command=self.pause_resume)
+        self.stop_button = ttk.Button(bar, text="Stop", style="Go.TButton", command=self.stop)
+        for b in (self.start_button, self.pause_button, self.stop_button):
+            b.pack(side="left", padx=(0, "6p"))
+
+        # the dashboard
+        body = tk.Frame(root, bg=BG)
+        body.grid(row=3, column=0, sticky="nsew")
+        body.columnconfigure(0, weight=1)
+        self.warning = tk.StringVar()
+        self.warning_label = tk.Label(body, textvariable=self.warning, fg=AMBER, bg=BG, font=self.f_bold,
+                                      anchor="w", justify="left", wraplength=self.wrap)
+        self.v = {name: tk.StringVar(value="-") for name in
+                  ("run", "trainer", "screen", "win", "action", "game", "day", "lives", "badges", "money",
+                   "shop", "bench", "why", "tally", "team0", "team1", "team2", "team3", "team4", "team5")}
+        self.value_labels = {}
+
+        tiles = tk.Frame(body, bg=BG)
+        tiles.grid(row=1, column=0, sticky="ew", **P)
+        for c in range(4):
+            tiles.columnconfigure(c, weight=1, uniform="tile")
+        self.tile_value = {}
+        for c, (key, caption) in enumerate((("day", "Day"), ("lives", "Lives"), ("badges", "Badges"),
+                                            ("money", "Gold"))):
+            card = self._card(tiles, caption)
+            card.grid(row=0, column=c, sticky="nsew", padx=(0 if c == 0 else 3, 0 if c == 3 else 3))
+            lab = tk.Label(card, textvariable=self.v[key], bg=CARD, fg=INK, font=self.f_huge, anchor="w")
+            lab.pack(fill="x", padx=10, pady=(0, 6))
+            self.tile_value[key] = lab
+        self.badge_bar = tk.Canvas(tiles, height=5, bg=BG, highlightthickness=0)
+        self.badge_bar.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(4, 0))
+
+        win = self._card(body, "Chance to win today's battle")
+        win.grid(row=2, column=0, sticky="ew", **P)
+        self.win_value = tk.Label(win, textvariable=self.v["win"], bg=CARD, fg=INK, font=self.f_big, anchor="w")
+        self.win_value.pack(fill="x", padx=10)
+        self.win_bar = tk.Canvas(win, height=12, bg=CARD, highlightthickness=0)
+        self.win_bar.pack(fill="x", padx=10, pady=(2, 8))
+        self.win_bar.bind("<Configure>", lambda e: self._draw_bars())
+
+        mid = tk.Frame(body, bg=BG)
+        mid.grid(row=3, column=0, sticky="ew", **P)
+        mid.columnconfigure(0, weight=3)
+        mid.columnconfigure(1, weight=2)
+        team = self._card(mid, "Your team")
+        team.grid(row=0, column=0, sticky="nsew", padx=(0, 3))
+        grid = tk.Frame(team, bg=CARD)
+        grid.pack(fill="x", padx=8, pady=(2, 2))
+        self.team_labels = []
+        for i in range(6):
+            grid.columnconfigure(i % 3, weight=1, uniform="slot")
+            lab = tk.Label(grid, textvariable=self.v[f"team{i}"], bg=SLOT, fg=INK, anchor="w", padx=6, pady=5)
+            lab.grid(row=i // 3, column=i % 3, sticky="ew", padx=2, pady=2)
+            self.team_labels.append(lab)
+        tk.Label(team, text="BENCH", bg=CARD, fg=GREY, font=self.f_tiny, anchor="w").pack(fill="x", padx=10)
+        tk.Label(team, textvariable=self.v["bench"], bg=CARD, fg=INK, anchor="w", justify="left",
+                 wraplength=self.wrap * 6 // 10).pack(fill="x", padx=10, pady=(0, 8))
+        info = self._card(mid, "The run")
+        info.grid(row=0, column=1, sticky="nsew", padx=(3, 0))
+        for key, caption in (("trainer", "Trainer"), ("shop", "Shop tier"), ("screen", "Screen"),
+                             ("tally", "This session")):
+            tk.Label(info, text=caption, bg=CARD, fg=GREY, font=self.f_tiny, anchor="w").pack(fill="x", padx=10)
+            lab = tk.Label(info, textvariable=self.v[key], bg=CARD, fg=INK, anchor="w", justify="left",
+                           wraplength=self.wrap * 4 // 10 - 20)
+            lab.pack(fill="x", padx=10, pady=(0, 4))
+            self.value_labels[key] = lab
+        self.days_row = tk.Canvas(info, height=16, bg=CARD, highlightthickness=0)     # one dot per battle
+        self.days_row.pack(fill="x", padx=10, pady=(0, 8))
+
+        now = self._card(body, "What the bot is doing")
+        now.grid(row=4, column=0, sticky="ew", **P)
+        lab = tk.Label(now, textvariable=self.v["action"], bg=CARD, fg=INK, font=self.f_bold, anchor="w",
+                       justify="left", wraplength=self.wrap - 24)
+        lab.pack(fill="x", padx=10)
+        self.value_labels["action"] = lab
+        tk.Label(now, textvariable=self.v["why"], bg=CARD, fg=GREY, anchor="w", justify="left",
+                 wraplength=self.wrap - 24).pack(fill="x", padx=10, pady=(0, 8))
+
         # options: the same ones play.py takes
         opts = ttk.LabelFrame(root, text="Options", padding="6p")
-        opts.grid(row=1, column=0, sticky="ew", **P)
+        opts.grid(row=4, column=0, sticky="ew", **P)
         self.new_run = tk.BooleanVar(value=False)
         self.ranked = tk.BooleanVar(value=False)
         self.limit_days = tk.BooleanVar(value=False)
@@ -496,50 +659,16 @@ class App:
             w.pack(side="left", padx=("6p", 0))
             self.option_widgets.append(w)
 
-        # the buttons
-        bar = ttk.Frame(root)
-        bar.grid(row=2, column=0, sticky="ew", **P)
-        self.start_button = ttk.Button(bar, text="Start", command=self.start)
-        self.pause_button = ttk.Button(bar, text="Pause", command=self.pause_resume)
-        self.stop_button = ttk.Button(bar, text="Stop", command=self.stop)
-        for b in (self.start_button, self.pause_button, self.stop_button):
-            b.pack(side="left", padx=(0, "6p"))
-        self.mode_text = tk.StringVar()
-        self.mode_label = ttk.Label(root, textvariable=self.mode_text, font=self.f_bold, wraplength=self.wrap)
-        self.mode_label.grid(row=3, column=0, sticky="ew", padx="6p")
-
-        body = ttk.Frame(root)
-        body.grid(row=4, column=0, sticky="nsew")
-        body.columnconfigure(0, weight=1)
-        body.rowconfigure(2, weight=1)
-        self.warning = tk.StringVar()
-        self.warning_label = tk.Label(body, textvariable=self.warning, fg=AMBER, font=self.f_bold, anchor="w",
-                                      justify="left", wraplength=self.wrap)
-
-        # status
-        st = ttk.LabelFrame(body, text="Status", padding="6p")
-        st.grid(row=1, column=0, sticky="ew", **P)
-        st.columnconfigure(1, weight=1)
-        self.v = {name: tk.StringVar(value="-") for name in ("run", "trainer", "screen", "win", "action", "game")}
-        ttk.Label(st, textvariable=self.v["run"], font=self.f_big).grid(row=0, column=0, columnspan=2, sticky="w")
-        rows = (("trainer", "Trainer"), ("screen", "Screen"), ("win", "Win chance today"),
-                ("action", "Last action"), ("game", "Game window"))
-        self.value_labels = {}
-        for r, (name, caption) in enumerate(rows, start=1):
-            ttk.Label(st, text=caption + ":", foreground=GREY).grid(row=r, column=0, sticky="nw", padx=(0, "8p"))
-            lab = ttk.Label(st, textvariable=self.v[name], wraplength=self.wrap - self.f_mono.measure("0") * 18,
-                            justify="left")
-            lab.grid(row=r, column=1, sticky="w")
-            self.value_labels[name] = lab
-
         # thinking
-        th = ttk.LabelFrame(body, text="Thinking (newest at the bottom)", padding="3p")
-        th.grid(row=2, column=0, sticky="nsew", **P)
-        th.columnconfigure(0, weight=1)
-        th.rowconfigure(0, weight=1)
-        self.text = tk.Text(th, width=76, height=22, wrap="word", font=self.f_mono, state="disabled",
-                            borderwidth=0, padx=4, pady=4)
-        scroll = ttk.Scrollbar(th, orient="vertical", command=self.text.yview)
+        th = self._card(root, "Thinking (newest at the bottom)")
+        th.grid(row=5, column=0, sticky="nsew", **P)
+        inner = tk.Frame(th, bg=CARD)
+        inner.pack(fill="both", expand=True, padx=4, pady=4)
+        inner.columnconfigure(0, weight=1)
+        inner.rowconfigure(0, weight=1)
+        self.text = tk.Text(inner, width=76, height=8, wrap="word", font=self.f_mono, state="disabled",
+                            borderwidth=0, padx=4, pady=4, bg=CARD, fg=INK)
+        scroll = ttk.Scrollbar(inner, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=scroll.set)
         self.text.grid(row=0, column=0, sticky="nsew")
         scroll.grid(row=0, column=1, sticky="ns")
@@ -548,8 +677,24 @@ class App:
         self.text.tag_configure("bad", foreground=RED)
 
         self.files = tk.StringVar(value="Emergency stop: push the mouse into a corner of the screen.")
-        ttk.Label(root, textvariable=self.files, foreground=GREY, wraplength=self.wrap, justify="left").grid(
-            row=5, column=0, sticky="ew", padx="6p", pady=(0, "4p"))
+        tk.Label(root, textvariable=self.files, bg=BG, fg=GREY, wraplength=self.wrap, justify="left",
+                 anchor="w").grid(row=6, column=0, sticky="ew", padx="6p")
+        tk.Label(root, textvariable=self.v["game"], bg=BG, fg=GREY, wraplength=self.wrap, justify="left",
+                 anchor="w", font=self.f_tiny).grid(row=7, column=0, sticky="ew", padx="6p", pady=(0, "4p"))
+
+    def _draw_bars(self) -> None:
+        """The two bars: badges won out of the goal (under the tiles) and the chance to win today."""
+        s = self.status
+        for canvas, frac, colour in (
+                (self.badge_bar, (s.badges or 0) / s.badges_goal if s.badges_goal else 0, GOLD),
+                (self.win_bar, s.win_now or 0,
+                 GOOD if (s.win_now or 0) >= 0.65 else GOLD if (s.win_now or 0) >= 0.4 else RED)):
+            canvas.delete("all")
+            w = max(canvas.winfo_width(), 10)
+            h = int(canvas.cget("height"))
+            canvas.create_rectangle(0, 0, w, h, fill=TRACK, outline="")
+            if frac:
+                canvas.create_rectangle(0, 0, int(w * min(frac, 1)), h, fill=colour, outline="")
 
     # -- the options, as the arguments play.py takes --
     def argv(self) -> list[str] | None:
@@ -747,12 +892,28 @@ class App:
 
     def _refresh(self) -> None:
         s = self.status
+        dash = lambda v, pre="": "-" if v is None else f"{pre}{v}"
         self.v["run"].set(s.run_line())
+        self.v["day"].set(dash(s.day))
+        self.v["lives"].set(dash(s.lives))
+        self.v["badges"].set("-" if s.badges is None else f"{s.badges} / {s.badges_goal or '?'}")
+        self.v["money"].set(dash(s.money, "$"))
         self.v["trainer"].set(s.trainer or "-")
         self.v["screen"].set(s.screen_line())
         self.v["win"].set(s.win_line())
         self.v["action"].set(s.action_line())
-        self.value_labels["action"].configure(foreground=RED if s.last_ok is False else "")
+        self.v["shop"].set(s.shop_line())
+        self.v["bench"].set(s.bench_line())
+        self.v["why"].set(s.why or "")
+        self.v["tally"].set(s.tally())
+        for i, text in enumerate(s.team_names()):
+            self.v[f"team{i}"].set(text)
+            self.team_labels[i].configure(fg=GREY if text == "empty" else INK)
+        self.days_row.delete("all")
+        for n, (_, won) in enumerate(s.results[-14:]):          # green = badge won, red = badge lost
+            self.days_row.create_oval(n * 18, 2, n * 18 + 13, 15, fill=GOOD if won else RED, outline="")
+        self.value_labels["action"].configure(fg=RED if s.last_ok is False else INK)
+        self._draw_bars()
 
     def _show_banner(self, kind: str, title: str, text: str, capture: str | None, log: str | None) -> None:
         colour = CALM if kind == "info" else RED
