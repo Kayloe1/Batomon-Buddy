@@ -268,3 +268,50 @@ class StartRun(unittest.TestCase):
         h, clicks = self.hands_on([panel])
         self.assertTrue(h.confirm_continue(allow_ranked=True).ok)
         self.assertEqual(clicks, [reader.CONTINUE_CONFIRM])
+
+
+class OverflowTwice(unittest.TestCase):
+    """2026-11-15: after selling for one waiting monster, a second one arrived in the overflow slot."""
+
+    def hands_on(self, reads):
+        h = hands.Hands.__new__(hands.Hands)
+        h.dry_run = False
+        seq = iter(reads)
+        last = {"v": None}
+
+        def look(save_if_unreadable=True):
+            last["v"] = next(seq, last["v"])
+            return copy.deepcopy(last["v"])
+        h.look = look
+        h._drag = lambda a, b: [a, b]
+        h.wait_for = lambda wanted, t: look()
+        h._log = lambda name, r: r
+        old = hands.time.sleep
+        hands.time.sleep = lambda s: None
+        self.addCleanup(lambda: setattr(hands.time, "sleep", old))
+        return h
+
+    @staticmethod
+    def screen(bench0, waiting):
+        mon = lambda n: {"name": n, "level": 1, "stats": {"attack": 1}}
+        return {"screen": "overflow", "problems": [], "bench": [mon(bench0), mon("A"), mon("B"), mon("C")],
+                "overflow": mon(waiting)}
+
+    def test_a_second_waiting_monster_counts_as_done(self):
+        first, second = self.screen("Venopuff", "Saberhorn"), self.screen("Saberhorn", "Berroon")
+        r = self.hands_on([first, second, second]).resolve_overflow(0)
+        self.assertTrue(r.ok, r.message)
+        self.assertIn("another monster", r.message)
+
+    def test_nothing_changed_is_a_failure(self):
+        first = self.screen("Venopuff", "Saberhorn")
+        h = self.hands_on([first])
+        t = iter(range(0, 1000, 5))
+        old = hands.time.time
+        hands.time.time = lambda: next(t)
+        self.addCleanup(lambda: setattr(hands.time, "time", old))
+        self.assertFalse(h.resolve_overflow(0).ok)
+
+    def test_the_shop_still_counts_as_done(self):
+        r = self.hands_on([self.screen("Venopuff", "Saberhorn"), {"screen": "shop", "problems": []}]).resolve_overflow(0)
+        self.assertTrue(r.ok, r.message)
