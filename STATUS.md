@@ -26,7 +26,8 @@ Real-run timing (6 runs, 53 minutes): battles 33%, clicking and checking about a
 | `engine\` | Planner, model, evaluator, opponent pool, layout search, events, trinkets, trainers. `docs\decision-engine.md`. |
 | `sim\` | Offline battle simulator, checked against recorded battles. `docs\simulator.md`, `python -m sim --rules`. |
 | `train\` | Offline practice and a learned policy (optional). `docs\training.md`. |
-| `batch.py`, `report.py` | Several Casual runs in a row; statistics from the logs. |
+| `batch.py`, `report.py` | Several runs in a row (`--ranked` for Ranked); statistics from the logs. |
+| `scorecard.py` | Double-click `scorecard.bat`: a page with one row per run (mode, trainer, result, badges, last day, lives lost, stops), Ranked and Casual apart. Rank before / after is not read yet. |
 | `learn_monsters.py` | Hovers monsters the reader cannot name and learns them from the info panel. |
 | `tests\` | `.venv\Scripts\python.exe -m unittest discover tests` (about a minute). The screenshots they need are tracked in git (`git add -f` a new one). |
 

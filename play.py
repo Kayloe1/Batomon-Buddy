@@ -282,6 +282,8 @@ def _play(argv, control: Control, hands, brain) -> int:
 
     think_path = log_path.with_name(log_path.name.replace("run_", "thinking_").replace(".jsonl", ".txt"))
     control.event("start", log=log_path.name, thinking=think_path.name)
+    log("session", new_run=args.new_run, ranked=args.ranked, days=args.days,
+        decide="simple" if args.simple else "learned" if args.learned else "planner")
 
     def think(lines: list[str]) -> None:
         """Say what the bot is thinking: on screen and in logs\\thinking_<time>.txt."""
