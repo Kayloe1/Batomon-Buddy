@@ -149,7 +149,7 @@ def act(h, a):
 # the wait at the top of the loop accepts them all.
 AFTER_WAIT = {"shop", "result", "event", "gift_box", "trinket_pick", "take_one_confirm", "trainer_pick", "select_target",
               "overflow", "cash_in", "run_over", "new_run", "main_menu", "main_menu_continue",
-              "continue_confirm", "title", "stats", "rank_result"}
+              "continue_confirm", "title", "stats", "rank_result", "trainer_ability"}
 
 LAST_LOG = None          # path of the log of the latest main() call (batch.py reads it)
 
@@ -567,6 +567,23 @@ def _play(argv, control: Control, hands, brain) -> int:
             played = True
             if not r.ok:
                 return stop(f"after picking a trainer: {r.message} "
+                            f"(capture: {(r.after or {}).get('saved_capture')})", r.after)
+        elif screen == "trainer_ability":
+            # Mysterious Mask: a second trainer's ability for the rest of the run. Chosen like a trainer
+            # at the start of a run (the engine does not model the added ability yet).
+            h.last_image.save(hands_mod.CAPTURE_DIR / f"trainer_ability_{datetime.now():%Y%m%d_%H%M%S}.png")
+            offered = state["trainers"]
+            if brain:
+                k, why = brain.trainer(offered)
+            else:
+                k = next((offered.index(t) for t in PREFERRED_TRAINERS if t in offered), 0)
+                why = "preferred list"
+            r = h.pick_trainer_ability(k)
+            think([f"Choose a trainer's ability (Mysterious Mask) between {', '.join(str(o) for o in offered)}: "
+                   f"{offered[k] or 'card ' + str(k)}. Reason: {why}. ({r.message})"])
+            log("trainer_ability", offered=offered, picked=k, ok=r.ok, message=r.message)
+            if not r.ok:
+                return stop(f"after choosing a trainer's ability: {r.message} "
                             f"(capture: {(r.after or {}).get('saved_capture')})", r.after)
         elif screen == "result":
             h.last_image.save(hands_mod.CAPTURE_DIR / f"result_{datetime.now():%Y%m%d_%H%M%S}.png")

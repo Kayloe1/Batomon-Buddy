@@ -86,6 +86,21 @@ class NewScreens(unittest.TestCase):
         self.assertEqual(state("title_screen.png")["screen"], "title")
         self.assertEqual(state("title_screen.png")["problems"], [])
 
+    def test_trainer_ability_choice(self):
+        # Mysterious Mask (2026-11-15, stuck_20261114_201501.png): the trainer cards 28 px higher, a blue
+        # HIDE bottom left, a pink-framed banner. Rebuilt from a trainer pick capture.
+        pic = np.asarray(window.canonical_picture(Image.open(CAP / "trainer_pick.png"))).copy()
+        names = reader.read_state(Image.fromarray(pic))["trainers"]
+        pic[:-28] = pic[28:].copy()
+        pic[1196:1318, 20:396] = (49, 198, 247)
+        pic[1100:1404, 452:2108] = (255, 74, 107)
+        pic[1110:1394, 470:2090] = (255, 255, 255)
+        st = reader.read_state(Image.fromarray(pic))
+        self.assertEqual(st["screen"], "trainer_ability")
+        self.assertEqual(st["trainers"], names)
+        x0, y0, x1, y1 = reader.trainer_ability_card(1)
+        self.assertLess(y0, reader.trainer_card(1)[1])
+
     def test_ranked_rank_card(self):
         # 2026-11-15, measured on stuck_20261114_194622.png (Rank Up!, Silver 8): rebuilt from its colours
         pic = np.full((1440, 2560, 3), (20, 54, 52), np.uint8)
