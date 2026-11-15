@@ -35,12 +35,18 @@ Logs: `logs\run_<time>.jsonl` (every shop read, plan, action, battle, Stats numb
 `logs\batch_summary.jsonl`, `logs\engine_memory.json` (trinkets, rescue, today's buys; reset when a new run is
 detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 so far).
 
-## The Ranked safeguard
+## Ranked Mode (allowed by Ed on 2026-11-14, opt-in)
 - The New Run dialog has two buttons, Ranked Mode and Casual Mode; the selected one is blue, the other grey.
-- `hands.start_casual_run()` presses CONFIRM only after two fresh captures both read "Casual blue, Ranked grey,
-  Pantra selected". If the reading is unclear it stops. It never clicks the Ranked button, and no other code
-  path presses CONFIRM on that dialog. `hands.confirm_continue()` uses the same two-read rule for a saved run.
-- `play.py` only starts a run when given `--new-run` (the control window's first box).
+- `hands.start_run(mode)` presses CONFIRM only after two fresh captures both read "<mode> blue, the other grey,
+  Pantra selected". If the reading is unclear it stops. Casual is the default; the Ranked button is clicked
+  only by `start_run("ranked")`, which `play.py` uses only with `--ranked` (the control window's
+  **Play Ranked** box, off by default; `batch.py --ranked`).
+- `play.py` only starts a run when given `--new-run` (the control window's first box, or the Ranked box).
+- The Continue panel (a saved run after the game restarts): Confirm is pressed for "CASUAL MODE", and for
+  "RANKED MODE" only with `--ranked` and only once `templates\continue_ranked_mode.png` has been saved from a
+  real panel. Until then a saved Ranked run stops there with a capture.
+- Ranked has not been played live yet: its screens (rank, rewards, end of run) are expected to stop the bot
+  the first time they show, to be taught.
 - The shop screen shows no mode, so a run that is already open is played whatever its mode. Ed (2026-11-14)
   does not mind if it continues a Ranked run by accident.
 
@@ -100,7 +106,7 @@ in git (`git add -f`) so the lesson can be repeated.
    teams accumulate.
 
 ## Safety rules (unchanged)
-- Never start a Ranked run without Ed saying so.
+- Start Ranked runs only when Ed ticks Ranked (`--ranked`); Casual stays the default.
 - Do not decrypt, unpack or modify the game's files, and do not read or write its memory.
 - Bots: Ed said on 2026-11-11 that the developer allows bots. (This is Ed's statement; no source is recorded here.)
 - Work only inside this folder.

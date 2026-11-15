@@ -9,9 +9,10 @@ and, in a red box, why it stopped when it cannot read something.
 Pause and Stop take effect between two actions: never in the middle of a click or a drag, and never
 while the bot waits for a battle to end. After a pause the screen is read again before anything else.
 
-The window starts nothing in the game itself. With the first box ticked, play.py may call
-hands.start_casual_run() (Casual Mode is read twice before Confirm is pressed), exactly as
-`python play.py --new-run` does. There is no control for Ranked Mode and nothing here clicks.
+The window starts nothing in the game itself. With the first box ticked, play.py may start a
+Casual run (the mode is read twice before Confirm is pressed), exactly as `python play.py --new-run`
+does. With the Ranked box ticked it starts Ranked runs instead (`--new-run --ranked`; Ed allowed
+this on 2026-11-14). Nothing here clicks.
 
 The window is not kept on top and does not take the keyboard while the bot plays: the bot brings the
 game to the front before every click. Keep it beside the game picture, not over it. Pushing the mouse
@@ -192,8 +193,9 @@ def action_text(kind: str, rec: dict) -> str | None:
         sold = rec.get("sold")
         return "sell " + (f"bench slot {sold + 1}" if isinstance(sold, int) else "the new monster") + " (no room)"
     return {"confirm": "CONFIRM on the result box", "gift": "open the gift box", "cash_in": "Cash In",
-            "new_run": "start a Casual run", "continue_run": "Continue on the main menu",
-            "confirm_continue": "Confirm on the Continue panel (Casual run)",
+            "new_run": f"start a {(rec.get('mode') or 'casual').capitalize()} run",
+            "continue_run": "Continue on the main menu",
+            "confirm_continue": "Confirm on the Continue panel",
             "title": "click on the title screen"}.get(kind, kind)
 
 
@@ -464,13 +466,18 @@ class App:
         opts = ttk.LabelFrame(root, text="Options", padding="6p")
         opts.grid(row=1, column=0, sticky="ew", **P)
         self.new_run = tk.BooleanVar(value=False)
+        self.ranked = tk.BooleanVar(value=False)
         self.limit_days = tk.BooleanVar(value=False)
         self.days = tk.StringVar(value="1")
         self.decide = tk.StringVar(value="planner")
         self.option_widgets = []
         w = ttk.Checkbutton(opts, variable=self.new_run,
-                            text="If no run is open, start a new Casual run (never Ranked)")
+                            text="If no run is open, start a new Casual run")
         w.grid(row=0, column=0, columnspan=4, sticky="w")
+        self.option_widgets.append(w)
+        w = ttk.Checkbutton(opts, variable=self.ranked,
+                            text="Play Ranked: start new runs in Ranked Mode instead (and continue a saved Ranked run)")
+        w.grid(row=3, column=0, columnspan=4, sticky="w", pady=("3p", 0))
         self.option_widgets.append(w)
         w = ttk.Checkbutton(opts, variable=self.limit_days, text="Stop after")
         w.grid(row=1, column=0, sticky="w")
@@ -546,8 +553,10 @@ class App:
     # -- the options, as the arguments play.py takes --
     def argv(self) -> list[str] | None:
         out = []
-        if self.new_run.get():
+        if self.new_run.get() or self.ranked.get():
             out.append("--new-run")
+        if self.ranked.get():
+            out.append("--ranked")
         if self.limit_days.get():
             text = self.days.get().strip()
             if not text.isdigit() or not 0 <= int(text) <= 99:
@@ -692,7 +701,7 @@ class App:
                 capture = m.group(1) if m else None
             if "--new-run" in why:
                 why = ("No run is open in the game. Tick the first box under Options to let the bot start a "
-                       "Casual run, then press Start.")
+                       "Casual run (or the Ranked box for a Ranked run), then press Start.")
             self._show_banner("needs", "THE BOT STOPPED AND NEEDS YOU", why, capture, data.get("log"))
         elif kind == "error":
             text = data.get("text") or "unknown error"

@@ -200,6 +200,7 @@ CONTINUE_CANCEL: Box = (590, 1160, 1245, 1265)
 CONTINUE_MODE_LABEL: Box = (580, 600, 1000, 680)      # "CASUAL MODE", top left of the panel
 CONTINUE_MODE_GREY = (126, 126, 126)
 CASUAL_LABEL_FILE = ROOT / "templates" / "continue_casual_mode.png"
+RANKED_LABEL_FILE = ROOT / "templates" / "continue_ranked_mode.png"   # saved from the first Ranked panel seen
 
 
 def continue_mode_mask(pic: np.ndarray) -> np.ndarray | None:
@@ -211,22 +212,32 @@ def continue_mode_mask(pic: np.ndarray) -> np.ndarray | None:
     return m[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 
 
-def continue_mode(pic: np.ndarray) -> str | None:
-    """"casual" only when the label is, pixel for pixel, the saved "CASUAL MODE" label; else None.
-
-    Anything else (a Ranked label, a label never seen, a shifted picture) is None, and the bot
-    then refuses to press Confirm. There is deliberately no way for this to return "ranked".
-    """
-    m = continue_mode_mask(pic)
-    if m is None or not CASUAL_LABEL_FILE.exists():
-        return None
-    tpl = np.asarray(Image.open(CASUAL_LABEL_FILE).convert("L")) > 127
+def _label_matches(m: np.ndarray, file: Path) -> bool:
+    if not file.exists():
+        return False
+    tpl = np.asarray(Image.open(file).convert("L")) > 127
     if abs(m.shape[0] - tpl.shape[0]) > 1 or abs(m.shape[1] - tpl.shape[1]) > 1:
-        return None
+        return False
     h, w = min(m.shape[0], tpl.shape[0]), min(m.shape[1], tpl.shape[1])
     a, b = m[:h, :w], tpl[:h, :w]
-    iou = np.logical_and(a, b).sum() / max(np.logical_or(a, b).sum(), 1)
-    return "casual" if iou >= 0.97 else None
+    return np.logical_and(a, b).sum() / max(np.logical_or(a, b).sum(), 1) >= 0.97
+
+
+def continue_mode(pic: np.ndarray) -> str | None:
+    """"casual" or "ranked" only when the label is, pixel for pixel, the saved "CASUAL MODE" or
+    "RANKED MODE" label (templates/continue_*_mode.png); else None.
+
+    Anything else (a label never saved, a shifted picture) is None, and the bot then refuses to
+    press Confirm. "ranked" needs templates/continue_ranked_mode.png, saved from a real panel.
+    """
+    m = continue_mode_mask(pic)
+    if m is None:
+        return None
+    if _label_matches(m, CASUAL_LABEL_FILE):
+        return "casual"
+    if _label_matches(m, RANKED_LABEL_FILE):
+        return "ranked"
+    return None
 
 
 TITLE_ANYWHERE: Box = (1180, 1300, 1380, 1400)     # empty sky under the label

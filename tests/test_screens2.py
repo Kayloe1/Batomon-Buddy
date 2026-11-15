@@ -47,6 +47,22 @@ class NewScreens(unittest.TestCase):
         pic[y0:y1, x0:x1] = 255
         self.assertIsNone(reader.continue_mode(pic))
 
+    def test_continue_panel_reads_ranked_only_from_a_saved_label(self):
+        import tempfile
+        pic = np.asarray(window.canonical_picture(Image.open(CAP / "continue_confirm_casual.png"))).copy()
+        x0, y0, x1, y1 = reader.CONTINUE_MODE_LABEL
+        label = pic[y0:y1, x0:x1].copy()
+        pic[y0:y1, x0 + 60:x1] = label[:, :-60]          # stands in for a "RANKED MODE" label
+        old = reader.RANKED_LABEL_FILE
+        self.addCleanup(lambda: setattr(reader, "RANKED_LABEL_FILE", old))
+        with tempfile.TemporaryDirectory() as d:
+            reader.RANKED_LABEL_FILE = Path(d) / "continue_ranked_mode.png"
+            self.assertIsNone(reader.continue_mode(pic))     # nothing saved yet: refused
+            Image.fromarray((reader.continue_mode_mask(pic) * 255).astype(np.uint8)).save(reader.RANKED_LABEL_FILE)
+            self.assertEqual(reader.continue_mode(pic), "ranked")
+            self.assertEqual(reader.continue_mode(np.asarray(window.canonical_picture(
+                Image.open(CAP / "continue_confirm_casual.png")))), "casual")
+
     def test_continue_buttons(self):
         pic = np.asarray(window.canonical_picture(Image.open(CAP / "continue_confirm_casual.png")))
         for box in (reader.CONTINUE_CONFIRM, reader.CONTINUE_CANCEL):

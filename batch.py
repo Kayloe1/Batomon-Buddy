@@ -1,12 +1,12 @@
-"""Play several Casual runs back to back and summarise them.
+"""Play several runs back to back (Casual, or Ranked with --ranked) and summarise them.
 
-    python batch.py --runs 5 [--learned | --simple]
+    python batch.py --runs 5 [--ranked] [--learned | --simple]
 
 Exit code 0: every run finished. Exit code 1: the batch stopped because the bot needed help.
 
 Each run is played by play.main(["--new-run"]): it continues the run that is open, and
-when a run ends it starts the next one with hands.start_casual_run() (Casual Mode only,
-checked twice; there is no code path that selects Ranked). The batch stops at the first
+when a run ends it starts the next one with hands.start_run() (Casual, or Ranked with
+--ranked; the mode is checked twice before Confirm). The batch stops at the first
 thing the bot does not understand (loud message + beep, see play.alert) and prints what
 it has so far. Push the mouse into a screen corner to abort at any moment.
 
@@ -35,11 +35,13 @@ def one_line(s: dict) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--runs", type=int, default=3, help="how many Casual runs to play (default 3)")
+    ap.add_argument("--runs", type=int, default=3, help="how many runs to play (default 3)")
     ap.add_argument("--learned", action="store_true", help="shop with the learned policy (as play.py --learned)")
     ap.add_argument("--simple", action="store_true", help="use the old simple shop rules (as play.py --simple)")
+    ap.add_argument("--ranked", action="store_true", help="play Ranked runs instead of Casual (as play.py --ranked)")
     args = ap.parse_args(argv)
-    play_argv = ["--new-run"] + (["--learned"] if args.learned else []) + (["--simple"] if args.simple else [])
+    play_argv = (["--new-run"] + (["--ranked"] if args.ranked else []) + (["--learned"] if args.learned else [])
+                 + (["--simple"] if args.simple else []))
     LOG_DIR.mkdir(exist_ok=True)
     summaries = []
     stopped = False

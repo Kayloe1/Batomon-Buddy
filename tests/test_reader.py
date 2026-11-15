@@ -179,12 +179,17 @@ class NewRunSafety(unittest.TestCase):
         self.assertIsNone(s["mode"])
         self.assertTrue(s["problems"])
 
-    def test_start_method_never_clicks_the_ranked_button(self):
+    def test_ranked_only_on_request(self):
+        """The Ranked button is clicked only by start_run("ranked"), and play.py asks for that only
+        with --ranked (Ed, 2026-11-14)."""
         import inspect
+        import re
         import hands
-        src = inspect.getsource(hands.Hands.start_casual_run)
-        self.assertNotIn("NEW_RUN_RANKED", src)
         self.assertNotIn("NEW_RUN_RANKED", inspect.getsource(__import__("play")))
+        self.assertEqual(inspect.getsource(hands).count("NEW_RUN_RANKED"), 1)
+        play_src = inspect.getsource(__import__("play"))
+        self.assertIn('mode = "ranked" if args.ranked else "casual"', play_src)
+        self.assertEqual(re.findall(r"start_(?:casual|ranked)_run\(", play_src), [])
 
 
 class OtherScreens(unittest.TestCase):
