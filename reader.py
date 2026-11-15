@@ -191,6 +191,13 @@ OVERFLOW_SLOT: Box = (1548, 710, 1788, 894)
 # cards like the trainer pick, 28 px higher, over the dimmed shop, with HIDE (blue) bottom left and a
 # pink-framed banner. Checked before "event", whose probes it also matches.
 TRAINER_ABILITY_DY = -28
+
+# "Stolen!" (the Burglar's ability after a trinket pick, 2026-11-15): one trinket card in the middle with a
+# red Confirm right under it, a yellow "Stolen!" above it, "You stole a trinket!" in the banner. Checked
+# before "trinket_pick", whose Take All probes the Confirm button covers.
+STOLEN_CONFIRM: Box = (1080, 945, 1480, 1020)
+SCREENS = {"trinket_stolen": [(1280, 215, (255, 211, 14)), (1280, 1000, RED), (1280, 1030, (189, 41, 74)),
+                              (100, 1215, BLUE), (460, 1300, PINK)], **SCREENS}
 SCREENS = {"trainer_ability": [(820, 200, (255, 189, 8)), (1483, 200, (255, 189, 8)), (2146, 200, (255, 189, 8)),
                                (100, 1215, BLUE), (460, 1300, PINK)], **SCREENS}
 
@@ -1771,7 +1778,7 @@ def read_state(image: Image.Image) -> dict:
         state.update(read_select_target(pic))
     elif state["screen"] == "gift_box":
         state["problems"] = []
-    elif state["screen"] == "trinket_pick":
+    elif state["screen"] in ("trinket_pick", "trinket_stolen"):
         state.update(read_trinket_pick(pic))
     elif state["screen"] == "trainer_pick":
         state.update(read_trainer_pick(pic))

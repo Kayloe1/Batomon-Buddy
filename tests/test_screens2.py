@@ -86,6 +86,22 @@ class NewScreens(unittest.TestCase):
         self.assertEqual(state("title_screen.png")["screen"], "title")
         self.assertEqual(state("title_screen.png")["problems"], [])
 
+    def test_stolen_trinket(self):
+        # Burglar (2026-11-15, stuck_20261114_232733.png): one card, "Stolen!" above it, Confirm under it.
+        # Rebuilt from a single-card trinket pick; it read as a trinket pick with Take All before.
+        pic = np.asarray(window.canonical_picture(Image.open(CAP / "trinket_pick_single.png"))).copy()
+        names = [t for t in reader.read_state(Image.fromarray(pic))["trinkets"] if t]
+        pic[192:228, 1208:1348] = (255, 211, 14)
+        pic[940:1020, 1068:1492] = (239, 66, 107)
+        pic[1020:1044, 1068:1492] = (189, 41, 74)
+        pic[1196:1318, 20:396] = (49, 198, 247)
+        pic[1290:1310, 452:470] = (255, 74, 107)
+        st = reader.read_state(Image.fromarray(pic))
+        self.assertEqual(st["screen"], "trinket_stolen")
+        self.assertEqual([t for t in st["trinkets"] if t], names)
+        x0, y0, x1, y1 = reader.STOLEN_CONFIRM
+        self.assertGreater(reader._near(pic[y0:y1, x0:x1], (239, 66, 107), 40).mean(), 0.9)
+
     def test_trainer_ability_choice(self):
         # Mysterious Mask (2026-11-15, stuck_20261114_201501.png): the trainer cards 28 px higher, a blue
         # HIDE bottom left, a pink-framed banner. Rebuilt from a trainer pick capture.

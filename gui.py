@@ -65,7 +65,7 @@ from tkinter import messagebox, ttk
 SCREENS = {
     "shop": "shop", "battle": "battle", "matchmaking": "looking for an opponent", "blank": "between two screens",
     "result": "battle result", "stats": "Stats window", "event": "event", "gift_box": "gift box",
-    "trinket_pick": "trinket choice", "take_one_confirm": "take one or all?", "trainer_pick": "trainer choice", "trainer_ability": "choose a trainer's ability", "select_target": "choosing a target",
+    "trinket_pick": "trinket choice", "take_one_confirm": "take one or all?", "trainer_pick": "trainer choice", "trainer_ability": "choose a trainer's ability", "trinket_stolen": "a stolen trinket (Burglar)", "select_target": "choosing a target",
     "overflow": "team and bench full", "cash_in": "trinket box (Cash In / Open)", "rank_result": "Ranked: rank card", "run_over": "end of the run",
     "new_run": "New Run dialog", "main_menu": "main menu", "main_menu_continue": "main menu (a run is open)",
     "continue_confirm": "Continue panel", "title": "title screen", "minimized": "game window minimized",
