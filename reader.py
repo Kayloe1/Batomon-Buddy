@@ -378,6 +378,9 @@ def resolve(text: str, candidates: list[str], ignore_case: bool = False) -> str 
     return None
 
 
+NEAR_MISS_MIN_LEN = 5     # shorter names are too easy to confuse with a new one
+
+
 def near_miss_name(text: str, candidates: list[str]) -> str | None:
     """The one known name that `text` is a slight misreading of, or None.
 
@@ -386,8 +389,18 @@ def near_miss_name(text: str, candidates: list[str]) -> str | None:
     2026-11-14, and the run stopped). A wrong answer here makes the bot buy or value the wrong
     card, so when in doubt it must return None (the run then stops, as before).
     """
-    # TODO(human): decide how close is close enough, and return the single matching candidate.
-    return None
+    # The rule suggested to Ed (2026-11-15; loosen it here if it stops too often): same length, exactly one letter different, and only one known name fits.
+    # Without a picture to back it up the rule is stricter than text_fits_name: an unknown glyph counts
+    # as a different letter, and short names (under NEAR_MISS_MIN_LEN letters) are never guessed.
+    def key(s: str) -> str:
+        # the card font draws capital I like lowercase l and capital O like zero
+        return s.replace(" ", "").replace("I", "l").replace("O", "0")
+    t = key(text or "")
+    if len(t) < NEAR_MISS_MIN_LEN:
+        return None
+    hits = [cand for cand in candidates
+            if len(key(cand)) == len(t) and sum(a != b for a, b in zip(t, key(cand))) == 1]
+    return hits[0] if len(set(hits)) == 1 else None
 
 
 def fill_number(text: str, expected: int | None) -> int | None:
@@ -1572,8 +1585,10 @@ def _read_shop_slot(pic: np.ndarray, i: int, masks: dict, problems: list[str],
         name = near_miss_name(raw_name, MONSTER_NAMES + ITEM_NAMES)
         if name:
             kind = "monster" if name in MONSTER_NAMES else "item"
+            name_from = "near_miss"     # text alone: not used to teach letters (stop_lessons wants "sprite")
             if notes is not None:
-                notes.append(f"shop {i}: name '{raw_name}' taken as {name} (one known name is that close)")
+                notes.append(f"shop {i}: name '{raw_name}' taken as {name} (one letter off, and no other "
+                             f"known name is that close)")
     price = _to_int(raw_price[1:]) if raw_price.startswith("$") else None
     if price is None and raw_price.startswith("$"):
         price = fill_number(raw_price[1:], _list_cost(name, kind))

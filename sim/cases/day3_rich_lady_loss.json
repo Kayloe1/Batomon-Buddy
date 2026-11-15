@@ -150,9 +150,8 @@
       "a_damage_taken_at_least": 800
     },
     "known_gaps": {
-      "winner": "The simulator has Ed alive at 14 s; the game had him at 0 HP by 15 s.",
-      "time_between": "Same gap: the simulated battle runs on to 16 s.",
-      "snapshot.a_damage_taken_at_least": "By 14 s the simulator has Ed taking 662 net of heals (802 before his 140 of heals), but the game had him at 0 of 800. The missing ~140 equals his heals, so either his heals did not count or the opponent had ~140 damage the end screen does not show."
+      "time_between": "With heals stopped at 60+ Poison (sim/rules.py, a guess) Ed dies on the 15 s Poison tick, not before it; the end screen's 101 Poison (no 15 s Spinarai cast) says before 15 s.",
+      "snapshot.a_damage_taken_at_least": "By 14 s the simulator has Ed taking 712 net of heals (802 before the 90 of heals he got at 5-50 Poison); the game had him at 0 of 800. The last ~88 would need his low-Poison heals not to count either, which three other battles contradict, or ~88 opponent damage the end screen does not show."
     },
     "notes": "End screen: Ed 0/800, opponent 124/800. Ed's Mosslug ended at 55 damage (2 casts) and the opponent's Spinarai at 17 Poison, Ed's bar showed 101 Poison (the Spinarai cast at 15 s would have made it 118), so the battle ended at 14-15 s."
   }

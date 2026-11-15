@@ -123,14 +123,26 @@ right, Charge moves the timer, Knockout disables abilities) are also from those 
 **Not simulated:** shop-phase effects (they show up in the badges instead), Shiny variants, Fancy Sword,
 Scrap Sword, Zenith Stone, Magic Lasso, Jinto monsters, the 6 locked Mythical trinkets.
 
-## Open question from Day 3
+## Open question from Day 3: heals while poisoned (partly settled 2026-11-15)
 
-Either Ed's heals did not count while he was heavily poisoned, or the opponent had about 140 damage the
-end screen does not show (for example a self-knockout monster that left the board). The cheapest way to
-settle it: after a battle where we heal while poisoned, open **Replay** and read both HP bars every few
-seconds, or read the opponent's Stats tab (the bot reads the Stats window after every battle since 2026-11-13,
-so a logged battle where we heal while poisoned can settle it). Once known, change
-the rule in `sim/battle.py` and move the case's `known_gaps` entry to a passing check.
+The Day 3 loss needs about 140 of Ed's heals not to count. The bot's logged battles since then were
+checked for heals at different Poison levels (end-screen HP bars and winners; the bar reading that sticks
+at 54.4% / 29.5% was left out):
+
+| Battle | Poison when the heals came | Fits |
+|---|---|---|
+| 2026-11-12 day 1 win | 1 to 9 | heals count: Ed's end HP 36.4% in the game, 36.7% in the sim (27% if they don't) |
+| 2026-11-13 day 5 loss | 16, 44, then 97, 147 | heals at 44 count (opponent's end HP 38.3%; 35% or less if not); 97+ either way (37.9% / 39.2%) |
+| 2026-11-12 day 1 loss | 7 to 35 | either way |
+| 2026-11-12 day 5 win | the opponent's, at 37, then 110 to 369 | the sim calls it a loss unless heals at 110+ do nothing |
+| Day 3 Rich Lady loss | 5 to 50, then 74, 101 | the sim calls it a draw unless heals at 74+ do nothing |
+
+All five fit "a heal does nothing at 60 Poison or more" (any threshold from 50 to 74 does). That is now
+the simulator's rule (`SETTINGS["heal_blocked_at_poison"] = 60`, marked `guess`; `None` turns it off).
+With it the logged battles agree 24 of 24 (23 before) and the Stats-window error drops from 103.7 to 102.7.
+It is a fit to five battles, not something the game says. Day 3 still has Ed dying on the 15 s tick
+rather than just before it (about 88 HP short at 14 s), so it may be only part of the story. A Replay of a
+battle where we heal at 50 to 150 Poison, read every few seconds, would settle it.
 
 ## Checking against logged battles
 

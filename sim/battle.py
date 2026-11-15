@@ -400,6 +400,9 @@ class Battle:
     def heal(self, tr: Trainer, amount: float) -> None:
         if tr.hp <= EPS and not self.immortal:
             return                   # a trainer at 0 HP is out; a heal later in the same instant cannot revive it
+        blocked_at = SETTINGS.get("heal_blocked_at_poison")
+        if blocked_at is not None and tr.poison >= blocked_at:
+            return                   # GUESS: heavy Poison stops heals (sim/rules.py)
         amount *= tr.heal_mult
         tr.hp += amount
         if SETTINGS["heal_cap"]:

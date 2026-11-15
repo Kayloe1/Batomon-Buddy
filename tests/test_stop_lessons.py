@@ -44,9 +44,11 @@ class TeachFromAStop(unittest.TestCase):
         self.user_lessons = tmp / "user_lessons.json"
         no_card_sprites = tmp / "no_card_sprites"     # the person teaches here, not the card pictures
         no_card_sprites.mkdir()
+        # the text-only near miss would name "Hickrane" too; these tests need the card to stay a stop
         for target, name, value in ((glyphs, "TEMPLATE_FILE", self.glyph_file),
                                     (stop_lessons, "USER_LESSONS", self.user_lessons),
-                                    (reader, "CARD_SPRITE_DIR", no_card_sprites)):
+                                    (reader, "CARD_SPRITE_DIR", no_card_sprites),
+                                    (reader, "near_miss_name", lambda text, candidates: None)):
             p = mock.patch.object(target, name, value)
             p.start()
             self.addCleanup(p.stop)
@@ -171,10 +173,23 @@ class SelfTaughtCardNames(unittest.TestCase):
         # nothing left to teach: a second look does nothing
         self.assertEqual(stop_lessons.self_teach_cards(self.image, reader.read_state(self.image)), [])
 
-    def test_without_a_picture_match_it_still_stops(self):
+    def test_without_a_picture_match_one_wrong_letter_is_named_from_the_text(self):
         empty = Path(self.tmp.name) / "empty"
         empty.mkdir()
+        before = self.glyph_file.read_bytes()
         with mock.patch.object(reader, "CARD_SPRITE_DIR", empty):
+            st = reader.read_state(self.image)
+            self.assertEqual(st["problems"], [])
+            self.assertEqual((st["shop"][4]["name"], st["shop"][4].get("name_from")), ("Kickrane", "near_miss"))
+            # a name from the text alone is not proof enough to teach letters from
+            self.assertEqual(stop_lessons.self_teach_cards(self.image, st), [])
+        self.assertEqual(self.glyph_file.read_bytes(), before)
+
+    def test_without_a_picture_match_or_a_near_miss_it_still_stops(self):
+        empty = Path(self.tmp.name) / "empty"
+        empty.mkdir()
+        with mock.patch.object(reader, "CARD_SPRITE_DIR", empty), \
+                mock.patch.object(reader, "near_miss_name", lambda text, candidates: None):
             st = reader.read_state(self.image)
         self.assertEqual(st["problems"], ["shop 4: unknown name 'Hickrane'"])
 
