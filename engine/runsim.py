@@ -80,12 +80,15 @@ def pick_gift(s: RunState, rarity: str, rng: random.Random) -> str | None:
 
 
 def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int = 24,
-             verbose: bool = False) -> dict:
+             verbose: bool = False, field: str = "ghosts") -> dict:
     rng = random.Random(seed)          # shops and gifts: identical for both policies
     shop_rng = random.Random(seed * 7 + 1)
     # ghosts only in both pools: the recorded real teams would sit at the front of both, and the
     # engine would be graded on the opponents it planned against
     fight_pools = opponents.pools(n=48, seed=9001, recorded=False)        # who we really meet
+    if field == "gold":                     # the Gold-rank opponents the bot met (engine/practice.py)
+        from . import practice
+        fight_pools = practice.gold_pools()
     planner = None
     if policy == "engine":
         planner = Planner(Evaluator(opponents.pools(n=pool_n, seed=1, recorded=False)), params or Params(),
@@ -140,12 +143,13 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
 
 
 def _job(args):
-    seed, policy, params = args
-    return play_run(seed, policy, Params(**params) if params else None)
+    seed, policy, params, field = args
+    return play_run(seed, policy, Params(**params) if params else None, field=field)
 
 
-def run_many(policy: str, seeds: list[int], params: Params | None = None, workers: int = 4) -> list[dict]:
-    jobs = [(s, policy, asdict(params) if params else None) for s in seeds]
+def run_many(policy: str, seeds: list[int], params: Params | None = None, workers: int = 4,
+             field: str = "ghosts") -> list[dict]:
+    jobs = [(s, policy, asdict(params) if params else None, field) for s in seeds]
     if workers <= 1:
         return [_job(j) for j in jobs]
     with ProcessPoolExecutor(workers) as ex:
@@ -167,15 +171,18 @@ def main() -> int:
     ap.add_argument("--first-seed", type=int, default=1000)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--field", choices=["ghosts", "gold"], default="ghosts",
+                    help="who the runs fight: the ghosts (default) or the Gold-rank practice field")
     ap.add_argument("--params", default="", help='JSON of Params overrides, e.g. {"w_next": 0.3}')
     args = ap.parse_args()
     params = Params(**json.loads(args.params)) if args.params else None
     t = time.time()
     if args.verbose:
-        r = play_run(args.first_seed, args.policy, params, verbose=True)
+        r = play_run(args.first_seed, args.policy, params, verbose=True, field=args.field)
         print(r)
         return 0
-    res = run_many(args.policy, list(range(args.first_seed, args.first_seed + args.runs)), params, args.workers)
+    res = run_many(args.policy, list(range(args.first_seed, args.first_seed + args.runs)), params, args.workers,
+                   field=args.field)
     for r in res:
         print(r)
     print(json.dumps(summary(res)), f"({time.time() - t:.0f} s)")

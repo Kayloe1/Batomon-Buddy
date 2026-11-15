@@ -46,10 +46,25 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
 - The Continue panel (a saved run after the game restarts): Confirm is pressed for "CASUAL MODE", and for
   "RANKED MODE" only with `--ranked` and only once `templates\continue_ranked_mode.png` has been saved from a
   real panel. Until then a saved Ranked run stops there with a capture.
-- Ranked has not been played live yet: its screens (rank, rewards, end of run) are expected to stop the bot
-  the first time they show, to be taught.
 - The shop screen shows no mode, so a run that is already open is played whatever its mode. Ed (2026-11-14)
   does not mind if it continues a Ranked run by accident.
+- Played live overnight 2026-11-14/15: 23 Ranked runs, 8 won; rank went from Silver 8 to Gold 5 (logs in
+  `runs\2026-11-15-ranked`). At Gold it won 1 of 10 runs (6.8 badges on average).
+
+### Why it loses at Gold (2026-11-15, from the overnight logs)
+- From day 5 on its team stops levelling up: the six fielded monsters add up to about 7-8 levels on days 5-10,
+  while Gold opponents reach 10-11 by days 8-10. It buys single monsters and sells them again, and rarely
+  finishes a merge.
+- It is too confident there: about 70% expected wins on days 5-10, about 50% real. Even against the very team it
+  met, the simulator gave it 74% where it really won 60%: the opponent's trinkets and trainer power are not seen.
+- A mode-only opponent pool (Ranked teams only) barely changed its guesses.
+- **Practice field:** `python -m engine.runsim --field gold` plays offline runs against the Gold teams it met,
+  with the unseen strength estimated from each real battle (`engine/practice.py`, `data/practice_gold.jsonl`).
+  The unchanged bot averages about 6-7 badges there, like the real Gold runs, so it can judge fixes offline.
+- Tried against it (24 runs each, seeds 3100-3123): unchanged 7 won / 6.3 badges; `POWER_RAMP` 0.45 (expect
+  stronger opponents) 7 / 6.0; `copy_progress` 0.10 (value pairs more) 6 / 6.1. Neither kept.
+- Next idea: a shopping change that commits to finishing merges (keep pairs, hunt the third copy) and test it
+  on the practice field.
 
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
