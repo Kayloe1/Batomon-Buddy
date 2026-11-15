@@ -41,6 +41,28 @@ HP: Box = (120, 985, 530, 1035)
 RANK_BAR: Box = (510, 1075, 1100, 1140)
 RANK_MAX = 14            # what "Rank Max" is reported as: one above the last numbered rank (13)
 MONEY: Box = (1185, 1085, 1370, 1155)
+
+
+def drop_specks(mask: np.ndarray, max_area: int = 20) -> np.ndarray:
+    """Remove tiny white specks that lie wholly above or below the text's rows.
+
+    2026-11-15: the head of a tall shop sprite (Pylong) poked into the money box as a 4x3 blob under the
+    digits and "$8" read as "$8?". A speck next to the text (inside its rows) is kept: it may be part of a
+    glyph, and an unknown glyph must still stop the bot."""
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8), connectivity=8)
+    if n <= 2:
+        return mask
+    big = [i for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] > max_area]
+    if not big:
+        return mask
+    top = min(stats[i, cv2.CC_STAT_TOP] for i in big)
+    bottom = max(stats[i, cv2.CC_STAT_TOP] + stats[i, cv2.CC_STAT_HEIGHT] for i in big)
+    out = mask.copy()
+    for i in range(1, n):
+        y0, h = stats[i, cv2.CC_STAT_TOP], stats[i, cv2.CC_STAT_HEIGHT]
+        if stats[i, cv2.CC_STAT_AREA] <= max_area and (y0 >= bottom or y0 + h <= top):
+            out[labels == i] = False
+    return out
 REROLL_PRICE: Box = (60, 1320, 360, 1410)
 
 # Buttons (for the hands)
@@ -720,7 +742,7 @@ def text_masks(pic: np.ndarray) -> dict[str, tuple[str, np.ndarray, dict]]:
         "trainer": ("caps", glyphs.white(crop(pic, TRAINER)), {"space_gap": 6}),
         "hp": ("hp", glyphs.white(crop(pic, HP)), {}),
         "rank_bar": ("rankbar", glyphs.inked(crop(pic, RANK_BAR)), {}),
-        "money": ("chunky", glyphs.white(crop(pic, MONEY)), {}),
+        "money": ("chunky", drop_specks(glyphs.white(crop(pic, MONEY))), {}),
         "reroll": ("chunky", glyphs.white(crop(pic, REROLL_PRICE)), {}),
     }
     for i in range(SHOP_SLOTS):
