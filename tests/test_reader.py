@@ -431,8 +431,9 @@ class NewNames(unittest.TestCase):
     """2026-11-15 (Smuggler): 'Lamplet' read letter for letter but is in no list."""
 
     def test_a_clean_new_name_is_an_unknown_card_not_a_stop(self):
-        self.assertTrue(reader._clean_new_name("Lamplet"))
-        for raw in ("Lamp?et", "La", "lamplet", "LAMPLET", "Lamp let", "Lamp1et", "Hickrane"):
+        self.assertIn("Lamplet", reader.MONSTER_NAMES)        # a Jinto monster since 2026-11-15, no longer new
+        self.assertTrue(reader._clean_new_name("Zorbwick"))
+        for raw in ("Zorb?ick", "Zo", "zorbwick", "ZORBWICK", "Zorb wick", "Zorb1ick", "Hickrane"):
             self.assertFalse(reader._clean_new_name(raw), raw)
 
     def test_the_engine_never_buys_an_unknown_card(self):
@@ -441,3 +442,18 @@ class NewNames(unittest.TestCase):
         st["shop"][0] = {"name": "Lamplet", "price": 3, "kind": "unknown", "stats": [], "rarity": None}
         s = model.from_reader(st)
         self.assertFalse(model.can_buy(s, 0))
+
+
+class JintoSprites(unittest.TestCase):
+    """Templates made from the batomon.com pictures (build_jinto_sprites.py) name Jinto monsters on the team."""
+
+    def test_made_templates_name_themselves_even_when_the_sprite_bobs(self):
+        import numpy as np
+        from PIL import Image
+        for name in ("Cinnabark", "Drumire", "Miasmaw", "Quillustrous"):
+            patch = np.asarray(Image.open(reader.SPRITE_DIR / f"{name}.png").convert("RGB"))
+            bobbed = np.full_like(patch, 255)
+            bobbed[:-3, 4:] = patch[3:, :-4]
+            slot = np.full((200, 260, 3), 255, np.uint8)
+            slot[36:140, 40:200] = bobbed
+            self.assertEqual(reader.species_of(reader.match_sprite(slot)[0]), name)

@@ -423,6 +423,9 @@ MONSTER_NAMES: list[str] = list(_names["pantra_batomon_base_price"]) + list(_nam
 if (ROOT / "data" / "foreign_monsters.csv").exists():          # event-given monsters of another region
     with open(ROOT / "data" / "foreign_monsters.csv", newline="", encoding="utf-8") as _f:
         MONSTER_NAMES += [row["name"] for row in csv.DictReader(_f)]
+if (ROOT / "data" / "jinto_monsters.csv").exists():             # Jinto region (build_jinto.py)
+    with open(ROOT / "data" / "jinto_monsters.csv", newline="", encoding="utf-8") as _f:
+        MONSTER_NAMES += [row["name"] for row in csv.DictReader(_f) if row["name"] not in MONSTER_NAMES]
 ITEM_NAMES: list[str] = list(_names["items"])
 with open(ROOT / "data" / "trainers.csv", newline="", encoding="utf-8") as _f:
     TRAINER_NAMES: list[str] = [row["name"] for row in csv.DictReader(_f)]
