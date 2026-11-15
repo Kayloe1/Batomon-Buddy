@@ -200,6 +200,15 @@ STOLEN_CONFIRM: Box = (1080, 945, 1480, 1020)
 STOLEN_PROBES = [(1280, 1000, RED), (1280, 1030, (189, 41, 74)), (100, 1215, BLUE), (460, 1300, PINK)]
 
 
+def _is_two_card_box(pic: np.ndarray) -> bool:
+    """The one-button trinket box with two cards side by side (a doubled Locked Box, 2026-11-15): the
+    same Confirm as Cash In, but the middle of the screen is the gap between the cards."""
+    steady = [(1152, 1020, RED), (1408, 1046, RED), (25, 1315, (22, 22, 23)),
+              (940, 300, (255, 255, 255)), (1620, 300, (255, 255, 255)),
+              (940, 600, (231, 231, 231)), (1620, 600, (231, 231, 231))]
+    return all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in steady)
+
+
 def _is_stolen(pic: np.ndarray) -> bool:
     if not all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in STOLEN_PROBES):
         return False
@@ -653,6 +662,8 @@ def detect_screen(pic: np.ndarray) -> str:
     for name, points in SCREENS.items():
         if all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in points):
             return name
+    if _is_two_card_box(pic):
+        return "cash_in"
     if is_stats_window(pic):
         return "stats"                    # scrolled: its header and scrollbar look different
     return "unknown"
