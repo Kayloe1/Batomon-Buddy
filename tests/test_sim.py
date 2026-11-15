@@ -35,7 +35,7 @@ class Data(unittest.TestCase):
         sp = data.load_species()
         import csv
         foreign = set()                       # monsters of other regions (learned in play) and the stand-in
-        for f in ("foreign_monsters.csv", "stand_in_monsters.csv"):
+        for f in ("foreign_monsters.csv", "stand_in_monsters.csv", "jinto_monsters.csv"):
             with open(data.DATA / f, newline="", encoding="utf-8") as fh:
                 foreign |= {r["name"] for r in csv.DictReader(fh)}
         self.assertEqual(len([n for n in sp if n not in data.EXTRA_UNITS and n not in foreign]), 64)
@@ -350,3 +350,16 @@ class GaiadrasilCountsOngoingDamage(unittest.TestCase):
         r = simulate(a, EMPTY, until=9.0)
         fum, gaia = r.units[0]
         self.assertGreater(gaia["dealt"], 50 * 2)        # more than Fumungus's own base Damage
+
+
+class JintoData(unittest.TestCase):
+    def test_jinto_monsters_load_and_stay_out_of_the_pantra_shop(self):
+        from engine import data as edata
+        sp = data.load_species()
+        for n in ("Cinnabark", "Drumire", "Miasmaw", "Quillustrous"):
+            self.assertIn(n, sp)
+        self.assertEqual(sp["Cinnabark"].levels[3].stats["poison"], 15)
+        self.assertEqual(sp["Drumire"].cost, 45)
+        shop = {s.name for r in edata.RARITIES for s in edata.by_rarity(r)}
+        self.assertNotIn("Cinnabark", shop)
+        self.assertEqual(len(shop), 64)

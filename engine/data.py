@@ -125,6 +125,11 @@ def roster() -> dict[str, Species]:
     with open(DATA / "batomon_pantra_levels.csv", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             levels[row["name"]] = row
+    jl = DATA / "jinto_monsters_levels.csv"        # Jinto monsters (build_jinto.py); read like foreign ones
+    if jl.exists():
+        with open(jl, encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                levels.setdefault(row["name"], row)
     out: dict[str, Species] = {}
     rows = []
     with open(DATA / "batomon_pantra.csv", encoding="utf-8") as f:
@@ -132,6 +137,10 @@ def roster() -> dict[str, Species]:
     foreign = DATA / "foreign_monsters.csv"
     if foreign.exists():
         with open(foreign, encoding="utf-8") as f:
+            rows += [(r, True) for r in csv.DictReader(f)]
+    jinto = DATA / "jinto_monsters.csv"
+    if jinto.exists():
+        with open(jinto, encoding="utf-8") as f:
             rows += [(r, True) for r in csv.DictReader(f)]
     with open(DATA / "stand_in_monsters.csv", encoding="utf-8") as f:     # never in the shop, like foreign
         rows += [(r, True) for r in csv.DictReader(f)]
