@@ -196,8 +196,15 @@ TRAINER_ABILITY_DY = -28
 # red Confirm right under it, a yellow "Stolen!" above it, "You stole a trinket!" in the banner. Checked
 # before "trinket_pick", whose Take All probes the Confirm button covers.
 STOLEN_CONFIRM: Box = (1080, 945, 1480, 1020)
-SCREENS = {"trinket_stolen": [(1280, 215, (255, 211, 14)), (1280, 1000, RED), (1280, 1030, (189, 41, 74)),
-                              (100, 1215, BLUE), (460, 1300, PINK)], **SCREENS}
+# The "Stolen!" text shimmers from (255, 211, 14) to (255, 239, 98), so it is tested by _is_stolen, not a probe.
+STOLEN_PROBES = [(1280, 1000, RED), (1280, 1030, (189, 41, 74)), (100, 1215, BLUE), (460, 1300, PINK)]
+
+
+def _is_stolen(pic: np.ndarray) -> bool:
+    if not all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in STOLEN_PROBES):
+        return False
+    r, g, b = (pic[195:226, 1215:1341].reshape(-1, 3).astype(int).T)
+    return bool(((r >= 240) & (g >= 200) & (g <= 245) & (b <= 110)).mean() > 0.05)
 SCREENS = {"trainer_ability": [(820, 200, (255, 189, 8)), (1483, 200, (255, 189, 8)), (2146, 200, (255, 189, 8)),
                                (100, 1215, BLUE), (460, 1300, PINK)], **SCREENS}
 
@@ -641,6 +648,8 @@ def detect_screen(pic: np.ndarray) -> str:
         return "blank"                    # fade between screens
     if _is_new_run(pic):
         return "new_run"
+    if _is_stolen(pic):
+        return "trinket_stolen"
     for name, points in SCREENS.items():
         if all(_near(pic[y, x], colour, SCREEN_TOL) for x, y, colour in points):
             return name

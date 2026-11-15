@@ -99,6 +99,8 @@ class NewScreens(unittest.TestCase):
         st = reader.read_state(Image.fromarray(pic))
         self.assertEqual(st["screen"], "trinket_stolen")
         self.assertEqual([t for t in st["trinkets"] if t], names)
+        pic[192:228, 1208:1348] = (255, 239, 98)            # the text shimmers (2026-11-15)
+        self.assertEqual(reader.read_state(Image.fromarray(pic))["screen"], "trinket_stolen")
         x0, y0, x1, y1 = reader.STOLEN_CONFIRM
         self.assertGreater(reader._near(pic[y0:y1, x0:x1], (239, 66, 107), 40).mean(), 0.9)
 
