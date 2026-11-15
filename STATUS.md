@@ -103,7 +103,8 @@ in git (`git add -f`) so the lesson can be repeated.
    badges and event / trinket lines are the obvious next kinds to add. First live use of the button is
    still to do.
 2. Level 4: capture one, teach the label and its colour.
-3. Settle the Day 3 simulator gap (do heals count while heavily poisoned?) with a logged battle.
+3. Heals while poisoned: the simulator now guesses that heals do nothing at 60+ Poison (fits five logged
+   battles, `docs\simulator.md`). Confirm it with a Replay of a battle with heals at 50 to 150 Poison.
 4. Keep recording opponents; re-run `python -m engine.opponents` and `python -m train.learn` as late-day
    teams accumulate.
 

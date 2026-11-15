@@ -2,6 +2,7 @@
 import random
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -10,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 from sim import data  # noqa: E402
 from sim.battle import Battle, simulate, team_from_reader, win_rate  # noqa: E402
 from sim.check import check_case, load_cases  # noqa: E402
+from sim.rules import SETTINGS  # noqa: E402
 from sim.__main__ import main  # noqa: E402
 
 
@@ -198,11 +200,19 @@ class RecordedBattles(unittest.TestCase):
         self.assertEqual(bad, [])
         self.assertGreaterEqual(len(verified), 10)
 
-    @unittest.expectedFailure
-    def test_day3_outcome_known_gap(self):
-        """Known gap: the simulator does not yet kill Ed by 15 s (see the case's known_gaps)."""
-        r = simulate(self.cases["day3_rich_lady_loss"]["a"], self.cases["day3_rich_lady_loss"]["b"])
-        self.assertEqual(r.winner, "b")
+    def test_day3_outcome(self):
+        """Ed loses Day 3 once heals at 60+ Poison do nothing (a guess, sim/rules.py); without it, a draw."""
+        case = self.cases["day3_rich_lady_loss"]
+        self.assertEqual(simulate(case["a"], case["b"]).winner, "b")
+        with mock.patch.dict(SETTINGS, {"heal_blocked_at_poison": None}):
+            self.assertEqual(simulate(case["a"], case["b"]).winner, "draw")
+
+    def test_heals_at_low_poison_still_count(self):
+        case = self.cases["day3_rich_lady_loss"]
+        with mock.patch.dict(SETTINGS, {"heal_blocked_at_poison": 1}):     # every heal while poisoned blocked
+            all_blocked = simulate(case["a"], case["b"], until=14.0)
+        r = simulate(case["a"], case["b"], until=14.0)
+        self.assertGreater(r.hp[0], all_blocked.hp[0])     # Ed's heals at 5-50 Poison counted
 
     def test_check_command_passes(self):
         import contextlib

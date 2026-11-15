@@ -29,6 +29,9 @@ SETTINGS = {
     "deaths_after_instant": True,
     # Heal cannot raise HP above the maximum.
     "heal_cap": True,
+    # GUESS (2026-11-15): a heal does nothing while its trainer has at least this much Poison
+    # (None = heals always count). Five logged battles fit a threshold between 50 and 74; 60 is the middle.
+    "heal_blocked_at_poison": 60,
     # At equal times the player's side acts first, then the opponent's.
     "player_first_on_ties": True,
     # Shortest effective cooldown after Cooldown Speed. Without a floor, stacking speed (Galvanine Lv4
@@ -67,6 +70,8 @@ RULES = [
      "guess", "Glossary: 'Takes additional damage when attacked.' The 25 Shock from Electranade was still on the bar at the end of Day 3, so it does not decay or get used up. Flat vs percent is not known; flat fits Day 3 better."),
     ("Poison and Burn ticks do 15% less damage while the trainer has a shield, and hit the shield first.",
      "old-notes", "UNVERIFIED hard number (15%) from the September notes: 'Damage from status effects deal 15% less damage against shields.' No recorded battle since the updates has a shield in it."),
+    ("A heal does nothing while its trainer has 60 Poison or more (SETTINGS heal_blocked_at_poison).",
+     "guess", "Fits five battles, 2026-11-15: Day 3 Rich Lady (Ed's last heals at 74 and 101 Poison must not count, or he lives to 16 s), the 2026-11-12 day 5 win (the opponent's heals at 110+ Poison must not count, or the sim calls it a loss), and three end-screen HP bars that need heals at 9, 35 and 44 Poison to count. Any threshold from 50 to 74 fits; nothing in the game text says so. Check it with a Replay of a battle with heals at 50-150 Poison."),
     ("Heal cannot raise HP above the maximum.",
      "guess", "The Stats screen counts the full heal even at full HP (Day 2 Dribblet: 6 x 20 = 120), so it cannot show this."),
     ("Multicast N repeats the whole active N times; each repeat counts as one trigger.",
