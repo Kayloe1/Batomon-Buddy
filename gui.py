@@ -66,7 +66,7 @@ SCREENS = {
     "shop": "shop", "battle": "battle", "matchmaking": "looking for an opponent", "blank": "between two screens",
     "result": "battle result", "stats": "Stats window", "event": "event", "gift_box": "gift box",
     "trinket_pick": "trinket choice", "take_one_confirm": "take one or all?", "trainer_pick": "trainer choice", "select_target": "choosing a target",
-    "overflow": "team and bench full", "cash_in": "Cash In", "run_over": "end of the run",
+    "overflow": "team and bench full", "cash_in": "trinket box (Cash In / Open)", "run_over": "end of the run",
     "new_run": "New Run dialog", "main_menu": "main menu", "main_menu_continue": "main menu (a run is open)",
     "continue_confirm": "Continue panel", "title": "title screen", "minimized": "game window minimized",
     "unknown": "not recognised",

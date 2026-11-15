@@ -142,8 +142,10 @@ SCREENS: dict[str, list[tuple[int, int, tuple[int, int, int]]]] = {
     # Title screen: the logo and the dragon silhouette (the dark "PRESS ANY KEY TO START" label is not
     # always shown: it was missing on a fresh start, 2026-11-13, and the bot stopped there)
     "title": [(768, 240, (237, 103, 250)), (1408, 240, (67, 249, 245)), (1280, 739, (111, 49, 71))],
-    # "Cash In": a trinket dialog (blue header, white body) with one red button, shop dimmed behind it
-    "cash_in": [(1280, 255, (0, 132, 189)), (1280, 560, (255, 255, 255)), (1152, 1020, RED),
+    # A trinket dialog with one red button over the dimmed shop: "Cash In" (Fake Diamond) or "Open"
+    # (Locked Box after a lost battle, 2026-11-15). The header has the trinket's rarity colour (blue Rare,
+    # grey (112, 112, 122) Common), so it is not probed; the white body and the button are.
+    "cash_in": [(1280, 300, (255, 255, 255)), (1280, 560, (255, 255, 255)), (1152, 1020, RED),
                 (1408, 1046, RED), (25, 1315, (22, 22, 23))],
     # Battle: the two trainer portraits in the bottom corners (their frames do not move)
     "battle": [(30, 1160, (156, 156, 173)), (2530, 1160, (156, 156, 173)), (30, 1420, (255, 255, 255)),

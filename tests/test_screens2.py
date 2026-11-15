@@ -89,6 +89,12 @@ class NewScreens(unittest.TestCase):
     def test_cash_in(self):
         self.assertEqual(state("cash_in_fake_diamond.png")["screen"], "cash_in")
 
+    def test_a_common_trinket_box_with_one_button_is_the_same_screen(self):
+        # Locked Box (2026-11-15): same card and button, grey (112, 112, 122) header instead of blue
+        pic = np.asarray(window.canonical_picture(Image.open(CAP / "cash_in_fake_diamond.png"))).copy()
+        pic[236:300, 972:1588] = (112, 112, 122)
+        self.assertEqual(reader.read_state(Image.fromarray(pic))["screen"], "cash_in")
+
     def test_buttons_land_on_their_buttons(self):
         for name, box in (("main_menu.png", reader.MAIN_MENU_NEW_RUN), ("cash_in_fake_diamond.png", reader.CASH_IN_BUTTON),
                           ("main_menu_continue.png", reader.MAIN_MENU_CONTINUE)):
