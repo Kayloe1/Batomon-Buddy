@@ -87,8 +87,10 @@ in git (`git add -f`) so the lesson can be repeated.
   normal stop: a note in the log and `last_stop.txt`, a `crash_*.png`, a beep and the red box. `batch.py` exits
   with 1 when it stopped for help and 0 when every run finished.
 - **Fonts are never complete.** A glyph, name or screen met for the first time stops the run until it is taught.
-- Names with unknown letters resolve when exactly one known name fits. `reader.near_miss_name` (a look-alike
-  letter such as K read as H) is unfinished and always answers "no match".
+- Names with unknown letters resolve when exactly one known name fits. A shop card name with one letter read
+  wrong (K read as H) and no picture to confirm it is named by `reader.near_miss_name` only when the name has
+  at least 5 letters, exactly one letter differs, and no other known name is that close (2026-11-15). Such a
+  name is not used to teach letters; two letters off, or one wrong plus one unknown, still stops.
 - **Not read:** owned trinkets (kept in the engine's memory), the item counter (assumed until the game refuses
   an item), a monster's passive text (the info panel's picture is saved for a person to read).
 - **Team names come from sprites** saved when the bot buys a monster, plus card sprites from every shop seen.

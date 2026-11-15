@@ -143,6 +143,27 @@ class ScreenDetection(unittest.TestCase):
         self.assertIsNone(reader.near_miss_name("Xat", ["Bat", "Cat"]))
         self.assertIsNone(reader.near_miss_name("", ["Bat"]))
 
+    def test_near_miss_takes_one_wrong_letter_only(self):
+        names = reader.MONSTER_NAMES + reader.ITEM_NAMES
+        self.assertEqual(reader.near_miss_name("Hickrane", names), "Kickrane")     # the real K-as-H stop
+        self.assertEqual(reader.near_miss_name("Hickrane", ["Kickrane"]), "Kickrane")
+        self.assertIsNone(reader.near_miss_name("Hickrame", ["Kickrane"]))       # two letters off
+        self.assertIsNone(reader.near_miss_name("H?ckrane", ["Kickrane"]))       # unknown + wrong
+        self.assertIsNone(reader.near_miss_name("Kickranes", ["Kickrane"]))      # length differs
+        self.assertIsNone(reader.near_miss_name("Kickrane", ["Kickrane"]))       # exact is resolve()'s job
+        self.assertIsNone(reader.near_miss_name("Xabbit", ["Rabbit", "Babbit"]))  # two names fit
+        self.assertIsNone(reader.near_miss_name("Bxat", ["Boat"]))               # too short to guess
+
+    def test_near_miss_reads_l_as_capital_i(self):
+        self.assertEqual(reader.near_miss_name("lronclax", ["Ironclaw"]), "Ironclaw")
+
+    def test_no_two_known_names_are_one_letter_apart(self):
+        # near_miss_name relies on this; a new name that breaks it needs a look at the rule
+        names = reader.MONSTER_NAMES + reader.ITEM_NAMES
+        for name in names:
+            with self.subTest(name=name):
+                self.assertIsNone(reader.near_miss_name(name, [n for n in names if n != name]))
+
     def test_rank_max_is_read(self):
         st = reader.read_state(Image.open(CAPTURES / "shop_rank_max.png"))
         self.assertEqual(st["problems"], [])
