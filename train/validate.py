@@ -22,6 +22,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from engine import data, model, opponents
 from engine.evaluate import Evaluator
+from engine.runsim import default_workers
 from engine.runsim import simple_policy_turn
 from sim import rules
 
@@ -98,7 +99,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--policy", default="learned", help="learned, simple, or a path to a policy json")
     ap.add_argument("--runs", type=int, default=200)
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=default_workers())
     ap.add_argument("--no-variants", action="store_true")
     args = ap.parse_args()
     rec = opponents.load_recorded()

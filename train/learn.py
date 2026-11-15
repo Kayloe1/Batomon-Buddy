@@ -26,6 +26,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from engine import opponents
 from engine.evaluate import Evaluator
+from engine.runsim import default_workers
 
 from .env import OppSource, play_run
 from .policy import NAMES, SPEC, FastPolicy, Theta, save_theta, theta_from_vec, vec_from_theta
@@ -116,7 +117,7 @@ def main() -> int:
     ap.add_argument("--pop", type=int, default=48)
     ap.add_argument("--runs", type=int, default=40)
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=default_workers())
     ap.add_argument("--p-league", type=float, default=0.35)
     ap.add_argument("--p-ghost", type=float, default=0.5)
     ap.add_argument("--sim", action="store_true", help="policy uses simulator gain as a feature (slower)")
