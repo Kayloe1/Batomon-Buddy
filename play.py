@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from datetime import datetime
 
 import hands as hands_mod
@@ -150,6 +151,21 @@ def act(h, a):
 AFTER_WAIT = {"shop", "result", "event", "gift_box", "trinket_pick", "take_one_confirm", "trainer_pick", "select_target",
               "overflow", "cash_in", "run_over", "new_run", "main_menu", "main_menu_continue",
               "continue_confirm", "title", "stats", "rank_result", "trainer_ability"}
+
+def end_badges(h, state: dict, frames: int = 6) -> tuple[int | None, list]:
+    """The badges on the end-of-run screen: the most counted over a few frames. On a won run confetti
+    falls over the coins and can hide one in a single frame (2026-11-15: 9 read, 10 shown)."""
+    reads = [state.get("badges")]
+    if state.get("screen") == "run_over" and not getattr(h, "dry_run", False):
+        for _ in range(frames - 1):
+            time.sleep(0.4)
+            s = h.look(save_if_unreadable=False)
+            if s.get("screen") != "run_over":
+                break
+            reads.append(s.get("badges"))
+    known = [b for b in reads if b is not None]
+    return (max(known) if known else None), reads
+
 
 LAST_LOG = None          # path of the log of the latest main() call (batch.py reads it)
 
@@ -505,8 +521,9 @@ def _play(argv, control: Control, hands, brain) -> int:
         elif screen in ("run_over", "new_run", "main_menu"):
             if screen in ("run_over", "main_menu") and played:
                 h.last_image.save(hands_mod.CAPTURE_DIR / f"run_over_{datetime.now():%Y%m%d_%H%M%S}.png")
-                print("run over" + (f": {state['badges']} badges" if state.get("badges") is not None else ""))
-                log("run_over", badges=state.get("badges"))
+                badges, reads = end_badges(h, state)
+                print("run over" + (f": {badges} badges" if badges is not None else ""))
+                log("run_over", badges=badges, badge_reads=reads)
                 return 0
             if not args.new_run:
                 return stop("no run is open; use --new-run to start a Casual run")
