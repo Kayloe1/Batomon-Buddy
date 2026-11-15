@@ -1,0 +1,3 @@
+{"time": "2026-11-14T19:51:50", "kind": "session", "new_run": true, "ranked": true, "days": 99, "decide": "planner"}
+{"time": "2026-11-14T19:51:53", "kind": "rank_result", "capture": "rank_20261114_195150.png", "ok": true, "message": "now on 'run_over'"}
+{"time": "2026-11-14T19:51:53", "kind": "run_over", "badges": 5}

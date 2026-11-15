@@ -1,0 +1,2 @@
+{"time": "2026-11-14T18:43:19", "kind": "continue_run", "ok": false, "message": "now on 'unknown'"}
+{"time": "2026-11-14T18:43:19", "kind": "stop", "why": "after Continue: now on 'unknown' (capture: stuck_20261114_184319.png)", "state": {"screen": "unknown", "problems": ["screen 'unknown' cannot be read yet", "waited for ['battle', 'cash_in', 'continue_confirm', 'event', 'gift_box', 'matchmaking', 'result', 'shop', 'trainer_pick', 'trinket_pick'], stuck on 'unknown'"], "saved_capture": "stuck_20261114_184319.png"}}

@@ -1,0 +1,231 @@
+HOW TO READ THIS: each option gets a 'gain' = how much better the run looks after it
+(and the buys it leads to) than ending the turn now. It mixes the chance to win today,
+the next two days, money kept and progress to level-ups. Bigger is better.
+
+--- Day 12 | $100 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Decision: sell Aegistruct: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 12 | $123 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Pylong $40
+   +0.00  buy Ironcore $40
+   +0.00  buy Torrantler $50
+   +0.00  buy Fumungus $40
+   +0.00  use Black Sludge
+   ... and 6 weaker options
+Decision: spend the surplus: $123 in hand, $97 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 12 | $120 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.09  sell Formiqueen   <-- my choice
+   +0.09  sell Celestia
+   +0.09  sell Aristobat
+   +0.09  sell Magmite
+   +0.05  buy Gaiadrasil $60
+   ... and 6 weaker options
+Decision: sell Formiqueen. It is a small improvement (+0.09), ahead of 'sell Celestia' (+0.09).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 12 | $158 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.22  sell Celestia   <-- my choice
+   +0.09  buy Sirenade $40
+   +0.09  buy Gaiadrasil $60
+   +0.09  sell Aristobat
+   +0.09  sell Magmite
+   ... and 5 weaker options
+Decision: sell Celestia. It is a clear improvement (+0.22), ahead of 'buy Sirenade $40' (+0.09).
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 12 | $173 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.22  buy Magmalith $30   <-- my choice
+   +0.22  buy Sirenade $40
+   +0.22  buy Gaiadrasil $60
+   +0.22  sell Aristobat
+   +0.22  sell Magmite
+   ... and 4 weaker options
+Decision: buy Magmalith $30. It is a clear improvement (+0.22), ahead of 'buy Sirenade $40' (+0.22).
+
+--- Day 12 | $143 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 81%.
+Options I weighed (gain compared with ending the turn now):
+   +0.22  buy Gaiadrasil $60   <-- my choice
+   +0.22  sell Aristobat
+   +0.22  sell Magmite
+   +0.09  buy Sirenade $40
+   +0.05  buy Pyronade $25
+   ... and 3 weaker options
+Decision: buy Gaiadrasil $60. It is a clear improvement (+0.22), ahead of 'sell Aristobat' (+0.22).
+
+--- Day 12 | $83 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  buy Sirenade $40
+   +0.00  buy Pyronade $25
+   +0.00  sell Aristobat
+   +0.00  sell Magmite
+   +0.00  reroll
+   ... and 1 weaker options
+Decision: spend the surplus: $83 in hand, $57 more than is worth keeping, and a reroll is the only way left to turn it into a stronger team. It is free and can only help, so I use it before the battle.
+
+--- Day 12 | $80 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  buy Dirgefin $25   <-- my choice
+   +0.07  buy Celestia $30
+   +0.07  buy Reapra $35
+   +0.07  buy Dracana $40
+   +0.07  use Focus Pill
+   ... and 4 weaker options
+Decision: buy Dirgefin $25. It is a small improvement (+0.07), ahead of 'buy Celestia $30' (+0.07).
+
+--- Day 12 | $55 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  sell Aristobat to buy Celestia   <-- my choice
+   +0.07  buy Reapra $35
+   +0.07  use Focus Pill
+   +0.07  sell Aristobat
+   +0.05  sell Magmite to buy Celestia
+   ... and 7 weaker options
+Decision: sell Aristobat to buy Celestia. It is a small improvement (+0.07), ahead of 'buy Reapra $35' (+0.07).
+Why sell first: I cannot afford or fit the new monster otherwise, and the team is stronger with it.
+
+--- Day 12 | $68 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  buy Celestia $30   <-- my choice
+   +0.07  buy Reapra $35
+   +0.07  use Focus Pill
+   +0.05  sell Magmite
+   +0.00  buy Dracana $40
+   ... and 2 weaker options
+Decision: buy Celestia $30. It is a small improvement (+0.07), ahead of 'buy Reapra $35' (+0.07).
+
+--- Day 12 | $38 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.07  buy Reapra $35   <-- my choice
+   +0.07  use Focus Pill
+   +0.05  sell Magmite
+   +0.00  sell Magmite to buy Dracana
+   +0.00  reroll
+   ... and 3 weaker options
+Decision: buy Reapra $35. It is a small improvement (+0.07), ahead of 'use Focus Pill' (+0.07).
+
+Trinket choice between Blitz Bell, Mysterious Mask, Upgrade Disc: I took Blitz Bell because Blitz Bell +0.024; Upgrade Disc +0.012; Mysterious Mask +0.012. (now on 'shop')
+
+--- Day 12 | $3 | 1 lives | 8 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  use Focus Pill
+   -0.02  sell Magmite
+   -1.36  sell Lignite
+   -2.22  sell Blixie to buy Dracana
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Reapra from team bottom middle to team bottom left: this layout won the most simulated battles.
+Move Gaiadrasil from bench slot 2 to team bottom middle: this layout won the most simulated battles.
+Battle: expected win chance 94%.
+
+--- Day 13 | $105 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Decision: sell Magmalith: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 13 | $120 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Decision: sell Dirgefin: it will never play (not on the team, no merge in reach). It is free and can only help, so I use it before the battle.
+Why sell: its money is worth more than what it adds to the team.
+
+--- Day 13 | $133 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 88%.
+Options I weighed (gain compared with ending the turn now):
+   +0.01  use Hot Pepper   <-- my choice
+   +0.00  buy Sirenade $40
+   +0.00  buy Torrantler $50
+   +0.00  sell Celestia
+   +0.00  sell Magmite
+   ... and 4 weaker options
+Decision: use Hot Pepper. It is about the same as doing nothing (+0.01), ahead of 'buy Sirenade $40' (+0.00).
+
+--- Day 13 | $133 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.01  buy Galvanine $40
+   +0.01  buy Galvanine $40
+   +0.01  buy Torrantler $50
+   +0.01  buy Coalem $45
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.03), ahead of 'buy Galvanine $40' (+0.01).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 13 | $130 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.28  buy Onsetra $50   <-- my choice
+   +0.28  buy Noxalith $30
+   +0.28  buy Draconarch $60
+   +0.28  buy Aegistruct $45
+   +0.28  buy Magmalith $30
+   ... and 4 weaker options
+Decision: buy Onsetra $50. It is a clear improvement (+0.28), ahead of 'buy Noxalith $30' (+0.28).
+
+--- Day 13 | $80 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.00  buy Noxalith $30
+   +0.00  buy Draconarch $60
+   +0.00  buy Aegistruct $45
+   +0.00  buy Magmalith $30
+   ... and 3 weaker options
+Decision: reroll. It is a small improvement (+0.03).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 13 | $77 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.03  reroll   <-- my choice
+   +0.00  buy Clawnetic $45
+   +0.00  buy Lignite $30
+   +0.00  buy Geminiss $50
+   +0.00  buy Stalagrove $35
+   ... and 4 weaker options
+Decision: reroll. It is a small improvement (+0.03).
+Why reroll: on average a fresh shop is worth more to this team than anything on offer now.
+
+--- Day 13 | $74 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.10  buy Onsetra $50   <-- my choice
+   +0.10  buy Berroon $20
+   +0.10  sell Celestia
+   +0.10  sell Magmite
+   +0.03  reroll
+   ... and 4 weaker options
+Decision: buy Onsetra $50. It is a small improvement (+0.10), ahead of 'buy Berroon $20' (+0.10).
+
+--- Day 13 | $24 | 1 lives | 9 badges ---
+Chance to win today's battle with the team as it is: 94%.
+Options I weighed (gain compared with ending the turn now):
+   +0.00  sell Magmite to buy Ironcore
+   +0.00  sell Magmite to buy Dryadell
+   +0.00  buy Berroon $20
+   +0.00  sell Magmite to buy Prismagon
+   +0.00  sell Celestia
+   ... and 6 weaker options
+Nothing left in the shop makes the team better, so the turn ends here.
+Move Reapra from team bottom left to team top left: this layout won the most simulated battles.
+Move Onsetra from bench slot 1 to team bottom right: this layout won the most simulated battles.
+Battle: expected win chance 94%.
+
+Ranked: the rank card showed at the end of the run (saved as rank_20261115_010300.png). I press Confirm. (now on 'run_over')
+
