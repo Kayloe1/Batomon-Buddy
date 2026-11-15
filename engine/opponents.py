@@ -21,6 +21,7 @@ opponent teams, add them with `add_recorded()` and they join the pool.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 from pathlib import Path
@@ -149,6 +150,51 @@ def ghost_run(seed: int, days: int, skill: str) -> list[dict]:
     return out
 
 
+CACHE_DIR = Path(__file__).resolve().parent.parent / "logs"
+_CODE_FILES = ("engine/opponents.py", "engine/model.py", "engine/arrange.py", "engine/growth.py",
+               "engine/evaluate.py", "engine/data.py", "sim/battle.py", "sim/data.py",
+               "data/batomon_pantra.csv", "data/batomon_pantra_levels.csv")
+
+
+def _ghost_cache_path(skills: list[str], days: int, seed: int) -> Path:
+    """Where the built ghost pools are kept: keyed by what they depend on (the skill list, days, seed,
+    POWER_RAMP, EXTRA_INCOME) and by a hash of the code and data that build them, so a change to either
+    makes a new file instead of a stale hit."""
+    root = Path(__file__).resolve().parent.parent
+    h = hashlib.md5()
+    for f in _CODE_FILES:
+        h.update((root / f).read_bytes())
+    h.update(json.dumps([skills, days, seed, POWER_RAMP, EXTRA_INCOME], sort_keys=True).encode())
+    return CACHE_DIR / f"ghost_pools_{h.hexdigest()[:16]}.json"
+
+
+def _ghost_pools(skills: list[str], days: int, seed: int, mix: dict) -> dict[int, list[dict]]:
+    """Play the ghost runs (about 1-2 s) or read them back from the cache file."""
+    path = None
+    try:
+        path = _ghost_cache_path(skills, days, seed)
+        if path.exists():
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            return {int(d): v for d, v in raw.items()}
+    except (OSError, ValueError):
+        pass                                       # unreadable cache: just rebuild
+    pools: dict[int, list[dict]] = {d: [] for d in range(1, days + 1)}
+    for j, skill in enumerate(skills):
+        for spec in ghost_run(seed * 100_003 + j, days, skill):
+            pools[spec["day"]].append(spec)
+    text = json.dumps(pools)
+    pools = {int(d): v for d, v in json.loads(text).items()}      # the same form a cache hit returns
+    if path is not None:
+        try:
+            CACHE_DIR.mkdir(exist_ok=True)
+            tmp = path.with_suffix(f".{random.getrandbits(32):x}.tmp")
+            tmp.write_text(text, encoding="utf-8")
+            tmp.replace(path)                       # whole file or nothing: workers may start together
+        except OSError:
+            pass
+    return pools
+
+
 def build_pools(n: int = 48, days: int = 15, seed: int = 1, mix: dict | None = None,
                 recorded: bool = True) -> dict[int, list[dict]]:
     """n opponents for every day. The order is shuffled once, so the first k of a
@@ -162,10 +208,7 @@ def build_pools(n: int = 48, days: int = 15, seed: int = 1, mix: dict | None = N
         skills.append("steady")
     skills = skills[:n]
     rng.shuffle(skills)
-    pools: dict[int, list[dict]] = {d: [] for d in range(1, days + 1)}
-    for j, skill in enumerate(skills):
-        for spec in ghost_run(seed * 100_003 + j, days, skill):
-            pools[spec["day"]].append(spec)
+    pools = _ghost_pools(skills, days, seed, mix)
     if recorded:
         for d, recs in load_recorded().items():
             if d in pools:
