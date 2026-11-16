@@ -505,9 +505,17 @@ class Battle:
         u.alive = False
         self._living = [None, None]
         self.speeds_changed()
+        if u.is_("Emburn") and not u.disabled and u.param:
+            u.stats["burn"] += u.param
         for v in self.allies(u):
             if v.is_("Danuki") and not u.is_("Danuki") and v.active_passive():
                 v.stats["damage"] += ((v.param or 85.0) / 100.0) * u.stats["damage"]
+            if v.is_("Emburn") and v.active_passive() and v.param:
+                v.stats["burn"] += v.param
+        for side in (0, 1):
+            for v in self.teams[side]:
+                if v and v is not u and v.is_("Cawnushi") and v.active_passive() and v.param:
+                    v.stats["damage"] += v.param
         self.say(f"{u.name} (side {u.side}) is knocked out")
 
     def charge(self, u: Unit, seconds: float) -> None:
@@ -695,7 +703,7 @@ class Battle:
         elif name == "Draconarch":
             for v in self.adjacent(u):
                 if v.active_passive():
-                    self.battle_start(v)
+                    self.battle_start(v, from_trigger=True)
             u.cooldown += p
         elif name == "Galvanine":
             u.speed += 50
@@ -763,8 +771,8 @@ class Battle:
                 self.knockout(target)
 
     # ---------- battle start ----------
-    def battle_start(self, u: Unit) -> None:
-        bs_only = self.at_battle_start[u.side]
+    def battle_start(self, u: Unit, from_trigger: bool = False) -> None:
+        bs_only = self.at_battle_start[u.side] and not from_trigger
         if u.shiny and not bs_only:
             self.shiny_battle_start(u)
         if not u.active_passive():
