@@ -491,15 +491,19 @@ class Planner:
         base = self.quick(s, team, bench)
         base_finish = self.finish(s, team, bench, base)
         best_label, best_actions, best_v, best_imm = "end turn", [], base, base
+        best_after: tuple[RunState, list, list] | None = None
         considered = []
         win_now = self.win_today(s, team) if any(team) else 0.0
         for label, actions, states in self._candidates(s):
             total = 0.0
             total_imm = 0.0
+            first_after = None
             for t in states:
                 v_imm, team2, bench2 = self.evaluate_after(s, t, team, bench)
                 total_imm += v_imm
                 total += self.finish(t, team2, bench2, v_imm)
+                if first_after is None:
+                    first_after = (t, team2, bench2)
             v = total / len(states)
             v_imm_avg = total_imm / len(states)
             considered.append((label, v - base))
@@ -507,12 +511,21 @@ class Planner:
                 abs(v - best_v) <= 1e-6 and best_actions and v_imm_avg > best_imm + 1e-6
             ):
                 best_label, best_actions, best_v, best_imm = label, actions, v, v_imm_avg
+                best_after = first_after if len(states) == 1 else None
         rv = self._reroll_value(s, team, bench)
         if rv is not None:
             notes.append(f"reroll {rv - base:+.3f} vs best {best_v - base:+.3f}")
             considered.append(("reroll", rv - base))
             if rv > max(best_v, base_finish) + self.p.min_gain:
-                best_label, best_actions, best_v = "reroll", [Action("reroll")], rv
+                keep_merge = (
+                    best_actions
+                    and best_after is not None
+                    and len(best_after[0].gifts) > len(s.gifts)
+                    and (rv_after := self._reroll_value(*best_after)) is not None
+                    and rv_after >= rv - 1e-6
+                )
+                if not keep_merge:
+                    best_label, best_actions, best_v = "reroll", [Action("reroll")], rv
         if best_actions:
             for a in best_actions:
                 a.why, a.value = best_label, best_v
