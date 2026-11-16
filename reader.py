@@ -674,6 +674,27 @@ def read_run_over(pic: np.ndarray) -> dict:
     return {"badges": gold, "problems": []}
 
 
+def read_rank_result(pic: np.ndarray) -> dict:
+    """Stars (0-5), Rank Up! flag, and division digit on the post-run Ranked card."""
+    stars = 0
+    for i in range(5):
+        x0 = 1015 + i * 114
+        sub = pic[875:945, x0:x0 + 100]
+        if ((sub[..., 2] > 180) & (sub[..., 0] < 200)).sum() > 500:
+            stars += 1
+    ru = pic[380:445, 1220:1520]
+    rank_up = bool(((ru[..., 0] > 200) & (ru[..., 1] > 180) & (ru[..., 2] < 100)).sum() > 100)
+    # White rank label sits on a white card with a dark outline; flood-fill from the
+    # border to isolate the enclosed letter interiors, then read the trailing division digit.
+    band = pic[700:785, 1100:1480]
+    ff = (band.min(axis=2) > 200).astype(np.uint8)
+    mask_ff = np.zeros((ff.shape[0] + 2, ff.shape[1] + 2), np.uint8)
+    cv2.floodFill(ff, mask_ff, (0, 0), 2)
+    gl = glyphs.segment(ff == 1)
+    division = _to_int(store().classify("chunky", gl[-1].bitmap)[0]) if gl else None
+    return {"stars": stars, "rank_up": rank_up, "division": division, "problems": []}
+
+
 def detect_screen(pic: np.ndarray) -> str:
     if pic.max() < 40:
         return "blank"                    # fade between screens
@@ -740,7 +761,7 @@ def read_info_panel(pic: np.ndarray) -> dict | None:
     raw["name"] = s.read("caps", glyphs.white(crop(pic, INFO_NAME)), space_gap=7).strip()
     raw["rarity"] = s.read("caps", glyphs.white(crop(pic, INFO_RARITY)), space_gap=7).strip()
     raw["type"] = s.read("caps", glyphs.white(crop(pic, INFO_TYPE)), space_gap=7).strip()
-    name = resolve(raw["name"].title(), MONSTER_NAMES) or (raw["name"].title() if "?" not in raw["name"] else None)
+    name = resolve(raw["name"], MONSTER_NAMES, ignore_case=True) or (raw["name"].title() if "?" not in raw["name"] else None)
     rarity = next((r for r in RARITIES if r.upper() == raw["rarity"]), None)
     mtype = _match_masked(raw["type"], TYPE_NAMES)
     # cooldown: digits plus a small dot glyph
@@ -796,6 +817,10 @@ def text_masks(pic: np.ndarray) -> dict[str, tuple[str, np.ndarray, dict]]:
     }
     for i in range(SHOP_SLOTS):
         out[f"shop{i}"] = ("card", card_text_mask(crop(pic, _card_text(i))), {"space_gap": 7})
+    for i in range(TEAM_COLS * TEAM_ROWS):
+        out[f"level_team{i}"] = ("level", level_digit_mask(crop(pic, team_slot(i))), {})
+    for i in range(BENCH_SLOTS):
+        out[f"level_bench{i}"] = ("level", level_digit_mask(crop(pic, bench_slot(i))), {})
     return out
 
 
@@ -811,7 +836,12 @@ def card_text_mask(rgb: np.ndarray) -> np.ndarray:
         return glyphs.white(rgb)
     # same share of the anti-aliased edge as the white rule keeps (215/255)
     v = rgb.astype(int)
-    soft_grey = (v.min(axis=2) >= 153) & (v.max(axis=2) - v.min(axis=2) <= 12)
+    neutral = (v.max(axis=2) - v.min(axis=2)) <= 12
+    # a shiny card's glimmer sweeps across a greyed card at ~172 grey;
+    # keep anti-aliased edges (153+) only within 1px of a real 182-grey letter core
+    core_grey = (v.min(axis=2) >= 178) & neutral
+    near_core = cv2.dilate(core_grey.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+    soft_grey = (v.min(axis=2) >= 153) & neutral & near_core
     soft_red = (v[..., 0] >= 215) & (v[..., 1] <= 120) & (v[..., 2] <= 150)
     soft_red[:6] = False              # lower edge of a red or orange stat badge
     mask = soft_grey | soft_red
@@ -953,6 +983,17 @@ def badge_digit_glyphs(pic: np.ndarray, band: Box) -> list[np.ndarray]:
     edge = set(labels[0]) | set(labels[-1]) | set(labels[:, 0]) | set(labels[:, -1])
     inside = np.isin(labels, [k for k in range(1, n) if k not in edge])
     return [g.bitmap for g in glyphs.segment_blobs(glyphs.white(region, 235) & inside)]
+
+
+def badge_band(key: str) -> Box | None:
+    """Badge band box for a stop_lessons key ('badge_shop0', 'badge_team2', 'badge_bench1')."""
+    if key.startswith("badge_shop"):
+        return _card_badges(int(key[len("badge_shop"):]))
+    if key.startswith("badge_team"):
+        return owned_badge_band(team_slot(int(key[len("badge_team"):])))
+    if key.startswith("badge_bench"):
+        return owned_badge_band(bench_slot(int(key[len("badge_bench"):])))
+    return None
 
 
 # --------------------------------------------------------------- sprites ----
@@ -1603,6 +1644,18 @@ def level_mask(slot_rgb: np.ndarray) -> np.ndarray:
     return mask
 
 
+def level_digit_mask(slot_rgb: np.ndarray) -> np.ndarray:
+    """Mask of just the level digit (3rd piece after 'LV' and '.'), or an empty mask."""
+    fill = level_mask(slot_rgb)
+    parts = glyphs.segment(fill)
+    if len(parts) < 3:
+        return np.zeros((1, 1), dtype=bool)
+    g = parts[2]
+    out = np.zeros_like(fill)
+    out[g.y0:g.y1, g.x0:g.x1] = g.bitmap
+    return out
+
+
 def _read_owned_slot(pic: np.ndarray, box: Box, where: str, problems: list[str]) -> dict | None:
     """A team or bench slot. None = empty."""
     rgb = crop(pic, box)
@@ -1814,11 +1867,12 @@ def read_state(image: Image.Image) -> dict:
     state: dict = {"screen": detect_screen(pic)}
     if state["screen"] == "shop":
         state.update(read_shop(pic))
-    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm",
-                             "rank_result"):
+    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm"):
         # recognised. The battle field is read with read_battle() only on request: it takes
         # a few seconds, too slow for every frame while waiting.
         state["problems"] = []            # recognised; nothing on them is read yet
+    elif state["screen"] == "rank_result":
+        state.update(read_rank_result(pic))
     elif state["screen"] == "run_over":
         state.update(read_run_over(pic))
     elif state["screen"] == "continue_confirm":

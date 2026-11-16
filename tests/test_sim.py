@@ -446,3 +446,148 @@ class MechanicsAndMythicals(unittest.TestCase):
         r = simulate(team([mon("Panbud"), mon("Panbud")], trinkets=["Master Crown"]), EMPTY, until=0.1)
         self.assertEqual(r.units[0][0]["stats"]["damage"], 25)
         self.assertEqual(r.units[0][1]["stats"]["damage"], 45)
+
+    def test_sudden_death_starts_at_30s(self):
+        # At 30.5 s, both sides have taken 8 + 8 * 2^(0.5/3) Sudden Death damage.
+        r = simulate(team([], hp=1000), team([], hp=1000), until=30.5)
+        expected = 1000 - (8.0 + 8.0 * (2.0 ** (0.5 / 3.0)))
+        self.assertAlmostEqual(r.hp[0], expected, places=5)
+        self.assertAlmostEqual(r.hp[1], expected, places=5)
+        # Mirror stall finishes via Sudden Death well before the 300 s fallback.
+        r = simulate(team([mon("Dribblet")]), team([mon("Dribblet")]))
+        self.assertEqual(r.winner, "draw")
+        self.assertLess(r.time, 60.0)
+
+    def test_charge_discards_excess_and_casts_at_once(self):
+        # Ironcore L2 (2.0 s cd) charges adjacent Bumblebolt (2.5 s cd) by 2.0 s at 2.0 s:
+        # Bumblebolt's 2.0 + 2.0 = 4.0 s casts once at 2.0 s and discards the 1.5 s excess,
+        # so by 4.0 s (before the 2nd Ironcore cast? no, at 3.9 s) Bumblebolt has only 1 cast.
+        r = simulate(team([mon("Bumblebolt"), mon("Ironcore", 2)]), EMPTY, until=3.9)
+        self.assertEqual(r.units[0][0]["triggered"], 1)
+        # Clawnetic (3.0 s cd) charged 1.0 s per Shock hit: a 3-hit Bumblebolt cast at 2.5 s
+        # fills Clawnetic on hit 1 (2.5 + 1.0 -> casts at once, resets to 0), then hits 2 & 3
+        # charge it to 2.0 s, so by 3.6 s Clawnetic has 2 casts (2.5 s and 3.5 s).
+        r = simulate(team([mon("Clawnetic"), {**mon("Bumblebolt"), "multicast": 3}]), EMPTY, until=3.6)
+        self.assertEqual(r.units[0][0]["triggered"], 2)
+
+    def test_heal_at_60_poison_counts_but_70_is_blocked(self):
+        # 15 x Venopuff (4 Poison) inflicts 60 Poison at 3.5 s; Dribblet heals 20 at 6.0 s.
+        # At 60 Poison the heal still counts; at 72 Poison (18 x Venopuff) it is blocked.
+        r60 = simulate(team([mon("Dribblet")], hp=1000),
+                       team([mon("Venopuff", 1, poison=60)]), until=6.1)
+        r72 = simulate(team([mon("Dribblet")], hp=1000),
+                       team([mon("Venopuff", 1, poison=72)]), until=6.1)
+        # Between 3.5 s and 6.0 s Poison ticks at 4, 5, 6 s (3 ticks).
+        self.assertAlmostEqual(r60.hp[0], 1000 - 3 * 60 + 20)
+        self.assertAlmostEqual(r72.hp[0], 1000 - 3 * 72)
+
+    def test_at_battle_start_avoids_double_counting_badges(self):
+        # Battle-screen capture already includes Rally Flag (+12), Aegistruct (+140),
+        # Stellagon (+2 Multicast), and Lignite (24 * 3 = +72).
+        t = team([
+            mon("Runerock", 1, shield=140),
+            mon("Aegistruct", 1, shield=290),
+            mon("Lignite", 1, damage=72, burn=3),
+            mon("Stellagon", 1, damage=100),
+            {**mon("Panbud", 1, damage=25), "multicast": 3},
+        ], trinkets=["Rally Flag"])
+        t["at_battle_start"] = True
+        r = simulate(t, EMPTY, until=6.1)
+        self.assertEqual(r.units[0][1]["shielded"], 290)
+        self.assertEqual(r.units[0][2]["dealt"], 72)
+        self.assertEqual(r.units[0][4]["dealt"], 75)   # 3 hits x 25, not 5 hits x 25
+
+    def test_draconarch_triggers_battle_start_even_when_at_battle_start(self):
+        # Mid-battle Draconarch (cd=5.0) must still trigger adjacent Aegistruct's battle_start.
+        t = team([
+            mon("Runerock", 1, shield=140),
+            mon("Aegistruct", 1, shield=290),
+            mon("Draconarch", 1),
+        ])
+        t["at_battle_start"] = True
+        r = simulate(t, EMPTY, until=6.1)
+        # At 5.0 s Draconarch triggers Aegistruct (+140 -> 430), then Aegistruct casts at 6.0 s.
+        self.assertEqual(r.units[0][1]["shielded"], 430)
+
+    def test_emburn_and_cawnushi_on_knockout(self):
+        # Stingarde knocks itself out at 6.0 s: Emburn gains +3 Burn, Cawnushi (on enemy) gains +60 Damage.
+        r = simulate(team([mon("Stingarde"), mon("Emburn")]), team([mon("Cawnushi")]), until=6.1)
+        self.assertEqual(r.units[0][1]["stats"]["burn"], 9)
+        self.assertEqual(r.units[1][0]["stats"]["damage"], 110)
+
+    def test_talonite_omnichrome_tsunamere_sukoi_and_candy_jar(self):
+        # Talonite: +20 Shield per Rock ally, +1 Multicast per Flying ally.
+        r = simulate(team([mon("Talonite"), mon("Pebbler"), mon("Velocect")]), EMPTY, until=12.1)
+        self.assertEqual(r.units[0][0]["stats"]["shield"], 20)
+        self.assertEqual(r.units[0][0]["dealt"], 90)   # 2 base + 1 Flying ally = 3 hits x 30
+        # Omnichrome: +80% of highest-stat enemy at battle start.
+        r = simulate(team([mon("Omnichrome")]), team([mon("Panbud", 1, damage=100)]), until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 81)
+        # Tsunamere: levels up adjacent allies at battle start (max level 3).
+        r = simulate(team([mon("Panbud", 1), mon("Tsunamere")]), EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["level"], 2)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 50)
+        # Sukoi: on first cast (9 s), levels up ally above (slot 0 above slot 3).
+        r = simulate(team([mon("Panbud", 1), None, None, mon("Sukoi")]), EMPTY, until=9.1)
+        self.assertEqual(r.units[0][0]["level"], 2)
+        # Candy Jar: Common and Uncommon allies level up to 3 at battle start.
+        r = simulate(team([mon("Panbud", 1), mon("Talonite", 1)], trinkets=["Candy Jar"]), EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["level"], 3)
+        self.assertEqual(r.units[0][1]["level"], 1)   # Rare is unchanged
+
+    def test_scrap_sword_fancy_sword_and_tengusto(self):
+        # Scrap Sword (+2 per Common trinket: Gold Nugget x2 = +4) and Fancy Sword (+3% per trinket: 4 -> x1.12).
+        r = simulate(team([mon("Panbud", 1)], trinkets=["Scrap Sword", "Gold Nugget", "Gold Nugget"]),
+                     EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 29)
+        r = simulate(team([mon("Brawlmantis", 1)], trinkets=["Fancy Sword", "Gold Nugget", "Warhorn"]),
+                     EMPTY, until=0.1)
+        # Brawlmantis 50 * 1.09 = 54.5, then Warhorn +10 = 64.5 -> 64
+        self.assertEqual(round(r.units[0][0]["stats"]["damage"]), 64)
+        # Tengusto: +60 Damage per Badge (50 base + 3 * 60 = 230, x2 Multicast = 460).
+        t = team([mon("Tengusto", 1)])
+        t["badges"] = 3
+        r = simulate(t, EMPTY, until=4.6)
+        self.assertEqual(r.units[0][0]["dealt"], 460)
+
+    def test_zenith_stone_and_faebloom(self):
+        # Zenith Stone: +80% more on flat stat gains (Mosslug +20 -> +36; Metronome +10 -> +18).
+        r = simulate(team([mon("Mosslug", 1, damage=5)], trinkets=["Zenith Stone"]), EMPTY, until=6.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 41)
+        r = simulate(team([mon("Panbud", 1, damage=25)], trinkets=["Zenith Stone", "Metronome"]),
+                     EMPTY, until=5.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 43)
+        # Faebloom: adjacent allies get +10% Damage per Mythical Item used (2 items -> +20%).
+        t = team([mon("Panbud", 1, damage=100), mon("Faebloom", 1)])
+        t["mythical_items"] = 2
+        r = simulate(t, EMPTY, until=5.1)
+        self.assertEqual(r.units[0][0]["dealt"], 120)
+
+    def test_redhead_and_magic_lasso(self):
+        # Redhead: Fire monsters gain +2 Burn per victory.
+        t = team([mon("Scorchimp", 1)], trainer="Redhead")
+        t["victories"] = 3
+        r = simulate(t, EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["burn"], 11)   # 5 base + 3 * 2
+        # Magic Lasso: copies enemy top-middle (slot 1) into first empty slot.
+        t_a = team([mon("Panbud", 1)])
+        t_a["magic_lasso"] = True
+        t_b = team([None, mon("Brawlmantis", 1, damage=77)])
+        r = simulate(t_a, t_b, until=5.6)
+        self.assertEqual(len(r.units[0]), 2)
+        self.assertEqual(r.units[0][1]["name"], "Brawlmantis")
+        self.assertEqual(r.units[0][1]["dealt"], 77)
+
+    def test_rigalord_and_painted_types(self):
+        # Rigalord (2.0 s cd) spawns devoured Brawlmantis (5.5 s cd) in bottom row (slot 4 / idx 3)
+        # that ONLY triggers when Rigalord casts: at 4.1 s Rigalord cast twice -> Brawlmantis cast twice (100 dealt).
+        riga = {**mon("Rigalord", 1), "devoured": [mon("Brawlmantis", 1)]}
+        r = simulate(team([riga]), EMPTY, until=4.1)
+        self.assertEqual(len(r.units[0]), 2)
+        self.assertEqual(r.units[0][1]["slot"], 4)
+        self.assertEqual(r.units[0][1]["triggered"], 2)
+        self.assertEqual(r.units[0][1]["dealt"], 100)
+        # Painted monster has all 12 types (boosts Prismagon's type count).
+        painted_panbud = {**mon("Panbud", 1), "painted": True}
+        r = simulate(team([painted_panbud, mon("Prismagon", 1)]), EMPTY, until=4.1)
+        self.assertEqual(r.units[0][1]["stats"]["damage"], 100 + 10 * 12)

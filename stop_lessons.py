@@ -53,12 +53,30 @@ _BOXES = {
 for _i in range(reader.SHOP_SLOTS):
     _BOXES[f"shop{_i}"] = (f"Shop card {_i + 1} (from the left): name and price", reader._card_text(_i),
                            "Kickrane $40")
+for _i in range(reader.TEAM_COLS * reader.TEAM_ROWS):
+    _x0, _y0, _, _ = reader.team_slot(_i)
+    _BOXES[f"level_team{_i}"] = (f"Team slot {_i + 1} level", (_x0, _y0, _x0 + 110, _y0 + 40), "4")
+for _i in range(reader.BENCH_SLOTS):
+    _x0, _y0, _, _ = reader.bench_slot(_i)
+    _BOXES[f"level_bench{_i}"] = (f"Bench slot {_i + 1} level", (_x0, _y0, _x0 + 110, _y0 + 40), "4")
+for _i in range(reader.SHOP_SLOTS):
+    _BOXES[f"badge_shop{_i}"] = (f"Shop card {_i + 1} stat badges", reader.badge_band(f"badge_shop{_i}"), "24 x3")
+for _i in range(reader.TEAM_COLS * reader.TEAM_ROWS):
+    _BOXES[f"badge_team{_i}"] = (f"Team slot {_i + 1} stat badges", reader.badge_band(f"badge_team{_i}"), "24 x3")
+for _i in range(reader.BENCH_SLOTS):
+    _BOXES[f"badge_bench{_i}"] = (f"Bench slot {_i + 1} stat badges", reader.badge_band(f"badge_bench{_i}"), "24 x3")
+for _i in range(3):
+    _BOXES[f"event{_i}"] = (f"Event choice {_i + 1}", (0, 0, 1, 1), "Gain $40")
+    _x0 = 250 + 720 * _i
+    _BOXES[f"trinket{_i}"] = (f"Trinket card {_i + 1} name", (_x0 + 14, 266, _x0 + 610, 320), "Fool's Gold")
 
 # A problem line from the reader -> the region it is about.
 _PROBLEM = re.compile(
     r"^(?:(?P<shop>shop) (?P<i>\d): (?:unknown name|cannot read price|cannot split name and price|no text found)"
     r"|(?P<key>lives|day|badges|trainer|money|hp|reroll): (?:cannot read|unknown name)"
-    r"|(?P<rank>rank bar): cannot read)")
+    r"|(?P<rank>rank bar): cannot read"
+    r"|(?P<slot>team|bench) (?P<si>\d+): cannot read level"
+    r"|(?P<bwhere>shop|team|bench) (?P<bi>\d+): cannot read a stat badge)")
 
 
 @dataclass
@@ -82,8 +100,25 @@ def _picture_of(image: Image.Image) -> np.ndarray:
     return np.asarray(window.canonical_picture(image))
 
 
+def _region(pic: np.ndarray, key: str) -> tuple[str, np.ndarray, dict]:
+    if key.startswith("event"):
+        boxes = reader.event_choices(pic)
+        i = int(key[5:])
+        if i >= len(boxes):
+            raise ValueError(f"event choice {i + 1} is not on this screen")
+        return ("event", reader.event_effect_mask(pic, boxes[i]), {"space_gap": 7})
+    if key.startswith("trinket"):
+        mask = reader.trinket_name_mask(pic, int(key[7:]))
+        if mask is None:
+            raise ValueError(f"trinket card {int(key[7:]) + 1} is not on this screen")
+        return ("caps", mask, {"space_gap": 6})
+    return reader.text_masks(pic)[key]
+
+
 def _guess(pic: np.ndarray, key: str) -> str:
-    font, mask, opts = reader.text_masks(pic)[key]
+    if key.startswith("badge_"):
+        return " ".join(b["raw"] for b in reader.read_stat_badges(pic, _BOXES[key][1]))
+    font, mask, opts = _region(pic, key)
     if key.startswith("shop"):
         parts = reader._split_name_price(mask)
         if parts is None:
@@ -96,15 +131,35 @@ def items_for(capture: Path | str) -> list[Item]:
     """What on this capture the reader could not read and a person can teach it."""
     image = Image.open(capture)
     state = reader.read_state(image)
-    if state.get("screen") != "shop":
-        return []
+    screen = state.get("screen")
     pic = _picture_of(image)
+    if screen == "event":
+        out = []
+        for i, (box, eff, raw) in enumerate(zip(reader.event_choices(pic), state.get("effects", []), state.get("raw", []))):
+            if eff is None and raw:
+                x0, y0, x1, y1 = box
+                out.append(Item(f"event{i}", f"Event choice {i + 1}", "Gain $40", raw,
+                                Image.fromarray(pic[y0 + 44:y1, x0:x1])))
+        return out
+    if screen in ("trinket_pick", "trinket_stolen"):
+        out = []
+        for place, name in zip(state.get("card_places", []), state.get("trinkets", [])):
+            if name is None:
+                key = f"trinket{place}"
+                label, box, example = _BOXES[key]
+                x0, y0, x1, y1 = box
+                out.append(Item(key, label, example, _guess(pic, key), Image.fromarray(pic[y0:y1, x0:x1])))
+        return out
+    if screen != "shop":
+        return []
     keys: list[str] = []
     for p in state.get("problems", []):
         m = _PROBLEM.match(p)
         if not m:
             continue
-        key = f"shop{m['i']}" if m["shop"] else "rank_bar" if m["rank"] else m["key"]
+        key = (f"shop{m['i']}" if m["shop"] else "rank_bar" if m["rank"]
+               else f"level_{m['slot']}{m['si']}" if m["slot"]
+               else f"badge_{m['bwhere']}{m['bi']}" if m["bwhere"] else m["key"])
         if key not in keys:
             keys.append(key)
     out = []
@@ -118,8 +173,11 @@ def items_for(capture: Path | str) -> list[Item]:
 def unteachable(capture: Path | str) -> list[str]:
     """Problems on the capture that this tool cannot teach (so the window can say who can)."""
     state = reader.read_state(Image.open(capture))
-    if state.get("screen") != "shop":
-        return [f"the capture shows the '{state.get('screen')}' screen; only the shop screen can be taught here"]
+    screen = state.get("screen")
+    if screen in ("event", "trinket_pick", "trinket_stolen"):
+        return list(state.get("problems", []))
+    if screen != "shop":
+        return [f"the capture shows the '{screen}' screen; only the shop, event, or trinket screen can be taught here"]
     return [p for p in state.get("problems", []) if not _PROBLEM.match(p)]
 
 
@@ -154,12 +212,28 @@ def _truth(key: str, typed: str) -> str:
         return "Rank" + ("Max" if m[1].lower() == "max" else m[1]) + "".join("*" + o for o in odds)
     if key == "trainer":
         return typed.upper()
+    if key.startswith("level_"):
+        m = re.fullmatch(r"(?i)(?:lv\.?\s*)?(\d)", typed)
+        if not m:
+            raise ValueError("type the level number (a single digit, like 4)")
+        return m[1]
+    if key.startswith("badge_"):
+        s = re.sub(r"[\s,|]+", "", typed).lower()
+        if not re.fullmatch(r"[0-9x]+", s):
+            raise ValueError("type the stat badge numbers left to right, like  24 x3")
+        return s
+    if key.startswith("trinket"):
+        return typed.upper()
+    if key.startswith("event"):
+        return typed
     return typed.replace(" ", "")
 
 
 def _reads_as(pic: np.ndarray, key: str, truth: str) -> bool:
     """Does the region, read with the glyphs now known, say `truth`?"""
-    font, mask, opts = reader.text_masks(pic)[key]
+    if key.startswith("badge_"):
+        return "".join(b["raw"] for b in reader.read_stat_badges(pic, _BOXES[key][1])) == truth
+    font, mask, opts = _region(pic, key)
     st = reader.store()
     if "|" in truth:
         name, price = truth.split("|")
@@ -178,6 +252,8 @@ def _names_note(key: str, truth: str) -> str:
                     f"(data/names.json), so the bot will still stop on it: tell Claude.")
     elif key == "trainer" and not reader.resolve(truth, reader.TRAINER_NAMES, ignore_case=True):
         return f" '{truth}' is not in data/trainers.csv yet: tell Claude."
+    elif key.startswith("trinket") and not reader.resolve(truth, reader.TRINKET_NAMES, ignore_case=True):
+        return f" '{truth}' is not in data/trinkets.csv yet: tell Claude."
     return ""
 
 
@@ -225,7 +301,14 @@ def apply(capture: Path | str, answers: dict[str, str], override: bool = False) 
     try:
         masks = reader.text_masks(pic)
         for key, truth in truths.items():
-            font, mask, _ = masks[key]
+            if key.startswith("badge_"):
+                bitmaps = reader.badge_digit_glyphs(pic, _BOXES[key][1])
+                if len(bitmaps) != len(truth):
+                    raise ValueError(f"{_BOXES[key][0]}: {len(bitmaps)} marks in the picture, {len(truth)} characters typed")
+                for bm, ch in zip(bitmaps, truth):
+                    store.add("badge", ch, bm)
+                continue
+            font, mask, _ = _region(pic, key)
             if "|" in truth:
                 name, price = truth.split("|")
                 parts = reader._split_name_price(mask)

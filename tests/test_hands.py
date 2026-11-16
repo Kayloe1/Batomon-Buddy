@@ -52,6 +52,19 @@ class Checks(unittest.TestCase):
         self.assertIsNone(hands.check_move(BEFORE, s, ("team", 4), ("team", 0)))
         self.assertIsNotNone(hands.check_move(BEFORE, BEFORE, ("team", 4), ("team", 0)))
 
+    def test_move_allows_aura_stat_change_in_target_slot(self):
+        s = copy.deepcopy(BEFORE)
+        moved = copy.deepcopy(s["team"][4])
+        moved["stats"] = [{"value": 999, "raw": "999", "stat": "damage", "color": "#ef426b"}]
+        s["team"][0], s["team"][4] = moved, None
+        self.assertIsNone(hands.check_move(BEFORE, s, ("team", 4), ("team", 0)))
+
+        wrong = copy.deepcopy(BEFORE)
+        other = copy.deepcopy(wrong["team"][4])
+        other["name"] = "Othermon"
+        wrong["team"][0], wrong["team"][4] = other, None
+        self.assertIn("different name or level", hands.check_move(BEFORE, wrong, ("team", 4), ("team", 0)))
+
     def test_swap_two_monsters(self):
         s = copy.deepcopy(BEFORE)
         s["team"][4], s["team"][5] = s["team"][5], s["team"][4]
@@ -192,6 +205,34 @@ class LookRereadsUnnamed(unittest.TestCase):
         state, n = self._look([self._shop(None)])
         self.assertIsNone(state["team"][0]["name"])
         self.assertEqual(n, 3)
+
+    def test_unreadable_non_shop_screen_retries_and_keeps_clean_read(self):
+        bad_event = {"screen": "event", "problems": ["event 0: cannot read line"]}
+        clean_event = {"screen": "event", "problems": [], "choices": ["Heal all"]}
+        state, n = self._look([bad_event, bad_event, clean_event])
+        self.assertEqual(state["screen"], "event")
+        self.assertEqual(state["problems"], [])
+        self.assertEqual(n, 3)
+
+    def test_unknown_screen_retries_and_recovers_recognized_screen(self):
+        unknown = {"screen": "unknown", "problems": ["unrecognized screen"]}
+        clean_trinket = {"screen": "trinket_pick", "problems": [], "trinkets": ["Coupon"]}
+        state, n = self._look([unknown, clean_trinket])
+        self.assertEqual(state["screen"], "trinket_pick")
+        self.assertEqual(state["problems"], [])
+        self.assertEqual(n, 2)
+
+    def test_clean_non_shop_screen_is_not_repeated(self):
+        clean_event = {"screen": "event", "problems": [], "choices": ["Heal all"]}
+        state, n = self._look([clean_event])
+        self.assertEqual(n, 1)
+
+    def test_persistently_unreadable_non_shop_stops_after_four_reads(self):
+        bad_two = {"screen": "event", "problems": ["p1", "p2"]}
+        bad_one = {"screen": "event", "problems": ["p1"]}
+        state, n = self._look([bad_two, bad_one, bad_two, bad_two])
+        self.assertEqual(state["problems"], ["p1"])
+        self.assertEqual(n, 4)
 
 
 

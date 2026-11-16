@@ -17,6 +17,7 @@ turns all the logs into the longer report (unseen Batomon, shop odds, income).
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import sys
 from datetime import datetime
@@ -35,32 +36,41 @@ def one_line(s: dict) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--runs", type=int, default=3, help="how many runs to play (default 3)")
+    ap.add_argument("--runs", type=int, default=3, help="how many runs to play (default 3; 0 = endless)")
     ap.add_argument("--learned", action="store_true", help="shop with the learned policy (as play.py --learned)")
     ap.add_argument("--simple", action="store_true", help="use the old simple shop rules (as play.py --simple)")
     ap.add_argument("--ranked", action="store_true", help="play Ranked runs instead of Casual (as play.py --ranked)")
     args = ap.parse_args(argv)
+    if args.runs < 0:
+        print("--runs must be 0 (endless) or a positive integer", file=sys.stderr)
+        return 2
     play_argv = (["--new-run"] + (["--ranked"] if args.ranked else []) + (["--learned"] if args.learned else [])
                  + (["--simple"] if args.simple else []))
     LOG_DIR.mkdir(exist_ok=True)
     summaries = []
     stopped = False
-    for n in range(1, args.runs + 1):
-        print(f"\n=== run {n} of {args.runs} ===")
-        before_log = play.LAST_LOG
-        code = play.main(play_argv)
-        fresh = play.LAST_LOG is not None and play.LAST_LOG != before_log       # this call wrote its own log
-        s = report.summarize_run(report.load(play.LAST_LOG)) if fresh and play.LAST_LOG.exists() else None
-        if s:
-            s["log"] = play.LAST_LOG.name
-            summaries.append(s)
-            print("\nRUN RESULT:", one_line(s))
-            with open(LOG_DIR / "batch_summary.jsonl", "a", encoding="utf-8") as f:
-                f.write(json.dumps({"time": datetime.now().isoformat(timespec="seconds"), **s}) + "\n")
-        if code != 0 or (s and not s["ended"]):
-            print(f"\nBatch stopped after run {n}: the bot needs you (message above).")
-            stopped = True
-            break
+    run_iter = itertools.count(1) if args.runs == 0 else range(1, args.runs + 1)
+    try:
+        for n in run_iter:
+            label = f"run {n} (endless)" if args.runs == 0 else f"run {n} of {args.runs}"
+            print(f"\n=== {label} ===")
+            before_log = play.LAST_LOG
+            code = play.main(play_argv)
+            fresh = play.LAST_LOG is not None and play.LAST_LOG != before_log       # this call wrote its own log
+            s = report.summarize_run(report.load(play.LAST_LOG)) if fresh and play.LAST_LOG.exists() else None
+            if s:
+                s["log"] = play.LAST_LOG.name
+                summaries.append(s)
+                print("\nRUN RESULT:", one_line(s))
+                with open(LOG_DIR / "batch_summary.jsonl", "a", encoding="utf-8") as f:
+                    f.write(json.dumps({"time": datetime.now().isoformat(timespec="seconds"), **s}) + "\n")
+            if code != 0 or (s and not s["ended"]):
+                print(f"\nBatch stopped after run {n}: the bot needs you (message above).")
+                stopped = True
+                break
+    except KeyboardInterrupt:
+        print("\nBatch interrupted by user.")
+        stopped = True
     print("\n=== batch summary ===")
     for i, s in enumerate(summaries, 1):
         print(f"{i}. {one_line(s)}")

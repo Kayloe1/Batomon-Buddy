@@ -88,6 +88,13 @@ class FakeHands:
         self.card = {"name": "Pebbler", "price": 3, "kind": "monster", "stats": []}
         return hands.Result(True, f"now on '{self.screen}'")
 
+    def start_run(self, mode: str = "casual"):
+        self._did("start_run")
+        self.day, self.money, self.badges = 1, 10, 0
+        self.screen = "shop"
+        self.card = {"name": "Pebbler", "price": 3, "kind": "monster", "stats": []}
+        return hands.Result(True, "now on 'shop'")
+
 
 class FakeBrain:
     """Buys the first shop card while there is one, then battles. Always expects to win 62%.
@@ -336,6 +343,86 @@ class SessionTests(Quiet):
             events = self.events_until(s, "finished")
         self.assertEqual([d["text"] for k, d in events if k == "error"], ["Batomon Showdown window not found"])
 
+    def test_multiple_runs_plays_n_runs_and_reports_progress(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=3)
+        self.sessions.append(s)
+        s.start()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 0)
+        self.assertEqual(events[-1][1]["runs_completed"], 3)
+        self.assertEqual([(d["run"], d["total"]) for k, d in events if k == "run_start"], [(1, 3), (2, 3), (3, 3)])
+        self.assertEqual(game.calls, [
+            "buy", "battle", "confirm",
+            "start_run", "buy", "battle", "confirm",
+            "start_run", "buy", "battle", "confirm",
+        ])
+
+    def test_endless_runs_plays_until_stopped(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=0)
+        self.sessions.append(s)
+        s.start()
+        seen = []
+        end = time.time() + 10
+        while time.time() < end:
+            e = s.events.get(timeout=1)
+            seen.append(e)
+            if e[0] == "run_start" and e[1]["run"] >= 3:
+                s.stop()
+                break
+        else:
+            self.fail("did not reach run 3 in endless mode")
+        seen.extend(self.events_until(s, "finished"))
+        self.assertEqual(seen[-1][1]["code"], 0)
+        run_starts = [d for k, d in seen if k == "run_start"]
+        self.assertTrue(all(d["total"] == 0 for d in run_starts))
+        self.assertGreaterEqual(run_starts[-1]["run"], 3)
+        self.assertEqual(self.log_records()[-1]["why"], gui.STOPPED_HERE)
+
+    def test_stopping_between_runs_while_paused_ends_cleanly(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=3)
+        self.sessions.append(s)
+        entered, release = held_inside(game, "confirm")
+        s.start()
+        self.assertTrue(entered.wait(10))
+        s.pause()
+        release.set()
+        self.events_until(s, "paused")
+        s.stop()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 0)
+        self.assertNotIn("start_run", game.calls)
+        self.assertTrue(any(k == "log" and d["record"] == "stop" and d["data"].get("why") == gui.STOPPED_HERE
+                            for k, d in events))
+
+    def test_multiple_runs_stops_when_bot_needs_help(self):
+        game = FakeHands(days=1)
+        game.hooks["start_run"] = lambda: setattr(game, "unreadable", True)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=5)
+        self.sessions.append(s)
+        s.start()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 1)
+        self.assertEqual(events[-1][1]["runs_completed"], 2)
+        self.assertTrue(any(k == "needs_you" for k, _ in events))
+
+    def test_stop_after_run_finishes_current_run_and_stops(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=5)
+        self.sessions.append(s)
+        entered, release = held_inside(game, "battle")
+        s.start()
+        self.assertTrue(entered.wait(10))
+        s.stop_after_run()
+        release.set()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 0)
+        self.assertEqual(events[-1][1]["runs_completed"], 1)
+        self.assertEqual(game.calls, ["buy", "battle", "confirm"])
+        self.assertIn(("stopped_after_run", {"run": 1}), events)
+
 
 class TerminalStillWorks(Quiet):
     """python play.py and batch.py: no Control is passed, and play.LAST_LOG names the log."""
@@ -352,6 +439,35 @@ class TerminalStillWorks(Quiet):
         self.assertFalse(c.pause_point())
         self.assertFalse(c.stop_asked)
         self.assertIsNone(c.event("state", state={}))
+
+    def test_play_logs_rank_result_fields(self):
+        game = FakeHands(days=1, full_team=True)
+        orig_look = game.look
+
+        def look_with_rank(save_if_unreadable=True):
+            st = orig_look(save_if_unreadable)
+            if st["screen"] == "rank_result":
+                st.update({"stars": 3, "rank_up": False, "division": 6})
+            return st
+
+        def confirm_result_to_rank():
+            game._did("confirm")
+            game.badges += 1
+            game.day += 1
+            game.screen = "rank_result"
+            return hands.Result(True, "now on 'rank_result'")
+
+        def confirm_rank():
+            game._did("confirm_rank")
+            game.screen = "run_over"
+            return hands.Result(True, "now on 'run_over'")
+
+        game.look = look_with_rank
+        game.confirm_result = confirm_result_to_rank
+        game.confirm_rank = confirm_rank
+        self.assertEqual(play.main(["--simple"], hands=game), 0)
+        rank_rec = next(r for r in self.log_records() if r["kind"] == "rank_result")
+        self.assertEqual((rank_rec["stars"], rank_rec["rank_up"], rank_rec["division"]), (3, False, 6))
 
 
 class StatusTests(unittest.TestCase):
@@ -421,6 +537,39 @@ class StatusTests(unittest.TestCase):
                                 "battle": "BATTLE! (day 6)", "confirm": "CONFIRM on the result box"})
         self.assertIsNone(gui.action_text("shop", {"state": {}}))             # not an action
 
+    def test_runs_line_formats_finite_and_endless_runs(self):
+        st = gui.Status()
+        self.assertEqual(st.runs_line(), "-")
+        st.apply("run_start", {"run": 3, "total": 10})
+        self.assertEqual(st.runs_line(), "Run 3 / 10")
+        st.apply("run_start", {"run": 3, "total": 0})
+        self.assertEqual(st.runs_line(), "Run 3 (endless)")
+        st.apply("log", {"record": "run_over", "data": {}})
+        self.assertIsNone(st.ended)
+        st2 = gui.Status()
+        st2.apply("run_start", {"run": 1, "total": 3})
+        self.assertEqual(st2.runs_summary_line(), "0 won, 0 lost")
+        st2.apply("log", {"record": "run_over", "data": {"badges": 7}})
+        self.assertIsNone(st2.ended)
+        self.assertEqual(st2.runs_summary_line(), "0 won, 1 lost   (last 7, best 7 badges)")
+        st2.apply("run_start", {"run": 2, "total": 3})
+        st2.apply("log", {"record": "run_over", "data": {"badges": 10}})
+        self.assertEqual(st2.runs_summary_line(), "1 won, 1 lost   (last 10, best 10 badges)")
+        # starting run 3 resets per-run fields while keeping session-wide summary and battle tally
+        st2.apply("state", {"state": {"screen": "shop", "day": 9, "lives": 2, "badges": 8, "badges_goal": 10,
+                                      "money": 11, "trainer": "Witch", "team": [{"name": "Joltail", "level": 2}]}})
+        st2.apply("log", {"record": "day_result", "data": {"day": 9, "badges": 1, "lives": 0}})
+        st2.apply("run_start", {"run": 3, "total": 3})
+        self.assertIsNone(st2.day)
+        self.assertIsNone(st2.trainer)
+        self.assertEqual(st2.team, [])
+        self.assertEqual(len(st2.results), 1)
+        self.assertEqual((st2.runs_won, st2.runs_lost), (1, 1))
+        st2.apply("log", {"record": "run_over", "data": {"badges": 4}})
+        self.assertEqual(st2.runs_summary_line(), "1 won, 2 lost   (last 4, best 10 badges)")
+        st2.apply("finished", {"code": 0, "runs_completed": 3, "target_runs": 3})
+        self.assertEqual(st2.ended, "All 3 runs finished.")
+
     def test_the_window_is_placed_off_the_game(self):
         screen = (0, 0, 3840, 2088)
         game = (40, 20, 2622, 1516)
@@ -469,11 +618,15 @@ class WindowTests(Quiet):
         self.app = gui.App(self.root, new_session=new_session)
 
     def destroy(self):
+        import gc
         self.end_sessions()
         if getattr(self, "app", None) is not None:
             self.app.destroy()
-        else:
+            self.app = None
+        elif getattr(self, "root", None) is not None:
             self.root.destroy()
+        self.root = None
+        gc.collect()
 
     def pump(self, until, timeout: float = 10, what: str = ""):
         end = time.time() + timeout
@@ -643,6 +796,172 @@ class WindowTests(Quiet):
         self.pump(lambda: app.mode == "idle", what="the day limit")
         self.assertEqual(self.game.calls, ["buy", "battle", "confirm", "buy"])
         self.assertIn("Stopped before pressing BATTLE!", app.banner_title.cget("text"))
+
+    def test_runs_option_n_runs_and_status_display(self):
+        app = self.app
+        self.game.days = 1
+        app.runs.set("2")
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "idle", what="2 runs to finish")
+        self.assertEqual(app.v["runs"].get(), "Run 2 / 2")
+        self.assertEqual(app.runs_summary_widgets[0].winfo_manager(), "pack")
+        self.assertEqual(app.v["runs_summary"].get(), "0 won, 2 lost   (last 0, best 0 badges)")
+        self.assertEqual((app.banner_kind, app.banner_title.cget("text")), ("info", "All 2 runs finished."))
+        self.assertEqual(self.game.calls, ["buy", "battle", "confirm", "start_run", "buy", "battle", "confirm"])
+        # starting a single-run session resets summary stats and hides the multi-run summary row
+        app.runs.set("1")
+        self.game.start_run()
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "idle", what="single run reset")
+        self.assertEqual(app.runs_summary_widgets[0].winfo_manager(), "")
+        self.assertEqual(app.status.runs_won + app.status.runs_lost, 1)
+
+    def test_runs_option_endless_and_stop_early(self):
+        app = self.app
+        self.game.days = 1
+        app.runs.set("0")
+        app.start_button.invoke()
+        self.pump(lambda: (app.status.run_number or 0) >= 2, what="run 2 in endless mode")
+        self.assertEqual(app.v["runs"].get(), f"Run {app.status.run_number} (endless)")
+        app.stop_button.invoke()
+        self.pump(lambda: app.mode == "idle", what="endless stop")
+        self.assertEqual(app.banner_title.cget("text"), "Stopped, as you asked.")
+
+    def test_runs_invalid_input_does_not_start(self):
+        app = self.app
+        for bad in ("", "-1", "abc", "1.5"):
+            app.runs.set(bad)
+            self.assertIsNone(app.parse_runs(), bad)
+            app.start_button.invoke()
+            self.assertEqual(app.mode, "idle")
+            self.assertEqual(self.sessions, [])
+            self.assertIn("number of runs", app.mode_text.get())
+
+    def test_scorecard_button_opens_scorecard_and_handles_errors(self):
+        app = self.app
+        with mock.patch("scorecard.main", return_value=0) as m:
+            app.scorecard_button.invoke()
+            m.assert_called_once_with([])
+        with mock.patch("scorecard.main", side_effect=OSError("disk full")):
+            app.scorecard_button.invoke()
+            self.assertIn("Could not open scorecard", app.mode_text.get())
+
+    def test_prefs_are_saved_and_restored(self):
+        import tkinter as tk
+        app = self.app
+        app.new_run.set(True)
+        app.ranked.set(True)
+        app.limit_days.set(True)
+        app.days.set("5")
+        app.runs.set("0")
+        app.decide.set("learned")
+        app._save_prefs()
+        self.assertTrue((self.logs / gui.PREFS_NAME).exists())
+
+        root2 = tk.Tk()
+        root2.withdraw()
+        app2 = gui.App(root2, new_session=app.new_session)
+        try:
+            self.assertTrue(app2.new_run.get())
+            self.assertTrue(app2.ranked.get())
+            self.assertTrue(app2.limit_days.get())
+            self.assertEqual(app2.days.get(), "5")
+            self.assertEqual(app2.runs.get(), "0")
+            self.assertEqual(app2.decide.get(), "learned")
+        finally:
+            app2.destroy()
+
+        # corrupt prefs file is ignored cleanly
+        (self.logs / gui.PREFS_NAME).write_text("{not valid json", encoding="utf-8")
+        root3 = tk.Tk()
+        root3.withdraw()
+        app3 = gui.App(root3, new_session=app.new_session)
+        try:
+            self.assertEqual(app3.runs.get(), "1")
+            self.assertFalse(app3.ranked.get())
+        finally:
+            app3.destroy()
+
+    def test_stop_after_run_button_behavior_and_reset(self):
+        app = self.app
+        self.game.days = 1
+        # disabled for single-run sessions
+        self.assertEqual(self.state(app.stop_after_run_button), "disabled")
+        entered1, release1 = held_inside(self.game, "battle")
+        app.start_button.invoke()
+        self.pump(entered1.is_set, what="single run battle")
+        self.assertEqual(self.state(app.stop_after_run_button), "disabled")
+        release1.set()
+        self.pump(lambda: app.mode == "idle", what="single run end")
+
+        # enabled for endless / multi-run sessions
+        app.runs.set("0")
+        self.game.start_run()
+        self.game.calls.clear()
+        entered2, release2 = held_inside(self.game, "battle")
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "playing" and entered2.is_set(), what="endless run 1 battle")
+        self.assertEqual(self.state(app.stop_after_run_button), "normal")
+        app.stop_after_run_button.invoke()
+        self.assertEqual(self.state(app.stop_after_run_button), "disabled")
+        self.assertEqual(str(app.stop_after_run_button.cget("text")), "Stopping after run...")
+        self.assertEqual(app.mode_text.get(), "Playing (will stop after this run).")
+        release2.set()
+        self.pump(lambda: app.mode == "idle", what="stop after run 1")
+        self.assertEqual(self.game.calls, ["buy", "battle", "confirm"])
+        self.assertEqual(app.banner_title.cget("text"), "Stopped after run 1, as you asked.")
+        self.assertEqual(str(app.stop_after_run_button.cget("text")), "Stop after run")
+
+        # starting a new endless session resets the button cleanly
+        self.game.start_run()
+        entered3, release3 = held_inside(self.game, "battle")
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "playing" and entered3.is_set(), what="second endless session")
+        self.assertEqual(self.state(app.stop_after_run_button), "normal")
+        self.assertEqual(str(app.stop_after_run_button.cget("text")), "Stop after run")
+        app.stop_button.invoke()
+        release3.set()
+        self.pump(lambda: app.mode == "idle", what="second endless session stop")
+
+    def test_teach_dialog_renders_and_wraps_long_item(self):
+        from types import SimpleNamespace
+        from PIL import Image
+        import stop_lessons
+
+        item = SimpleNamespace(
+            key="event0", label="Event choice 1",
+            picture=Image.new("RGB", (60, 20), (30, 30, 30)),
+            guess="Gain +20 Damage on your entire team",
+            example="All allies gain +20 Damage and +10 Health",
+        )
+        cap = Path(self.tmp.name) / "captures" / "unread_ev.png"
+        cap.write_bytes(b"png")
+        with mock.patch.object(stop_lessons, "items_for", return_value=[item]), \
+             mock.patch.object(stop_lessons, "unteachable", return_value=[]):
+            dlg = gui.TeachDialog(self.root, cap)
+            try:
+                self.assertIn("event0", dlg.entries)
+            finally:
+                dlg.top.destroy()
+
+    def test_batch_runs_zero_endless_and_negative_validation(self):
+        import batch
+        with mock.patch("sys.stderr", io.StringIO()):
+            self.assertEqual(batch.main(["--runs", "-1"]), 2)
+
+        calls = []
+
+        def fake_play(argv):
+            calls.append(argv)
+            if len(calls) >= 2:
+                raise KeyboardInterrupt()
+            return 0
+
+        with mock.patch.object(batch, "LOG_DIR", self.logs), \
+             mock.patch.object(batch.play, "main", side_effect=fake_play):
+            self.assertEqual(batch.main(["--runs", "0", "--ranked"]), 1)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0], ["--new-run", "--ranked"])
 
 
 if __name__ == "__main__":

@@ -100,8 +100,8 @@ def check_move(before: dict, after: dict, src: tuple[str, int], dst: tuple[str, 
         return "source slot is still occupied"
     if target is not None and now_src is None and now_dst["level"] == target["level"]:
         return "source emptied but target did not level up"
-    if moved["stats"] != now_dst["stats"] and target is None:
-        return "monster in the target slot has different stats"
+    if target is None and (moved.get("name") != now_dst.get("name") or moved.get("level") != now_dst.get("level")):
+        return "monster in the target slot has different name or level"
     return None
 
 
@@ -133,11 +133,13 @@ def unnamed_owned(state: dict) -> int:
                if m and m.get("name") is None)
 
 
-def _read_rank(state: dict) -> tuple[int, int]:
-    """Order reads of one moment: a non-shop screen as it is, else fewest problems, then fewest unnamed."""
-    if state.get("screen") != "shop":
-        return (0, 0)
-    return (len(state.get("problems") or []), unnamed_owned(state))
+def _read_rank(state: dict) -> tuple[int, int, int]:
+    """Order reads of one moment: recognized screen first, fewest problems, then fewest unnamed."""
+    screen = state.get("screen")
+    unrecognized = 1 if screen in (None, "unknown", "blank") else 0
+    problems = len(state.get("problems") or [])
+    unnamed = unnamed_owned(state) if screen == "shop" else 0
+    return (unrecognized, problems, unnamed)
 
 
 # ------------------------------------------------------------------ hands ----
@@ -155,27 +157,27 @@ class Hands:
     def look(self, save_if_unreadable: bool = True) -> dict:
         if window.is_minimized(self.hwnd):
             return {"screen": "minimized", "problems": ["game window is minimized"]}
-        # A shine sweeps across shop cards of monsters you already own and can cut
-        # through their text, so a shop that does not read cleanly is read again.
-        # An owned monster's idle animation can also push its sprite match just past
-        # the limit for one frame (Runerock, 2026-11-13: 39 instead of its usual 33), and
-        # the engine then plans with an unknown stand-in in its place (it sold a Spinarai
-        # for a Dracana it did not buy once Runerock was named again). So a shop with an
-        # unnamed owned monster is read again too, and the read naming the most is kept.
+        # A shine, fade, or idle animation can spoil one frame on any screen (shop
+        # card text, Runerock's sprite, or an event/trinket/unknown frame), so any
+        # unreadable or unrecognized read is retried across a few snapshots and the
+        # cleanest read is kept.
+        attempts = 1 if getattr(self, "_single_read", False) else 4
         best = None
-        for attempt in range(4):
+        for attempt in range(attempts):
             img = window.capture_client(self.hwnd)
             state = reader.read_state(img)
             if best is None or _read_rank(state) < _read_rank(best[1]):
                 best = (img, state)
-            if state["screen"] != "shop":
+            screen = state.get("screen")
+            unrecognized = screen in (None, "unknown", "blank")
+            need_unnamed = screen == "shop" and unnamed_owned(state) and attempt < 2
+            if not unrecognized and not state.get("problems") and not need_unnamed:
                 break
-            if not state["problems"] and (not unnamed_owned(state) or attempt >= 2):
-                break
-            time.sleep(0.45)
+            if attempt + 1 < attempts:
+                time.sleep(0.45)
         img, state = best
         self.last_image = img
-        if save_if_unreadable and state["problems"]:
+        if save_if_unreadable and state.get("problems"):
             CAPTURE_DIR.mkdir(exist_ok=True)
             path = CAPTURE_DIR / f"unread_{datetime.now():%Y%m%d_%H%M%S_%f}.png"
             img.save(path)
@@ -455,7 +457,12 @@ class Hands:
         hits = 0
         state: dict = {}
         while time.time() - start < timeout:
-            state = self.look(save_if_unreadable=False)
+            prev_single = getattr(self, "_single_read", False)
+            self._single_read = True
+            try:
+                state = self.look(save_if_unreadable=False)
+            finally:
+                self._single_read = prev_single
             screen = state["screen"]
             if screen == "battle":
                 # keep an early frame of the battle: both teams with their starting badges

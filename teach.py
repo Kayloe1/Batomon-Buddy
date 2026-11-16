@@ -284,6 +284,16 @@ def main(lessons: list | None = None, rebuild: bool = False) -> None:
         pic = np.asarray(window.canonical_picture(Image.open(ROOT / lesson["file"])))
         masks = reader.text_masks(pic)
         for key, truth in lesson.get("text", {}).items():
+            if key.startswith("badge_"):
+                _teach_digits(store, "badge", reader.badge_digit_glyphs(pic, reader.badge_band(key)), truth, key)
+                continue
+            if key.startswith("event"):
+                boxes = reader.event_choices(pic)
+                store.teach("event", reader.event_effect_mask(pic, boxes[int(key[5:])]), truth)
+                continue
+            if key.startswith("trinket"):
+                store.teach("caps", reader.trinket_name_mask(pic, int(key[7:])), truth)
+                continue
             font, mask, _ = masks[key]
             if "|" in truth:
                 name, price = truth.split("|")

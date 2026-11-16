@@ -31,10 +31,14 @@ from .rules import SETTINGS
 
 EPS = 1e-9
 
+ALL_TYPES = ("Bug", "Dragon", "Electric", "Fighting", "Fire", "Flying",
+             "Ghost", "Grass", "Rock", "Steel", "Toxic", "Water")
+
 # Static trinket bonuses that change a card's badges (applied only when a slot has no "stats").
 STATIC_STAT_TRINKETS = {"Wood Sword", "Small Club", "Giant Club", "Terrarium", "Fire Orb",
-                        "Poison Orb", "Power Crown", "Excalibur", "Master Crown"}
-STATIC_STAT_TRAINERS = {"Chef", "Chemist", "Musician"}
+                        "Poison Orb", "Power Crown", "Excalibur", "Master Crown",
+                        "Scrap Sword", "Fancy Sword"}
+STATIC_STAT_TRAINERS = {"Chef", "Chemist", "Musician", "Redhead"}
 
 
 @dataclass
@@ -67,6 +71,17 @@ class Unit:
     healed: float = 0.0
     shielded: float = 0.0
     inflicted: dict[str, float] = field(default_factory=lambda: {"poison": 0, "burn": 0, "shock": 0})
+    base_name: str = field(init=False)
+    rigalord_only: bool = False
+    t0_dmg: float = 0.0
+    t0_heal: float = 0.0
+    t0_burn: float = 0.0
+    t0_shock: float = 0.0
+    t0_mc: int = 0
+    _speed_cached: float = -1.0
+
+    def __post_init__(self) -> None:
+        self.base_name = data.canonical_name(self.name)
 
     @property
     def row(self) -> int:
@@ -75,10 +90,6 @@ class Unit:
     @property
     def col(self) -> int:
         return self.slot % 3
-
-    @property
-    def base_name(self) -> str:
-        return data.canonical_name(self.name)
 
     def is_(self, name: str) -> bool:
         return self.base_name == name
@@ -119,6 +130,9 @@ class Trainer:
     shield_mult: float = 1.0
     link_cable: bool = False
     metronome: int = 0
+    badges: int = 0
+    mythical_items: int = 0
+    zenith_mult: float = 1.0
 
 
 @dataclass
@@ -151,7 +165,8 @@ SHINY_PARAM_MULT = {"Stalagrove": 1.2, "Geminiss": 1.2, "Blixie": 1.2}
 SHINY_COOLDOWN_MULT = {"Torrantler": 5.5 / 7.0}
 
 
-def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: list[str]) -> Unit:
+def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: list[str],
+               victories: int = 0) -> Unit:
     name = spec["name"]
     level = int(spec.get("level", 1))
     sp = data.species(name)
@@ -160,7 +175,12 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
     given = spec.get("stats")
     if given:
         stats = {s: float(given.get(s, 0)) for s in data.STATS}
-    types = list(sp.types)
+    if spec.get("painted"):
+        types = list(ALL_TYPES)
+    elif spec.get("types"):
+        types = list(spec["types"])
+    else:
+        types = list(sp.types)
     multicast = int(spec.get("multicast", lv.multicast))
     unit = Unit(side, slot, name, level, types, sp.rarity, float(spec.get("cooldown", lv.cooldown)),
                 stats, multicast, lv.passive_text if level > 1 else sp.passive, lv.param,
@@ -180,6 +200,8 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
                 unit.stats["burn"] += 2
         if trainer == "Chemist" and "Toxic" in unit.types:
             unit.stats["poison"] += 3
+        if trainer == "Redhead" and "Fire" in unit.types and victories:
+            unit.stats["burn"] += 2 * victories
         for t in trinkets:
             if t == "Wood Sword":
                 unit.stats["damage"] += 5
@@ -193,6 +215,14 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
                 unit.stats["damage"] += 350
             elif t == "Terrarium" and "Bug" in unit.types:
                 unit.stats["damage"] *= 1.2
+        n_scrap = trinkets.count("Scrap Sword")
+        if n_scrap:
+            rarities = data.trinket_rarities()
+            n_common = sum(1 for x in trinkets if rarities.get(x) == "Common")
+            unit.stats["damage"] += 2 * n_common * n_scrap
+        n_fancy = trinkets.count("Fancy Sword")
+        if n_fancy:
+            unit.stats["damage"] *= 1 + 0.03 * len(trinkets) * n_fancy
         if slot == 1:
             n_master = trinkets.count("Master Crown")
             if n_master:
@@ -241,14 +271,24 @@ class Battle:
         self.t = 0.0
         self.trainers = [self._trainer(0, team_a), self._trainer(1, team_b)]
         self.teams: list[list[Unit | None]] = [self._units(0, team_a), self._units(1, team_b)]
+        for side, tm in ((0, team_a), (1, team_b)):
+            if tm.get("magic_lasso"):
+                self._apply_magic_lasso(side)
         self.coffee = [bool(team_a.get("coffee")), bool(team_b.get("coffee"))]
+        self.at_battle_start = [bool(team_a.get("at_battle_start")), bool(team_b.get("at_battle_start"))]
         self.next_poison = SETTINGS["poison_interval"]
         self.next_burn = SETTINGS["burn_interval"]
+        self.next_sd = SETTINGS["sudden_death_start"]
         self.depth = 0
         self._adj: dict[int, list[Unit]] = {}
-        self._speeds: dict[int, float] | None = None   # cached speed_of; None = recompute
         self._living: list[list[Unit] | None] = [None, None]   # cached living(side); reset by knockout()
         self._dmg_visiting: set[int] = set()
+        self._side_names: list[set[str]] = [
+            {u.base_name for u in self.teams[0] if u},
+            {u.base_name for u in self.teams[1] if u},
+        ]
+        self._all_names: set[str] = self._side_names[0] | self._side_names[1]
+        self._has_shelldra: bool = "Shelldra" in self._all_names
 
     # ---------- setup ----------
     def _trainer(self, side: int, team: dict) -> Trainer:
@@ -263,6 +303,9 @@ class Battle:
             tr.shield_mult = 1.25
         tr.link_cable = "Link Cable" in trinkets
         tr.metronome = trinkets.count("Metronome")
+        tr.badges = int(team.get("badges") or 0)
+        tr.mythical_items = int(team.get("mythical_items") or 0)
+        tr.zenith_mult = 1.0 + 0.8 * trinkets.count("Zenith Stone")
         return tr
 
     def _units(self, side: int, team: dict) -> list[Unit | None]:
@@ -270,14 +313,43 @@ class Battle:
         slots += [None] * (6 - len(slots))
         trainer = team.get("trainer")
         trinkets = list(team.get("trinkets", []))
+        victories = int(team.get("victories") if team.get("victories") is not None else (team.get("badges") or 0))
         out = []
         for i, s in enumerate(slots):
-            out.append(build_unit(side, i, s, trainer, trinkets) if s else None)
+            out.append(build_unit(side, i, s, trainer, trinkets, victories=victories) if s else None)
+        if not team.get("at_battle_start"):
+            for i, s in enumerate(slots):
+                if s and out[i] and out[i].is_("Rigalord") and s.get("devoured"):
+                    for dev in s["devoured"]:
+                        for idx in (3, 4, 5):
+                            if out[idx] is None:
+                                copy_u = build_unit(side, idx, dev, trainer, trinkets, victories=victories)
+                                copy_u.rigalord_only = True
+                                out[idx] = copy_u
+                                break
         if trainer == "Musician" and not any(s and s.get("stats") for s in slots if s):
             electric = [u for u in out if u and "Electric" in u.types]
             if len(electric) == 1:
                 electric[0].stats["shock"] *= 2.5
         return out
+
+    def _apply_magic_lasso(self, side: int) -> None:
+        """Magic Lasso: gain an exact copy of the enemy's top-middle monster in the first empty slot."""
+        foe_mid = self.teams[1 - side][1]
+        if foe_mid is None:
+            return
+        for idx, u in enumerate(self.teams[side]):
+            if u is None:
+                copy_u = Unit(
+                    side, idx, foe_mid.name, foe_mid.level, list(foe_mid.types),
+                    foe_mid.rarity, foe_mid.cooldown, dict(foe_mid.stats),
+                    foe_mid.multicast, foe_mid.passive, foe_mid.param,
+                    foe_mid.ongoing, foe_mid.has_ability,
+                    speed=foe_mid.speed, protect=foe_mid.protect, shiny=foe_mid.shiny,
+                    base_damage=foe_mid.base_damage,
+                )
+                self.teams[side][idx] = copy_u
+                return
 
     def say(self, msg: str) -> None:
         if self.verbose:
@@ -313,17 +385,19 @@ class Battle:
 
     def speeds_changed(self) -> None:
         """Call after anything that can change a cooldown speed: a speed buff, a knockout."""
-        self._speeds = None
+        for side in (0, 1):
+            for u in self.teams[side]:
+                if u is not None:
+                    u._speed_cached = -1.0
 
     def speed(self, u: Unit) -> float:
         """speed_of(u), cached until speeds_changed() is called, and capped so the effective
         cooldown never drops below SETTINGS["min_cooldown"]."""
-        if self._speeds is None:
-            self._speeds = {}
-        v = self._speeds.get(id(u))
-        if v is None:
-            v = self._speeds[id(u)] = self.speed_of(u)
-        return min(v, u.cooldown / SETTINGS["min_cooldown"])
+        v = u._speed_cached
+        if v < 0.0:
+            v = min(self.speed_of(u), u.cooldown / SETTINGS["min_cooldown"])
+            u._speed_cached = v
+        return v
 
     def allies(self, u: Unit) -> list[Unit]:
         return [v for v in self.teams[u.side] if v and v is not u]
@@ -360,31 +434,50 @@ class Battle:
         return 1.0 + bonus / 100.0
 
     def damage_of(self, u: Unit) -> float:
+        if u.t0_dmg:
+            return max(0.0, self._raw_damage_of(u) - u.t0_dmg)
+        return self._raw_damage_of(u)
+
+    def _raw_damage_of(self, u: Unit) -> float:
         dmg = u.stats["damage"]
-        if not self.ongoing_active(u) or u.param is None or id(u) in self._dmg_visiting:
-            return dmg
-        self._dmg_visiting.add(id(u))
-        try:
-            k = self.ongoing_mult(u)
-            if u.is_("Lignite"):
-                dmg += u.param * k * u.stats["burn"]
-            elif u.is_("Fumungus"):
-                dmg += u.param / 100.0 * k * self.trainers[1 - u.side].poison
-            elif u.is_("Gaiadrasil"):
-                # allies' full Damage, Ongoing extras included (Fumungus's Poison-based Damage counted
-                # in the game: one cast hit 3375 where the allies' badges summed to ~2450, 2026-11-12)
-                dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.adjacent(u)
-                                                 if not v.is_("Gaiadrasil") and v.alive)
-            elif u.is_("Quillustrous"):
-                dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.allies(u)
-                                                 if not v.is_("Quillustrous") and v.alive)
-            elif u.is_("Orcana"):
-                dmg += u.param * k * sum(1 for v in self.allies(u) if v.alive and v.level >= 3)
-            return dmg
-        finally:
-            self._dmg_visiting.discard(id(u))
+        if self.ongoing_active(u) and u.param is not None and id(u) not in self._dmg_visiting:
+            self._dmg_visiting.add(id(u))
+            try:
+                k = self.ongoing_mult(u)
+                if u.is_("Lignite"):
+                    dmg += u.param * k * u.stats["burn"]
+                elif u.is_("Fumungus"):
+                    dmg += u.param / 100.0 * k * self.trainers[1 - u.side].poison
+                elif u.is_("Gaiadrasil"):
+                    # allies' full Damage, Ongoing extras included (Fumungus's Poison-based Damage counted
+                    # in the game: one cast hit 3375 where the allies' badges summed to ~2450, 2026-11-12)
+                    dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.adjacent(u)
+                                                     if not v.is_("Gaiadrasil") and v.alive)
+                elif u.is_("Quillustrous"):
+                    dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.allies(u)
+                                                     if not v.is_("Quillustrous") and v.alive)
+                elif u.is_("Orcana"):
+                    dmg += u.param * k * sum(1 for v in self.allies(u) if v.alive and v.level >= 3)
+                elif u.is_("Tengusto"):
+                    dmg += u.param * k * self.trainers[u.side].badges
+            finally:
+                self._dmg_visiting.discard(id(u))
+        m_items = self.trainers[u.side].mythical_items
+        if m_items and "Faebloom" in self._side_names[u.side]:
+            pct = 0.0
+            for v in self.adjacent(u):
+                if v.is_("Faebloom") and self.ongoing_active(v) and v.param:
+                    pct += (v.param / 100.0) * self.ongoing_mult(v) * m_items
+            if pct:
+                dmg *= 1.0 + pct
+        return dmg
 
     def heal_of(self, u: Unit) -> float:
+        if u.t0_heal:
+            return max(0.0, self._raw_heal_of(u) - u.t0_heal)
+        return self._raw_heal_of(u)
+
+    def _raw_heal_of(self, u: Unit) -> float:
         heal = u.stats["heal"]
         if not self.ongoing_active(u) or u.param is None:
             return heal
@@ -403,6 +496,11 @@ class Battle:
         return shld
 
     def burn_of(self, u: Unit) -> float:
+        if u.t0_burn:
+            return max(0.0, self._raw_burn_of(u) - u.t0_burn)
+        return self._raw_burn_of(u)
+
+    def _raw_burn_of(self, u: Unit) -> float:
         burn = u.stats["burn"]
         if not self.ongoing_active(u) or u.param is None:
             return burn
@@ -414,6 +512,11 @@ class Battle:
         return burn
 
     def shock_of(self, u: Unit) -> float:
+        if u.t0_shock:
+            return max(0.0, self._raw_shock_of(u) - u.t0_shock)
+        return self._raw_shock_of(u)
+
+    def _raw_shock_of(self, u: Unit) -> float:
         shock = u.stats["shock"]
         b = self.in_front(u)   # Pylong boosts the ally behind it, i.e. Pylong is in front of u
         if b and b.is_("Pylong") and self.ongoing_active(b) and b.param:
@@ -421,6 +524,11 @@ class Battle:
         return shock
 
     def multicast_of(self, u: Unit) -> int:
+        if u.t0_mc:
+            return max(1, self._raw_multicast_of(u) - u.t0_mc)
+        return self._raw_multicast_of(u)
+
+    def _raw_multicast_of(self, u: Unit) -> int:
         mc = u.multicast + u.extra_multicast
         if not u.has_ability:
             for v in self.adjacent(u):
@@ -469,9 +577,10 @@ class Battle:
     def gain_shield(self, tr: Trainer, amount: float) -> None:
         amount *= tr.shield_mult
         tr.shield += amount
-        for v in self.teams[tr.side]:
-            if v and v.is_("Stalagrove") and v.active_passive() and v.param:
-                v.stats["damage"] += v.param / 100.0 * amount
+        if "Stalagrove" in self._side_names[tr.side]:
+            for v in self.teams[tr.side]:
+                if v and v.is_("Stalagrove") and v.active_passive() and v.param:
+                    v.stats["damage"] += v.param / 100.0 * amount
 
     def knockout(self, u: Unit) -> None:
         if not u.alive:
@@ -483,14 +592,52 @@ class Battle:
         u.alive = False
         self._living = [None, None]
         self.speeds_changed()
-        for v in self.allies(u):
-            if v.is_("Danuki") and not u.is_("Danuki") and v.active_passive():
-                v.stats["damage"] += ((v.param or 85.0) / 100.0) * u.stats["damage"]
+        if u.is_("Emburn") and not u.disabled and u.param:
+            self._gain_stat(u, "burn", u.param)
+        side_names = self._side_names[u.side]
+        if "Danuki" in side_names or "Emburn" in side_names:
+            for v in self.allies(u):
+                if v.is_("Danuki") and not u.is_("Danuki") and v.active_passive():
+                    v.stats["damage"] += ((v.param or 85.0) / 100.0) * u.stats["damage"]
+                if v.is_("Emburn") and v.active_passive() and v.param:
+                    self._gain_stat(v, "burn", v.param)
+        if "Cawnushi" in self._all_names:
+            for side in (0, 1):
+                if "Cawnushi" not in self._side_names[side]:
+                    continue
+                for v in self.teams[side]:
+                    if v and v is not u and v.is_("Cawnushi") and v.active_passive() and v.param:
+                        self._gain_stat(v, "damage", v.param)
         self.say(f"{u.name} (side {u.side}) is knocked out")
+
+    def _gain_stat(self, u: Unit, stat: str, amount: float) -> None:
+        """Apply a flat stat gain in battle, scaled by Zenith Stone (+80% per copy)."""
+        u.stats[stat] += amount * self.trainers[u.side].zenith_mult
 
     def charge(self, u: Unit, seconds: float) -> None:
         if u.alive and u.base_name not in ("Dracana", "Ironcore", "Steamscuttle"):
-            u.progress += seconds
+            u.progress = min(u.cooldown, u.progress + seconds)
+            if u.progress >= u.cooldown - 1e-7:
+                u.progress = 0.0
+                self.cast(u, "charge")
+
+    def _level_up(self, u: Unit, target_level: int) -> None:
+        """Level up u in battle to target_level, applying the species' level deltas."""
+        if u.level >= target_level:
+            return
+        sp = data.species(u.name)
+        old_lv = sp.levels[min(max(u.level, 1), 4)]
+        new_lv = sp.levels[min(max(target_level, 1), 4)]
+        for sk in data.STATS:
+            u.stats[sk] += new_lv.stats[sk] - old_lv.stats[sk]
+        u.multicast += new_lv.multicast - old_lv.multicast
+        if new_lv.cooldown != old_lv.cooldown:
+            u.cooldown = new_lv.cooldown
+            u.progress = min(u.progress, u.cooldown)
+        u.level = target_level
+        u.param = new_lv.param
+        u.passive = new_lv.passive_text if target_level > 1 else sp.passive
+        u.has_ability = sp.has_ability() and not (sp.name in data.EVOLVES and target_level < 3)
 
     # ---------- casting ----------
     def cast(self, u: Unit, reason: str = "cooldown") -> None:
@@ -544,16 +691,17 @@ class Battle:
             self.say(f"{u.name} (side {u.side}, slot {u.slot + 1}) casts x{mc} [{reason}] "
                      f"-> HP {self.trainers[0].hp:.0f} / {self.trainers[1].hp:.0f}")
         if me.metronome:
-            u.stats["damage"] += 10 * me.metronome
+            self._gain_stat(u, "damage", 10 * me.metronome)
         if u.active_passive():
             self.on_cast(u)
+        side_names = self._side_names[u.side]
         # Puffloon: trigger when adjacent Toxic allies trigger.
-        if "Toxic" in u.types and not u.is_("Puffloon"):
+        if "Puffloon" in side_names and "Toxic" in u.types and not u.is_("Puffloon"):
             for v in self.adjacent(u):
                 if v.is_("Puffloon") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
         # Drumire: give casting Toxic ally Cooldown Speed for this battle.
-        if "Toxic" in u.types and u.alive:
+        if "Drumire" in side_names and "Toxic" in u.types and u.alive:
             gained_spd = False
             for v in self.allies(u):
                 if v.is_("Drumire") and v.active_passive() and v.param:
@@ -562,41 +710,45 @@ class Battle:
             if gained_spd:
                 self.speeds_changed()
         # Snapscald: trigger when an ally of level 3 or above casts.
-        if u.level >= 3 and not u.is_("Snapscald"):
+        if "Snapscald" in side_names and u.level >= 3 and not u.is_("Snapscald"):
             for v in self.allies(u):
                 if v.is_("Snapscald") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
         # Rhizuka: trigger when an ally applies Shield.
-        if applied_shield and not u.is_("Rhizuka"):
+        if "Rhizuka" in side_names and applied_shield and not u.is_("Rhizuka"):
             for v in self.allies(u):
                 if v.is_("Rhizuka") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
 
     def on_ally_inflicts(self, u: Unit, kind: str) -> None:
-        if kind == "burn":
+        side_names = self._side_names[u.side]
+        if kind == "burn" and "Oniclaw" in side_names:
             for v in self.living(u.side):
                 if v.is_("Oniclaw") and v.active_passive() and v.param:
                     v.stats["damage"] += v.base_damage * (v.param / 100.0)
-        for v in self.allies(u):
-            if not v.active_passive():
-                continue
-            if kind == "poison" and v.is_("Thorntail") and v.param:
-                v.stats["damage"] += v.param
-            if kind == "poison" and v.is_("Cobrex") and v.param:
-                self.charge(v, v.param)
-            if kind == "shock" and v.is_("Clawnetic") and v.param:
-                self.charge(v, v.param)
+        if kind == "poison" and ("Thorntail" in side_names or "Cobrex" in side_names):
+            for v in self.allies(u):
+                if not v.active_passive():
+                    continue
+                if v.is_("Thorntail") and v.param:
+                    self._gain_stat(v, "damage", v.param)
+                if v.is_("Cobrex") and v.param:
+                    self.charge(v, v.param)
+        elif kind == "shock" and "Clawnetic" in side_names:
+            for v in self.allies(u):
+                if v.active_passive() and v.is_("Clawnetic") and v.param:
+                    self.charge(v, v.param)
 
     def on_cast(self, u: Unit) -> None:
         p = u.param or 0
         name = u.base_name
         me = self.trainers[u.side]
         if name == "Mosslug":
-            u.stats["damage"] += p
+            self._gain_stat(u, "damage", p)
         elif name == "Pebbler":
-            u.stats["shield"] += p
+            self._gain_stat(u, "shield", p)
         elif name == "Pyrokami":          # Jinto: "On Cast: +10 Burn for this battle"
-            u.stats["burn"] += p
+            self._gain_stat(u, "burn", p)
         elif name in ("Stingarde", "Electranade", "Pyronade"):
             if not u.shiny:          # a Shiny copy keeps casting (Shiny Stingarde: 3 casts, 450 damage)
                 self.knockout(u)
@@ -608,7 +760,7 @@ class Battle:
         elif name == "Noxnimbus":
             for v in self.adjacent(u):
                 if "Toxic" in v.types:
-                    v.stats["poison"] += p
+                    self._gain_stat(v, "poison", p)
         elif name == "Runerock":
             for s in ("poison", "burn", "shock"):
                 setattr(me, s, max(0.0, getattr(me, s) - p))
@@ -635,18 +787,18 @@ class Battle:
         elif name == "Magmalith":
             a = self.above(u)
             if a and "Fire" in a.types:
-                a.stats["burn"] += p
+                self._gain_stat(a, "burn", p)
         elif name == "Noxalith":
             a = self.above(u)
             if a and "Toxic" in a.types:
-                a.stats["poison"] += p
+                self._gain_stat(a, "poison", p)
         elif name == "Dryadell":
             a = self.above(u)
             if a and "Grass" in a.types:
                 self.cast(a, "Dryadell")
         elif name == "Prismagon":
             kinds = {t for v in self.living(u.side) for t in v.types}
-            u.stats["damage"] += p * len(kinds)
+            self._gain_stat(u, "damage", p * len(kinds))
         elif name == "Reapra":
             enemies = [v for v in self.teams[1 - u.side] if v and v.alive]
             if u.level >= 4 and enemies:
@@ -670,12 +822,12 @@ class Battle:
         elif name == "Draconarch":
             for v in self.adjacent(u):
                 if v.active_passive():
-                    self.battle_start(v)
+                    self.battle_start(v, from_trigger=True)
             u.cooldown += p
         elif name == "Galvanine":
             u.speed += 50
             self.speeds_changed()
-            u.stats["shock"] += p
+            self._gain_stat(u, "shock", p)
         elif name == "Geminiss":
             for v in self.adjacent(u):
                 v.stats["shield"] *= 1 + p / 100.0
@@ -689,10 +841,10 @@ class Battle:
                 if "Water" in v.types and not v.is_("Torrantler"):
                     self.cast(v, "Torrantler")
         elif name == "Panbud" and u.evolved():
-            u.stats["damage"] += p
+            self._gain_stat(u, "damage", p)
         elif name == "Bonshell":
-            u.stats["damage"] += p
-            u.stats["shield"] += p
+            self._gain_stat(u, "damage", p)
+            self._gain_stat(u, "shield", p)
         elif name == "Shellter":
             u.stats["shield"] = max(0.0, u.stats["shield"] - p)
         elif name == "Cairnage":
@@ -722,7 +874,7 @@ class Battle:
                 was_alive = v.alive
                 self.knockout(v)
                 if was_alive and not v.alive:
-                    u.stats["shield"] += p
+                    self._gain_stat(u, "shield", p)
         elif name == "Vengrieve":
             enemies = [v for v in self.teams[1 - u.side] if v and v.alive]
             target = None
@@ -736,10 +888,19 @@ class Battle:
                 for sk in data.STATS:
                     u.stats[sk] += target.stats[sk]
                 self.knockout(target)
+        elif name == "Sukoi" and u.casts == 1:
+            a = self.above(u)
+            if a and a.level < 3:
+                self._level_up(a, a.level + 1)
+        elif name == "Rigalord":
+            for v in self.living(u.side):
+                if v.rigalord_only:
+                    self.cast(v, "Rigalord")
 
     # ---------- battle start ----------
-    def battle_start(self, u: Unit) -> None:
-        if u.shiny:
+    def battle_start(self, u: Unit, from_trigger: bool = False) -> None:
+        bs_only = self.at_battle_start[u.side] and not from_trigger
+        if u.shiny and not bs_only:
             self.shiny_battle_start(u)
         if not u.active_passive():
             return
@@ -747,47 +908,62 @@ class Battle:
         name = u.base_name
         if name in ("Frizzly", "Coalem"):
             self.cast(u, "battle start")
-        elif name == "Aster":
+        elif name == "Aster" and not bs_only:
             for v in self.adjacent(u):
                 if "Water" in v.types:
-                    v.stats["heal"] += p
-        elif name == "Aegistruct":
+                    self._gain_stat(v, "heal", p)
+        elif name == "Aegistruct" and not bs_only:
             gain = sum(v.stats["shield"] for v in self.adjacent(u) if not v.is_("Aegistruct"))
             u.stats["shield"] += p * gain
-        elif name == "Dribblet" and u.evolved():
-            u.stats["damage"] += p
-            u.stats["heal"] += p
+        elif name == "Dribblet" and u.evolved() and not bs_only:
+            self._gain_stat(u, "damage", p)
+            self._gain_stat(u, "heal", p)
         elif name == "Scorchimp" and u.evolved():
             fire = sum(1 for v in self.allies(u) if "Fire" in v.types)
             u.speed += p * fire
             self.speeds_changed()
-        elif name == "Miasmaw":
+        elif name == "Miasmaw" and not bs_only:
             u.stats["poison"] += p * sum(v.stats["poison"] for v in self.allies(u) if not v.is_("Miasmaw"))
         elif name == "Ginsage":
             for v in self.adjacent(u):
                 if "Grass" in v.types:
                     v.speed += p
             self.speeds_changed()
-        elif name == "Lumijel":
+        elif name == "Lumijel" and not bs_only:
             for v in self.allies(u):
                 if v.level >= 3:
-                    v.stats["damage"] += p
-                    v.stats["heal"] += p
-        elif name == "Brimtoad":
-            u.stats["burn"] += p
-            u.stats["poison"] += p
+                    self._gain_stat(v, "damage", p)
+                    self._gain_stat(v, "heal", p)
+        elif name == "Brimtoad" and not bs_only:
+            self._gain_stat(u, "burn", p)
+            self._gain_stat(u, "poison", p)
         elif name == "Rattleghast":
             for v in list(self.adjacent(u)):
                 was_alive = v.alive
                 self.knockout(v)
-                if was_alive and not v.alive:
-                    u.stats["poison"] += p
+                if was_alive and not v.alive and not bs_only:
+                    self._gain_stat(u, "poison", p)
+        elif name == "Talonite" and not bs_only:
+            self._gain_stat(u, "shield", 20.0 * sum(1 for v in self.allies(u) if "Rock" in v.types))
+            u.multicast += sum(1 for v in self.allies(u) if "Flying" in v.types)
+        elif name == "Omnichrome" and not bs_only:
+            enemies = self.living(1 - u.side)
+            if enemies:
+                best = max(enemies, key=lambda v: sum(v.stats.values()))
+                mult = (p or 80.0) / 100.0
+                for sk in data.STATS:
+                    u.stats[sk] += mult * best.stats[sk]
+        elif name == "Tsunamere" and not bs_only:
+            for v in self.adjacent(u):
+                if v.level < 3:
+                    self._level_up(v, v.level + 1)
 
     def trinket_start(self, side: int) -> None:
         tr = self.trainers[side]
         units = self.living(side)
+        bs_only = self.at_battle_start[side]
         for t in tr.trinkets:
-            if t == "Rally Flag":
+            if t == "Rally Flag" and not bs_only:
                 for u in units:
                     if u.col == 0:
                         u.stats["damage"] += 12
@@ -795,28 +971,32 @@ class Battle:
                 for u in units:
                     if u.col == 0:
                         u.speed += 8
-            elif t == "Earth Crest":
+            elif t == "Earth Crest" and not bs_only:
                 for u in units:
                     if u.col == 2:
                         u.stats["shield"] *= 1.10
-            elif t == "Sea Crest":
+            elif t == "Sea Crest" and not bs_only:
                 for u in units:
                     if u.col == 2:
                         u.stats["heal"] *= 1.10
-            elif t == "Warhorn":
+            elif t == "Warhorn" and not bs_only:
                 for u in units:
                     u.stats["damage"] += 10
             elif t == "Tempo Charm" and units:
                 self.rng.choice(units).speed += 4
-            elif t == "Metal Bat" and units:
+            elif t == "Metal Bat" and units and not bs_only:
                 max(units, key=lambda u: u.cooldown).stats["damage"] *= 1.5
-            elif t == "Ancient Plume" and len(units) == 1:
+            elif t == "Ancient Plume" and len(units) == 1 and not bs_only:
                 units[0].multicast += 1
-            elif t == "Alpha Crown":
+            elif t == "Alpha Crown" and not bs_only:
                 top = self.teams[side][1]
                 if top:
                     for u in units:
                         u.stats["damage"] = top.stats["damage"]
+            elif t == "Candy Jar" and not bs_only:
+                for u in units:
+                    if u.rarity in ("Common", "Uncommon") and u.level < 3:
+                        self._level_up(u, 3)
 
     def shiny_battle_start(self, u: Unit) -> None:
         """Shiny copies of monsters without a passive gain one (seen 2026-11-12 on the cards):
@@ -824,7 +1004,7 @@ class Battle:
         level 1 and "+2 Poison" at level 2 (so the numbers are taken to scale with the level)."""
         lv = max(u.level, 1)
         for stat, per_level in SHINY_BATTLE_START.get(u.base_name, {}).items():
-            u.stats[stat] += per_level * lv
+            self._gain_stat(u, stat, per_level * lv)
 
     def start(self) -> None:
         for side in (0, 1):
@@ -838,6 +1018,17 @@ class Battle:
                         for v in self.teams[s2]:
                             if v and v.row == u.row and v.ongoing:
                                 v.disabled = True
+        for side in (0, 1):
+            if not self.at_battle_start[side]:
+                continue
+            for u in self.teams[side]:
+                if not u:
+                    continue
+                u.t0_dmg = self._raw_damage_of(u) - u.stats["damage"]
+                u.t0_heal = self._raw_heal_of(u) - u.stats["heal"]
+                u.t0_burn = self._raw_burn_of(u) - u.stats["burn"]
+                u.t0_shock = self._raw_shock_of(u) - u.stats["shock"]
+                u.t0_mc = self._raw_multicast_of(u) - max(u.multicast + u.extra_multicast, 1)
         for side in self.order():
             repeats = 1 + ("Repeater Charm" in self.trainers[side].trinkets) + self.coffee[side]
             for _ in range(repeats):
@@ -861,14 +1052,16 @@ class Battle:
             result = self._result()
         while result is None:
             # Next event time.
-            times = [self.next_poison, self.next_burn]
+            times = [self.next_poison, self.next_burn, self.next_sd]
             standing = (self.living(0), self.living(1))
             spd = {}
             for side in (0, 1):
                 for u in standing[side]:
+                    if u.rigalord_only:
+                        continue
                     v = spd[id(u)] = self.speed(u)
                     times.append(self.t + max(0.0, u.cooldown - u.progress) / v)
-                    if u.is_("Shelldra") and u.active_passive():
+                    if self._has_shelldra and u.is_("Shelldra") and u.active_passive():
                         times.append(u.shelldra_next)
             t_next = min(times)
             if t_next > limit + EPS:
@@ -877,14 +1070,15 @@ class Battle:
             dt = t_next - self.t
             for side in (0, 1):
                 for u in standing[side]:
-                    u.progress += dt * spd[id(u)]
+                    if not u.rigalord_only:
+                        u.progress += dt * spd[id(u)]
             self.t = t_next
             # Casts: keep going while someone is ready (charges can make more units ready).
             for _ in range(50):
                 ready = False
                 for side in self.order():
                     for u in self.teams[side]:
-                        if u and u.alive and u.progress >= u.cooldown - 1e-7:
+                        if u and u.alive and not u.rigalord_only and u.progress >= u.cooldown - 1e-7:
                             u.progress -= u.cooldown
                             if u.progress < 1e-7:
                                 u.progress = 0.0
@@ -901,11 +1095,12 @@ class Battle:
                 tr.shock_pending = 0.0
             if not self.immortal and any(self.dead()):
                 return self._result()
-            for side in (0, 1):
-                for u in self.living(side):
-                    if u.is_("Shelldra") and u.active_passive() and u.shelldra_next <= self.t + EPS:
-                        u.extra_multicast += int(u.param or 0)
-                        u.shelldra_next += 4.0
+            if self._has_shelldra:
+                for side in (0, 1):
+                    for u in self.living(side):
+                        if u.is_("Shelldra") and u.active_passive() and u.shelldra_next <= self.t + EPS:
+                            u.extra_multicast += int(u.param or 0)
+                            u.shelldra_next += 4.0
             if abs(self.t - self.next_burn) < 1e-7:
                 for tr in (self.trainers[i] for i in self.order()):
                     if tr.burn > 0:
@@ -916,6 +1111,13 @@ class Battle:
                 for tr in (self.trainers[i] for i in self.order()):
                     self.status_damage(tr, tr.poison)
                 self.next_poison += SETTINGS["poison_interval"]
+            if abs(self.t - self.next_sd) < 1e-7:
+                sd_dmg = SETTINGS["sudden_death_base"] * (
+                    2.0 ** ((self.t - SETTINGS["sudden_death_start"]) / 3.0)
+                )
+                for tr in (self.trainers[i] for i in self.order()):
+                    self._take(tr, sd_dmg)
+                self.next_sd += SETTINGS["sudden_death_interval"]
             if not self.immortal and any(self.dead()):
                 result = self._result()
         return result

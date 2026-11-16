@@ -30,8 +30,12 @@ SETTINGS = {
     # Heal cannot raise HP above the maximum.
     "heal_cap": True,
     # GUESS (2026-11-15): a heal does nothing while its trainer has at least this much Poison
-    # (None = heals always count). Five logged battles fit a threshold between 50 and 74; 60 is the middle.
-    "heal_blocked_at_poison": 60,
+    # (None = heals always count). Logged battles fit a threshold between 60 and 74; 70 is in between.
+    "heal_blocked_at_poison": 70,
+    # Sudden Death: begins at 30 s, deals 8 * 2^((t - 30) / 3) every 0.5 s to both trainers.
+    "sudden_death_start": 30.0,
+    "sudden_death_interval": 0.5,
+    "sudden_death_base": 8.0,
     # At equal times the player's side acts first, then the opponent's.
     "player_first_on_ties": True,
     # Shortest effective cooldown after Cooldown Speed. Without a floor, stacking speed (Galvanine Lv4
@@ -55,8 +59,8 @@ RULES = [
      "verified", "batomon.com /mechanics/charge: Dracana, Ironcore, and Steamscuttle cannot receive Charge."),
     ("Several events at the same instant: casts first (player's side, slots 1-6, then the opponent's), then Burn and Poison ticks.",
      "guess", "batomon.com /mechanics/same-tick-resolution orders Shield -> Damage -> status application -> Heal; exact cast-vs-tick clock ordering and player-first ties are simulator conventions."),
-    ("There is no time limit; at 300 s the battle is called a draw.",
-     "guess", "batomon.com /mechanics/sudden-death begins at 30 s (8 * 2^(t/3) every 0.5 s); 300 s limit is a safety fallback."),
+    ("Sudden Death begins at 30 s, dealing 8 * 2^((t - 30) / 3) every 0.5 s to both trainers; at 300 s the battle is called a draw.",
+     "verified", "batomon.com /mechanics/sudden-death and 2026-11-15 long battles (42.0 s, 38.0 s, 37.5 s match exact cast counts)."),
     ("A trainer loses the moment its HP reaches 0 after same-instant casts resolve. If both reach 0 on the same tick it is a draw in the simulator.",
      "guess", "batomon.com /mechanics/same-tick-resolution says ties at 0 HP award the win to the player; simulator calls draws on simultaneous lethal hits (tested by tests/test_sim.py)."),
     # --- damage ---
@@ -70,8 +74,8 @@ RULES = [
      "verified", "batomon.com /mechanics/shock: Shock applied on a cast resolves after direct Damage and boosts subsequent hits."),
     ("Poison, Burn, and Shock ticks do 15% less damage while the trainer has a shield, and hit the shield first.",
      "verified", "batomon.com /mechanics/shield and /mechanics/burn /poison /shock: 15% reduction against Shield before Shield absorbs it."),
-    ("A heal does nothing while its trainer has 60 Poison or more (SETTINGS heal_blocked_at_poison).",
-     "guess", "Fits five battles, 2026-11-15: Day 3 Rich Lady (Ed's last heals at 74 and 101 Poison must not count, or he lives to 16 s), the 2026-11-12 day 5 win (the opponent's heals at 110+ Poison must not count, or the sim calls it a loss), and three end-screen HP bars that need heals at 9, 35 and 44 Poison to count. Not mentioned in /mechanics/heal (kept for Day 3 calibration)."),
+    ("A heal does nothing while its trainer has 70 Poison or more (SETTINGS heal_blocked_at_poison).",
+     "guess", "Fits 2026-11-15 battles: heals at 60 Poison counted (03:48:41), while Day 3 Rich Lady (74 and 101 Poison) and Day 5 (110+ Poison) needed them blocked."),
     ("Heal cannot raise HP above the maximum.",
      "verified", "batomon.com /mechanics/heal: Heal restores shared team HP without exceeding that battle's maximum."),
     ("Multicast N repeats the whole active N times; each repeat resolves On Cast (1 total trigger counted on Stats).",
@@ -122,6 +126,6 @@ RULES = [
 NOT_SIMULATED = [
     "Shop-phase effects (Guardiant, Cinderfly and Shogapede growth, Brawlmantis/Ninflora/Kickrane On Victory, Gildshell, Berroon, Plunderbird $, Craghorn items) - they change the badges the reader sees or economy, not the battle.",
     "Shiny variants beyond explicit rules (SHINY_BATTLE_START, SHINY_PARAM_MULT, SHINY_COOLDOWN_MULT, Shiny Celestia, Shiny Shrinell).",
-    "Trinkets: Fancy Sword, Scrap Sword, Zenith Stone, Magic Lasso, and Holy Grail/Mystic Incense/Rainbow Pearl/Ultra Duplicator non-battle effects.",
-    "Complex shop-transform/summon passives (Aerophim, Riglet/Rigalord, Omnichrome, Cosmivore, Goldora, Gachapod, Sarudo, Ignit evolution) and non-combat event monsters.",
+    "Trinkets: Holy Grail/Mystic Incense/Rainbow Pearl/Ultra Duplicator non-battle effects.",
+    "Complex shop-transform/summon passives (Aerophim, Riglet, Cosmivore, Goldora, Gachapod, Sarudo, Ignit evolution) and non-combat event monsters.",
 ]
