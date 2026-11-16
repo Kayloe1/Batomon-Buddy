@@ -675,3 +675,20 @@ class RecordedOpponents(unittest.TestCase):
             finally:
                 opponents.RECORDED = old
                 opponents._CACHE.clear()
+
+
+class TieBreakAndPoolMix(unittest.TestCase):
+    def test_immediate_value_breaks_finish_ties(self):
+        p = small_planner()
+        s = RunState(day=8, rank=8, money=120,
+                     shop=[card("Scorchimp"), card("Noxalith"), None, None, None])
+        s.team = [new_unit("Noxalith", 30), new_unit("Formiqueen", 25, 2), new_unit("Velocect", 15, 2),
+                  new_unit("Ironcore", 40), new_unit("Humbolt", 25, 2), new_unit("Cherubble", 25)]
+        s.bench = [new_unit("Noxalith", 30), new_unit("Pebbler", 15), new_unit("Magmite", 15), None]
+        plan = p.decide(s)
+        self.assertEqual(plan.actions[0].kind, "buy")
+        self.assertEqual(plan.actions[0].index, 1)
+
+    def test_pool_mix_sums_to_one(self):
+        self.assertAlmostEqual(sum(opponents.POOL_MIX.values()), 1.0)
+        self.assertEqual(opponents.POOL_MIX.get("casual", 0), 0.0)

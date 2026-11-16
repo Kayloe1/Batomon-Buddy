@@ -490,18 +490,23 @@ class Planner:
                         0.0, notes, considered=[], win_now=win)
         base = self.quick(s, team, bench)
         base_finish = self.finish(s, team, bench, base)
-        best_label, best_actions, best_v = "end turn", [], base
+        best_label, best_actions, best_v, best_imm = "end turn", [], base, base
         considered = []
         win_now = self.win_today(s, team) if any(team) else 0.0
         for label, actions, states in self._candidates(s):
             total = 0.0
+            total_imm = 0.0
             for t in states:
-                v, team2, bench2 = self.evaluate_after(s, t, team, bench)
-                total += self.finish(t, team2, bench2, v)
+                v_imm, team2, bench2 = self.evaluate_after(s, t, team, bench)
+                total_imm += v_imm
+                total += self.finish(t, team2, bench2, v_imm)
             v = total / len(states)
+            v_imm_avg = total_imm / len(states)
             considered.append((label, v - base))
-            if v > best_v + self.p.min_gain:
-                best_label, best_actions, best_v = label, actions, v
+            if v > best_v + self.p.min_gain or (
+                abs(v - best_v) <= 1e-6 and best_actions and v_imm_avg > best_imm + 1e-6
+            ):
+                best_label, best_actions, best_v, best_imm = label, actions, v, v_imm_avg
         rv = self._reroll_value(s, team, bench)
         if rv is not None:
             notes.append(f"reroll {rv - base:+.3f} vs best {best_v - base:+.3f}")
