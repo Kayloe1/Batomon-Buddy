@@ -224,8 +224,49 @@ class TypedFormsBecomeLessonText(unittest.TestCase):
         self.assertEqual(t("rank_bar", "rank max, 5% 10% 20% 40% 25%"), "RankMax*5%*10%*20%*40%*25%")
         self.assertEqual(t("trainer", "bug catcher"), "BUG CATCHER")
         self.assertEqual(t("money", "$ 316"), "$316")
+        self.assertEqual(t("level_team0", "4"), "4")
+        self.assertEqual(t("level_bench2", "LV. 4"), "4")
         with self.assertRaises(ValueError):
             t("day", "nine")
+        with self.assertRaises(ValueError):
+            t("level_team0", "twelve")
+
+
+class TeachLevelLabels(unittest.TestCase):
+    """Shop team/bench level-label stops (e.g. a new level digit) can be taught and replayed."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        tmp = Path(self.tmp.name)
+        self.glyph_file = tmp / "glyphs.json"
+        raw = json.loads(glyphs.TEMPLATE_FILE.read_text(encoding="utf-8"))
+        raw["level"] = [e for e in raw["level"] if e["label"] != "2"]
+        self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
+        self.user_lessons = tmp / "user_lessons.json"
+        for target, name, value in ((glyphs, "TEMPLATE_FILE", self.glyph_file),
+                                    (stop_lessons, "USER_LESSONS", self.user_lessons)):
+            p = mock.patch.object(target, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+        reader.reload_templates()
+        self.addCleanup(reader.reload_templates)
+
+    def test_level_label_is_offered_taught_and_replayed(self):
+        keys = [i.key for i in stop_lessons.items_for(CAPTURE)]
+        self.assertIn("level_team3", keys)
+        r = stop_lessons.apply(CAPTURE, {"level_team3": "LV. 2"})
+        self.assertFalse(any("cannot read level" in p for p in r.remaining), r.message)
+        self.assertNotIn("level_team3", [i.key for i in stop_lessons.items_for(CAPTURE)])
+        # Forget "2" again and replay from user_lessons via teach.main
+        raw = json.loads(self.glyph_file.read_text(encoding="utf-8"))
+        raw["level"] = [e for e in raw["level"] if e["label"] != "2"]
+        self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
+        reader.reload_templates()
+        self.assertIn("level_team3", [i.key for i in stop_lessons.items_for(CAPTURE)])
+        with mock.patch("builtins.print"):
+            teach.main(lessons=stop_lessons.load_user_lessons())
+        self.assertNotIn("level_team3", [i.key for i in stop_lessons.items_for(CAPTURE)])
 
 
 if __name__ == "__main__":

@@ -796,6 +796,10 @@ def text_masks(pic: np.ndarray) -> dict[str, tuple[str, np.ndarray, dict]]:
     }
     for i in range(SHOP_SLOTS):
         out[f"shop{i}"] = ("card", card_text_mask(crop(pic, _card_text(i))), {"space_gap": 7})
+    for i in range(TEAM_COLS * TEAM_ROWS):
+        out[f"level_team{i}"] = ("level", level_digit_mask(crop(pic, team_slot(i))), {})
+    for i in range(BENCH_SLOTS):
+        out[f"level_bench{i}"] = ("level", level_digit_mask(crop(pic, bench_slot(i))), {})
     return out
 
 
@@ -1606,6 +1610,18 @@ def level_mask(slot_rgb: np.ndarray) -> np.ndarray:
     for fill in LEVEL_FILLS:
         mask |= _near(label, fill, 14)
     return mask
+
+
+def level_digit_mask(slot_rgb: np.ndarray) -> np.ndarray:
+    """Mask of just the level digit (3rd piece after 'LV' and '.'), or an empty mask."""
+    fill = level_mask(slot_rgb)
+    parts = glyphs.segment(fill)
+    if len(parts) < 3:
+        return np.zeros((1, 1), dtype=bool)
+    g = parts[2]
+    out = np.zeros_like(fill)
+    out[g.y0:g.y1, g.x0:g.x1] = g.bitmap
+    return out
 
 
 def _read_owned_slot(pic: np.ndarray, box: Box, where: str, problems: list[str]) -> dict | None:

@@ -53,12 +53,19 @@ _BOXES = {
 for _i in range(reader.SHOP_SLOTS):
     _BOXES[f"shop{_i}"] = (f"Shop card {_i + 1} (from the left): name and price", reader._card_text(_i),
                            "Kickrane $40")
+for _i in range(reader.TEAM_COLS * reader.TEAM_ROWS):
+    _x0, _y0, _, _ = reader.team_slot(_i)
+    _BOXES[f"level_team{_i}"] = (f"Team slot {_i + 1} level", (_x0, _y0, _x0 + 110, _y0 + 40), "4")
+for _i in range(reader.BENCH_SLOTS):
+    _x0, _y0, _, _ = reader.bench_slot(_i)
+    _BOXES[f"level_bench{_i}"] = (f"Bench slot {_i + 1} level", (_x0, _y0, _x0 + 110, _y0 + 40), "4")
 
 # A problem line from the reader -> the region it is about.
 _PROBLEM = re.compile(
     r"^(?:(?P<shop>shop) (?P<i>\d): (?:unknown name|cannot read price|cannot split name and price|no text found)"
     r"|(?P<key>lives|day|badges|trainer|money|hp|reroll): (?:cannot read|unknown name)"
-    r"|(?P<rank>rank bar): cannot read)")
+    r"|(?P<rank>rank bar): cannot read"
+    r"|(?P<slot>team|bench) (?P<si>\d+): cannot read level)")
 
 
 @dataclass
@@ -104,7 +111,8 @@ def items_for(capture: Path | str) -> list[Item]:
         m = _PROBLEM.match(p)
         if not m:
             continue
-        key = f"shop{m['i']}" if m["shop"] else "rank_bar" if m["rank"] else m["key"]
+        key = (f"shop{m['i']}" if m["shop"] else "rank_bar" if m["rank"]
+               else f"level_{m['slot']}{m['si']}" if m["slot"] else m["key"])
         if key not in keys:
             keys.append(key)
     out = []
@@ -154,6 +162,11 @@ def _truth(key: str, typed: str) -> str:
         return "Rank" + ("Max" if m[1].lower() == "max" else m[1]) + "".join("*" + o for o in odds)
     if key == "trainer":
         return typed.upper()
+    if key.startswith("level_"):
+        m = re.fullmatch(r"(?i)(?:lv\.?\s*)?(\d)", typed)
+        if not m:
+            raise ValueError("type the level number (a single digit, like 4)")
+        return m[1]
     return typed.replace(" ", "")
 
 
