@@ -549,6 +549,24 @@ class Battle:
                 u.progress = 0.0
                 self.cast(u, "charge")
 
+    def _level_up(self, u: Unit, target_level: int) -> None:
+        """Level up u in battle to target_level, applying the species' level deltas."""
+        if u.level >= target_level:
+            return
+        sp = data.species(u.name)
+        old_lv = sp.levels[min(max(u.level, 1), 4)]
+        new_lv = sp.levels[min(max(target_level, 1), 4)]
+        for sk in data.STATS:
+            u.stats[sk] += new_lv.stats[sk] - old_lv.stats[sk]
+        u.multicast += new_lv.multicast - old_lv.multicast
+        if new_lv.cooldown != old_lv.cooldown:
+            u.cooldown = new_lv.cooldown
+            u.progress = min(u.progress, u.cooldown)
+        u.level = target_level
+        u.param = new_lv.param
+        u.passive = new_lv.passive_text if target_level > 1 else sp.passive
+        u.has_ability = sp.has_ability() and not (sp.name in data.EVOLVES and target_level < 3)
+
     # ---------- casting ----------
     def cast(self, u: Unit, reason: str = "cooldown") -> None:
         if not u.alive:
@@ -798,6 +816,10 @@ class Battle:
                 for sk in data.STATS:
                     u.stats[sk] += target.stats[sk]
                 self.knockout(target)
+        elif name == "Sukoi" and u.casts == 1:
+            a = self.above(u)
+            if a and a.level < 3:
+                self._level_up(a, a.level + 1)
 
     # ---------- battle start ----------
     def battle_start(self, u: Unit, from_trigger: bool = False) -> None:
@@ -845,6 +867,20 @@ class Battle:
                 self.knockout(v)
                 if was_alive and not v.alive and not bs_only:
                     u.stats["poison"] += p
+        elif name == "Talonite" and not bs_only:
+            u.stats["shield"] += 20.0 * sum(1 for v in self.allies(u) if "Rock" in v.types)
+            u.multicast += sum(1 for v in self.allies(u) if "Flying" in v.types)
+        elif name == "Omnichrome" and not bs_only:
+            enemies = self.living(1 - u.side)
+            if enemies:
+                best = max(enemies, key=lambda v: sum(v.stats.values()))
+                mult = (p or 80.0) / 100.0
+                for sk in data.STATS:
+                    u.stats[sk] += mult * best.stats[sk]
+        elif name == "Tsunamere" and not bs_only:
+            for v in self.adjacent(u):
+                if v.level < 3:
+                    self._level_up(v, v.level + 1)
 
     def trinket_start(self, side: int) -> None:
         tr = self.trainers[side]
@@ -881,6 +917,10 @@ class Battle:
                 if top:
                     for u in units:
                         u.stats["damage"] = top.stats["damage"]
+            elif t == "Candy Jar" and not bs_only:
+                for u in units:
+                    if u.rarity in ("Common", "Uncommon") and u.level < 3:
+                        self._level_up(u, 3)
 
     def shiny_battle_start(self, u: Unit) -> None:
         """Shiny copies of monsters without a passive gain one (seen 2026-11-12 on the cards):

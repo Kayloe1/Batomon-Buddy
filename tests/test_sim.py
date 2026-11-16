@@ -514,3 +514,23 @@ class MechanicsAndMythicals(unittest.TestCase):
         r = simulate(team([mon("Stingarde"), mon("Emburn")]), team([mon("Cawnushi")]), until=6.1)
         self.assertEqual(r.units[0][1]["stats"]["burn"], 9)
         self.assertEqual(r.units[1][0]["stats"]["damage"], 110)
+
+    def test_talonite_omnichrome_tsunamere_sukoi_and_candy_jar(self):
+        # Talonite: +20 Shield per Rock ally, +1 Multicast per Flying ally.
+        r = simulate(team([mon("Talonite"), mon("Pebbler"), mon("Velocect")]), EMPTY, until=12.1)
+        self.assertEqual(r.units[0][0]["stats"]["shield"], 20)
+        self.assertEqual(r.units[0][0]["dealt"], 90)   # 2 base + 1 Flying ally = 3 hits x 30
+        # Omnichrome: +80% of highest-stat enemy at battle start.
+        r = simulate(team([mon("Omnichrome")]), team([mon("Panbud", 1, damage=100)]), until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 81)
+        # Tsunamere: levels up adjacent allies at battle start (max level 3).
+        r = simulate(team([mon("Panbud", 1), mon("Tsunamere")]), EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["level"], 2)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 50)
+        # Sukoi: on first cast (9 s), levels up ally above (slot 0 above slot 3).
+        r = simulate(team([mon("Panbud", 1), None, None, mon("Sukoi")]), EMPTY, until=9.1)
+        self.assertEqual(r.units[0][0]["level"], 2)
+        # Candy Jar: Common and Uncommon allies level up to 3 at battle start.
+        r = simulate(team([mon("Panbud", 1), mon("Talonite", 1)], trinkets=["Candy Jar"]), EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["level"], 3)
+        self.assertEqual(r.units[0][1]["level"], 1)   # Rare is unchanged
