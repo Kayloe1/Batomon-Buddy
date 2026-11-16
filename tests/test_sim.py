@@ -562,3 +562,18 @@ class MechanicsAndMythicals(unittest.TestCase):
         t["mythical_items"] = 2
         r = simulate(t, EMPTY, until=5.1)
         self.assertEqual(r.units[0][0]["dealt"], 120)
+
+    def test_redhead_and_magic_lasso(self):
+        # Redhead: Fire monsters gain +2 Burn per victory.
+        t = team([mon("Scorchimp", 1)], trainer="Redhead")
+        t["victories"] = 3
+        r = simulate(t, EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["burn"], 11)   # 5 base + 3 * 2
+        # Magic Lasso: copies enemy top-middle (slot 1) into first empty slot.
+        t_a = team([mon("Panbud", 1)])
+        t_a["magic_lasso"] = True
+        t_b = team([None, mon("Brawlmantis", 1, damage=77)])
+        r = simulate(t_a, t_b, until=5.6)
+        self.assertEqual(len(r.units[0]), 2)
+        self.assertEqual(r.units[0][1]["name"], "Brawlmantis")
+        self.assertEqual(r.units[0][1]["dealt"], 77)

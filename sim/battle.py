@@ -35,7 +35,7 @@ EPS = 1e-9
 STATIC_STAT_TRINKETS = {"Wood Sword", "Small Club", "Giant Club", "Terrarium", "Fire Orb",
                         "Poison Orb", "Power Crown", "Excalibur", "Master Crown",
                         "Scrap Sword", "Fancy Sword"}
-STATIC_STAT_TRAINERS = {"Chef", "Chemist", "Musician"}
+STATIC_STAT_TRAINERS = {"Chef", "Chemist", "Musician", "Redhead"}
 
 
 @dataclass
@@ -161,7 +161,8 @@ SHINY_PARAM_MULT = {"Stalagrove": 1.2, "Geminiss": 1.2, "Blixie": 1.2}
 SHINY_COOLDOWN_MULT = {"Torrantler": 5.5 / 7.0}
 
 
-def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: list[str]) -> Unit:
+def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: list[str],
+               victories: int = 0) -> Unit:
     name = spec["name"]
     level = int(spec.get("level", 1))
     sp = data.species(name)
@@ -190,6 +191,8 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
                 unit.stats["burn"] += 2
         if trainer == "Chemist" and "Toxic" in unit.types:
             unit.stats["poison"] += 3
+        if trainer == "Redhead" and "Fire" in unit.types and victories:
+            unit.stats["burn"] += 2 * victories
         for t in trinkets:
             if t == "Wood Sword":
                 unit.stats["damage"] += 5
@@ -259,6 +262,9 @@ class Battle:
         self.t = 0.0
         self.trainers = [self._trainer(0, team_a), self._trainer(1, team_b)]
         self.teams: list[list[Unit | None]] = [self._units(0, team_a), self._units(1, team_b)]
+        for side, tm in ((0, team_a), (1, team_b)):
+            if tm.get("magic_lasso"):
+                self._apply_magic_lasso(side)
         self.coffee = [bool(team_a.get("coffee")), bool(team_b.get("coffee"))]
         self.at_battle_start = [bool(team_a.get("at_battle_start")), bool(team_b.get("at_battle_start"))]
         self.next_poison = SETTINGS["poison_interval"]
@@ -298,14 +304,33 @@ class Battle:
         slots += [None] * (6 - len(slots))
         trainer = team.get("trainer")
         trinkets = list(team.get("trinkets", []))
+        victories = int(team.get("victories") if team.get("victories") is not None else (team.get("badges") or 0))
         out = []
         for i, s in enumerate(slots):
-            out.append(build_unit(side, i, s, trainer, trinkets) if s else None)
+            out.append(build_unit(side, i, s, trainer, trinkets, victories=victories) if s else None)
         if trainer == "Musician" and not any(s and s.get("stats") for s in slots if s):
             electric = [u for u in out if u and "Electric" in u.types]
             if len(electric) == 1:
                 electric[0].stats["shock"] *= 2.5
         return out
+
+    def _apply_magic_lasso(self, side: int) -> None:
+        """Magic Lasso: gain an exact copy of the enemy's top-middle monster in the first empty slot."""
+        foe_mid = self.teams[1 - side][1]
+        if foe_mid is None:
+            return
+        for idx, u in enumerate(self.teams[side]):
+            if u is None:
+                copy_u = Unit(
+                    side, idx, foe_mid.name, foe_mid.level, list(foe_mid.types),
+                    foe_mid.rarity, foe_mid.cooldown, dict(foe_mid.stats),
+                    foe_mid.multicast, foe_mid.passive, foe_mid.param,
+                    foe_mid.ongoing, foe_mid.has_ability,
+                    speed=foe_mid.speed, protect=foe_mid.protect, shiny=foe_mid.shiny,
+                    base_damage=foe_mid.base_damage,
+                )
+                self.teams[side][idx] = copy_u
+                return
 
     def say(self, msg: str) -> None:
         if self.verbose:
