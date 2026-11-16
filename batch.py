@@ -40,12 +40,14 @@ def main(argv=None) -> int:
     ap.add_argument("--learned", action="store_true", help="shop with the learned policy (as play.py --learned)")
     ap.add_argument("--simple", action="store_true", help="use the old simple shop rules (as play.py --simple)")
     ap.add_argument("--ranked", action="store_true", help="play Ranked runs instead of Casual (as play.py --ranked)")
+    ap.add_argument("--background", action="store_true",
+                    help="click inside the game without moving the real mouse (as play.py --background)")
     args = ap.parse_args(argv)
     if args.runs < 0:
         print("--runs must be 0 (endless) or a positive integer", file=sys.stderr)
         return 2
     play_argv = (["--new-run"] + (["--ranked"] if args.ranked else []) + (["--learned"] if args.learned else [])
-                 + (["--simple"] if args.simple else []))
+                 + (["--simple"] if args.simple else []) + (["--background"] if args.background else []))
     LOG_DIR.mkdir(exist_ok=True)
     summaries = []
     stopped = False

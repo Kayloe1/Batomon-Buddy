@@ -15,6 +15,13 @@ Rules built in:
 - No click is sent while another window covers the game at that point (_ensure_visible).
 - The fast-forward button is never clicked (the game remembers it between battles).
 - pyautogui's fail-safe stays on: push the mouse into a screen corner to abort.
+- Background mode (Hands(background=True), play.py --background): instead of moving the real
+  mouse, the clicks, drags and wheel turns are posted straight to the game window as window
+  messages, and the game is not brought to the front. Ed can keep using other windows meanwhile.
+  This works because Godot (the game's engine) takes the pointer position from the message itself.
+  The game must stay un-minimized; other windows may cover it. Hovering (inspect) is not supported
+  there. The corner emergency stop still works. Every action is still checked by a fresh capture,
+  so a message the game ignores stops the bot instead of going unnoticed.
 - Every state, action and result is appended to logs/actions_<date>.jsonl.
 """
 from __future__ import annotations
@@ -144,12 +151,70 @@ def _read_rank(state: dict) -> tuple[int, int, int]:
 
 # ------------------------------------------------------------------ hands ----
 
+class _WindowMouse:
+    """Mouse input posted to one window as messages: the real pointer never moves and the window
+    need not be in front. Positions are screen pixels, as everywhere else in Hands."""
+    WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEWHEEL = 0x0200, 0x0201, 0x0202, 0x020A
+    MK_LBUTTON = 0x0001
+
+    def __init__(self, hwnd: int):
+        self.hwnd = hwnd
+        self.held = False
+
+    @staticmethod
+    def _lparam(x: int, y: int) -> int:
+        return ((y & 0xFFFF) << 16) | (x & 0xFFFF)
+
+    def _post(self, msg: int, wparam: int, lparam: int) -> None:
+        import win32api
+        win32api.PostMessage(self.hwnd, msg, wparam, lparam)
+
+    def _client(self, x: int, y: int) -> tuple[int, int]:
+        r = window.client_rect(self.hwnd)
+        return x - r.left, y - r.top
+
+    def move(self, x: int, y: int, duration: float = 0.0, steps: int = 1) -> None:
+        """Pointer to screen point (x, y); with steps > 1 the path is walked in that many moves."""
+        cx, cy = self._client(x, y)
+        start = getattr(self, "_at", (cx, cy))
+        steps = max(1, steps)
+        for k in range(1, steps + 1):
+            px = round(start[0] + (cx - start[0]) * k / steps)
+            py = round(start[1] + (cy - start[1]) * k / steps)
+            self._post(self.WM_MOUSEMOVE, self.MK_LBUTTON if self.held else 0, self._lparam(px, py))
+            time.sleep(duration / steps)
+        self._at = (cx, cy)
+
+    def down(self) -> None:
+        self.held = True
+        self._post(self.WM_LBUTTONDOWN, self.MK_LBUTTON, self._lparam(*self._at))
+
+    def up(self) -> None:
+        self.held = False
+        self._post(self.WM_LBUTTONUP, 0, self._lparam(*self._at))
+
+    def wheel(self, x: int, y: int, delta: int) -> None:
+        """One wheel turn of `delta` units (120 = one notch) at screen point (x, y)."""
+        self._post(self.WM_MOUSEWHEEL, (delta & 0xFFFF) << 16, self._lparam(x, y))
+
+
+def _emergency_check() -> None:
+    """The corner emergency stop, for background mode where pyautogui itself never runs."""
+    import pyautogui
+    pyautogui.failSafeCheck()
+
+
 class Hands:
-    def __init__(self, dry_run: bool = True):
+    background = False                # see the module notes; set by __init__
+    mouse = None
+
+    def __init__(self, dry_run: bool = True, background: bool = False):
         self.dry_run = dry_run
+        self.background = background
         self.hwnd = window.find_window()
         if self.hwnd is None:
             raise RuntimeError("Batomon Showdown window not found")
+        self.mouse = _WindowMouse(self.hwnd) if background else None
         LOG_DIR.mkdir(exist_ok=True)
         self.log_path = LOG_DIR / f"actions_{datetime.now():%Y%m%d}.jsonl"
 
@@ -164,7 +229,9 @@ class Hands:
         attempts = 1 if getattr(self, "_single_read", False) else 4
         best = None
         for attempt in range(attempts):
-            img = window.capture_client(self.hwnd)
+            # background: only the window's own drawing; screen pixels would show whatever covers it
+            img = (window.capture_client(self.hwnd, "printwindow") if self.background
+                   else window.capture_client(self.hwnd))
             state = reader.read_state(img)
             if best is None or _read_rank(state) < _read_rank(best[1]):
                 best = (img, state)
@@ -254,7 +321,15 @@ class Hands:
 
     def _click(self, box: reader.Box) -> list:
         x, y = self.screen_point(box)
-        if not self.dry_run:
+        if not self.dry_run and self.background:
+            _emergency_check()
+            m = self.mouse
+            m.move(x, y, duration=0.15, steps=4)
+            m.down()
+            time.sleep(0.06)
+            m.up()
+            m.move(*self.screen_point(PARK), duration=0.15, steps=4)
+        elif not self.dry_run:
             import pyautogui
             self._focus()
             self._ensure_visible((x, y))
@@ -273,6 +348,8 @@ class Hands:
         box = reader.team_slot(i) if where == "team" else reader.bench_slot(i)
         if self.dry_run:
             return None
+        if self.background:
+            raise RuntimeError("hovering to read the info panel needs the real mouse; run without background mode")
         import pyautogui
         self._focus()
         self._ensure_visible(self.screen_point(box))
@@ -294,7 +371,17 @@ class Hands:
     def _drag(self, src: reader.Box, dst: reader.Box) -> list:
         x0, y0 = self.screen_point(src)
         x1, y1 = self.screen_point(dst)
-        if not self.dry_run:
+        if not self.dry_run and self.background:
+            _emergency_check()
+            m = self.mouse
+            m.move(x0, y0, duration=0.15, steps=4)
+            m.down()
+            time.sleep(0.12)
+            m.move(x1, y1, duration=0.35, steps=12)
+            time.sleep(0.12)
+            m.up()
+            m.move(*self.screen_point(PARK), duration=0.15, steps=4)
+        elif not self.dry_run:
             import pyautogui
             self._focus()
             self._ensure_visible((x0, y0), (x1, y1))
@@ -310,7 +397,15 @@ class Hands:
     def _scroll(self, box: reader.Box, clicks: int) -> list:
         """Turn the mouse wheel over a box (negative = scroll down)."""
         x, y = self.screen_point(box)
-        if not self.dry_run:
+        if not self.dry_run and self.background:
+            _emergency_check()
+            self.mouse.move(x, y, duration=0.15, steps=4)
+            step = 120 if clicks > 0 else -120
+            for _ in range(abs(clicks)):
+                self.mouse.wheel(x, y, step)
+                time.sleep(0.04)
+            time.sleep(0.3)
+        elif not self.dry_run:
             import pyautogui
             self._focus()
             self._ensure_visible((x, y))

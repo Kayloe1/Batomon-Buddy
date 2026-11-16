@@ -734,6 +734,7 @@ class App:
         self.new_run = tk.BooleanVar(value=False)
         self.ranked = tk.BooleanVar(value=False)
         self.limit_days = tk.BooleanVar(value=False)
+        self.background = tk.BooleanVar(value=False)
         self.days = tk.StringVar(value="1")
         self.decide = tk.StringVar(value="planner")
         self.option_widgets = []
@@ -753,6 +754,11 @@ class App:
         w.pack(side="left", padx="4p")
         self.option_widgets.append(w)
         ttk.Label(runs_row, text="(0 = endless)").pack(side="left")
+        w = ttk.Checkbutton(opts, variable=self.background,
+                            text="Let me use my PC meanwhile: click inside the game without moving my mouse "
+                                 "(test; don't minimize the game)")
+        w.grid(row=5, column=0, columnspan=4, sticky="w", pady=("3p", 0))
+        self.option_widgets.append(w)
         w = ttk.Checkbutton(opts, variable=self.limit_days, text="Stop after")
         w.grid(row=1, column=0, sticky="w")
         self.option_widgets.append(w)
@@ -818,6 +824,8 @@ class App:
             if not text.isdigit() or not 0 <= int(text) <= 99:
                 return None
             out += ["--days", str(int(text))]
+        if self.background.get():
+            out.append("--background")
         if self.decide.get() == "simple":
             out.append("--simple")
         elif self.decide.get() == "learned":
@@ -841,7 +849,8 @@ class App:
             return
         if not isinstance(data, dict):
             return
-        for key, var in (("new_run", self.new_run), ("ranked", self.ranked), ("limit_days", self.limit_days)):
+        for key, var in (("new_run", self.new_run), ("ranked", self.ranked), ("limit_days", self.limit_days),
+                         ("background", self.background)):
             if isinstance(data.get(key), bool):
                 var.set(data[key])
         for key, var, hi in (("days", self.days, 99), ("runs", self.runs, 999)):
@@ -859,6 +868,7 @@ class App:
                 "new_run": self.new_run.get(),
                 "ranked": self.ranked.get(),
                 "limit_days": self.limit_days.get(),
+                "background": self.background.get(),
                 "days": self.days.get().strip(),
                 "runs": self.runs.get().strip(),
                 "decide": self.decide.get(),

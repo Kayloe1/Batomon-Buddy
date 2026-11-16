@@ -78,6 +78,12 @@ Double-click `control_window.bat`, or run `.\.venv\Scripts\python.exe gui.py`. I
   room, and warns when it covers the picture). It is never kept on top: the bot brings the game to the
   front for every click. Pushing the mouse into a screen corner still aborts.
 - **Play Ranked** (off by default) makes the bot start Ranked runs instead of Casual (`--new-run --ranked`).
+- **Let me use my PC meanwhile** (off by default, a test; `--background`) sends the clicks straight
+  to the game window instead of moving the real mouse, and does not bring the game to the front, so
+  other windows can be used while the bot plays. The game must stay open (not minimized) but may sit
+  behind other windows; keep your own pointer off the game picture. Every action is still checked
+  against a fresh picture, so if the game ignores these clicks the bot stops with a message. Pushing
+  the mouse into a screen corner still aborts.
 - The window clicks nothing itself. Started from the `.bat` there is
   no console; what would be printed goes to `logs\control_window_console.txt`.
 

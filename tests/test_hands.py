@@ -166,6 +166,71 @@ class CoveredGame(unittest.TestCase):
         self.assertEqual(sent[:3], ["move", "down", "up"])
 
 
+class BackgroundMode(unittest.TestCase):
+    """Background mode posts the input to the game window: no focus, no real mouse (2026-11-16)."""
+
+    def hands(self):
+        import types
+        from unittest import mock
+        h = hands.Hands.__new__(hands.Hands)
+        h.dry_run, h.hwnd, h.background = False, 1, True
+        h.mouse = hands._WindowMouse(1)
+        h._focus = lambda: self.fail("background mode must not bring the game to the front")
+        h._covering = lambda x, y: "Claude"          # covered: fine in background mode
+        h.screen_point = lambda box: (110, 220) if box is not hands.PARK else (15, 25)
+        posted = []
+        h.mouse._post = lambda msg, wp, lp: posted.append((msg, wp, lp & 0xFFFF, lp >> 16))
+        rect = hands.window.Rect(10, 20, 1000, 600)
+        for target, fake in ((hands.window, "client_rect"), ):
+            p = mock.patch.object(target, fake, return_value=rect)
+            p.start()
+            self.addCleanup(p.stop)
+        failsafe = types.SimpleNamespace(failSafeCheck=lambda: None)
+        old = sys.modules.get("pyautogui")
+        sys.modules["pyautogui"] = failsafe
+        self.addCleanup(lambda: sys.modules.__setitem__("pyautogui", old) if old else sys.modules.pop("pyautogui"))
+        p = mock.patch.object(hands.time, "sleep", lambda s: None)
+        p.start()
+        self.addCleanup(p.stop)
+        return h, posted
+
+    def test_a_click_is_posted_at_the_client_point(self):
+        h, posted = self.hands()
+        h._click(reader.STATS_CLOSE)
+        W = hands._WindowMouse
+        kinds = [m for m, *_ in posted]
+        self.assertIn(W.WM_LBUTTONDOWN, kinds)
+        down = next(p for p in posted if p[0] == W.WM_LBUTTONDOWN)
+        up = next(p for p in posted if p[0] == W.WM_LBUTTONUP)
+        self.assertEqual(down[2:], (100, 200))        # screen (110, 220) minus the client corner (10, 20)
+        self.assertEqual(up[2:], (100, 200))
+        self.assertLess(kinds.index(W.WM_LBUTTONDOWN), kinds.index(W.WM_LBUTTONUP))
+        self.assertEqual(posted[-1][0], W.WM_MOUSEMOVE)   # parked afterwards
+        self.assertEqual(posted[-1][2:], (5, 5))
+
+    def test_a_drag_holds_the_button_while_moving(self):
+        h, posted = self.hands()
+        h._drag(reader.team_slot(0), reader.SELL_BAR)
+        W = hands._WindowMouse
+        kinds = [m for m, *_ in posted]
+        i, j = kinds.index(W.WM_LBUTTONDOWN), kinds.index(W.WM_LBUTTONUP)
+        between = posted[i + 1:j]
+        self.assertTrue(between and all(m == W.WM_MOUSEMOVE and wp == W.MK_LBUTTON for m, wp, *_ in between))
+
+    def test_the_wheel_uses_screen_points_and_whole_notches(self):
+        h, posted = self.hands()
+        h._scroll(reader.STATS_SCROLL_POINT, -2)
+        wheels = [p for p in posted if p[0] == hands._WindowMouse.WM_MOUSEWHEEL]
+        self.assertEqual(len(wheels), 2)
+        self.assertEqual([(w[1] >> 16) for w in wheels], [0xFFFF - 119] * 2)   # -120 as an unsigned word
+        self.assertEqual(wheels[0][2:], (110, 220))
+
+    def test_hovering_is_refused(self):
+        h, _ = self.hands()
+        with self.assertRaises(RuntimeError):
+            h.inspect("team", 0)
+
+
 class LookRereadsUnnamed(unittest.TestCase):
     """A one-frame sprite miss on an owned monster is read again (Runerock, 2026-11-13)."""
 
