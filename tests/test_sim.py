@@ -577,3 +577,17 @@ class MechanicsAndMythicals(unittest.TestCase):
         self.assertEqual(len(r.units[0]), 2)
         self.assertEqual(r.units[0][1]["name"], "Brawlmantis")
         self.assertEqual(r.units[0][1]["dealt"], 77)
+
+    def test_rigalord_and_painted_types(self):
+        # Rigalord (2.0 s cd) spawns devoured Brawlmantis (5.5 s cd) in bottom row (slot 4 / idx 3)
+        # that ONLY triggers when Rigalord casts: at 4.1 s Rigalord cast twice -> Brawlmantis cast twice (100 dealt).
+        riga = {**mon("Rigalord", 1), "devoured": [mon("Brawlmantis", 1)]}
+        r = simulate(team([riga]), EMPTY, until=4.1)
+        self.assertEqual(len(r.units[0]), 2)
+        self.assertEqual(r.units[0][1]["slot"], 4)
+        self.assertEqual(r.units[0][1]["triggered"], 2)
+        self.assertEqual(r.units[0][1]["dealt"], 100)
+        # Painted monster has all 12 types (boosts Prismagon's type count).
+        painted_panbud = {**mon("Panbud", 1), "painted": True}
+        r = simulate(team([painted_panbud, mon("Prismagon", 1)]), EMPTY, until=4.1)
+        self.assertEqual(r.units[0][1]["stats"]["damage"], 100 + 10 * 12)

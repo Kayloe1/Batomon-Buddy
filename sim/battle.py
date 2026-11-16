@@ -31,6 +31,9 @@ from .rules import SETTINGS
 
 EPS = 1e-9
 
+ALL_TYPES = ("Bug", "Dragon", "Electric", "Fighting", "Fire", "Flying",
+             "Ghost", "Grass", "Rock", "Steel", "Toxic", "Water")
+
 # Static trinket bonuses that change a card's badges (applied only when a slot has no "stats").
 STATIC_STAT_TRINKETS = {"Wood Sword", "Small Club", "Giant Club", "Terrarium", "Fire Orb",
                         "Poison Orb", "Power Crown", "Excalibur", "Master Crown",
@@ -69,6 +72,7 @@ class Unit:
     shielded: float = 0.0
     inflicted: dict[str, float] = field(default_factory=lambda: {"poison": 0, "burn": 0, "shock": 0})
     base_name: str = field(init=False)
+    rigalord_only: bool = False
     t0_dmg: float = 0.0
     t0_heal: float = 0.0
     t0_burn: float = 0.0
@@ -171,7 +175,12 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
     given = spec.get("stats")
     if given:
         stats = {s: float(given.get(s, 0)) for s in data.STATS}
-    types = list(sp.types)
+    if spec.get("painted"):
+        types = list(ALL_TYPES)
+    elif spec.get("types"):
+        types = list(spec["types"])
+    else:
+        types = list(sp.types)
     multicast = int(spec.get("multicast", lv.multicast))
     unit = Unit(side, slot, name, level, types, sp.rarity, float(spec.get("cooldown", lv.cooldown)),
                 stats, multicast, lv.passive_text if level > 1 else sp.passive, lv.param,
@@ -308,6 +317,16 @@ class Battle:
         out = []
         for i, s in enumerate(slots):
             out.append(build_unit(side, i, s, trainer, trinkets, victories=victories) if s else None)
+        if not team.get("at_battle_start"):
+            for i, s in enumerate(slots):
+                if s and out[i] and out[i].is_("Rigalord") and s.get("devoured"):
+                    for dev in s["devoured"]:
+                        for idx in (3, 4, 5):
+                            if out[idx] is None:
+                                copy_u = build_unit(side, idx, dev, trainer, trinkets, victories=victories)
+                                copy_u.rigalord_only = True
+                                out[idx] = copy_u
+                                break
         if trainer == "Musician" and not any(s and s.get("stats") for s in slots if s):
             electric = [u for u in out if u and "Electric" in u.types]
             if len(electric) == 1:
@@ -873,6 +892,10 @@ class Battle:
             a = self.above(u)
             if a and a.level < 3:
                 self._level_up(a, a.level + 1)
+        elif name == "Rigalord":
+            for v in self.living(u.side):
+                if v.rigalord_only:
+                    self.cast(v, "Rigalord")
 
     # ---------- battle start ----------
     def battle_start(self, u: Unit, from_trigger: bool = False) -> None:
@@ -1034,6 +1057,8 @@ class Battle:
             spd = {}
             for side in (0, 1):
                 for u in standing[side]:
+                    if u.rigalord_only:
+                        continue
                     v = spd[id(u)] = self.speed(u)
                     times.append(self.t + max(0.0, u.cooldown - u.progress) / v)
                     if self._has_shelldra and u.is_("Shelldra") and u.active_passive():
@@ -1045,14 +1070,15 @@ class Battle:
             dt = t_next - self.t
             for side in (0, 1):
                 for u in standing[side]:
-                    u.progress += dt * spd[id(u)]
+                    if not u.rigalord_only:
+                        u.progress += dt * spd[id(u)]
             self.t = t_next
             # Casts: keep going while someone is ready (charges can make more units ready).
             for _ in range(50):
                 ready = False
                 for side in self.order():
                     for u in self.teams[side]:
-                        if u and u.alive and u.progress >= u.cooldown - 1e-7:
+                        if u and u.alive and not u.rigalord_only and u.progress >= u.cooldown - 1e-7:
                             u.progress -= u.cooldown
                             if u.progress < 1e-7:
                                 u.progress = 0.0
