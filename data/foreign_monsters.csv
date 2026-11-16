@@ -3,10 +3,10 @@ Rhizuka,30,Rare,Rock,15.0,Deal 200 damage,Trigger this when an ally applies Shie
 Ignit,40,Rare,Fire,8.0,Burn 1,On Victory: Evolve,"Event-only (crying baby basilisk event); Batopedia ??? tab. The evolution was not seen; the simulator uses the base card only."
 Talonite,20,Rare,Flying/Rock,12.0,Deal 30 damage; Multicast 2,On Battle Start: +20 Shield permanently for each Rock ally and +1 Multicast permanently for each Flying ally,"Event-only; Batopedia ??? tab. The passive is not simulated."
 Wishwash,40,Super Rare,Water,3.5,Heal 150,On Battle Start: Gain a random non-unique Rare Trinket,"Event-only; Batopedia ??? tab. The passive is not simulated."
-Pyrokami,26,Rare,Fire,3.6,Deal 5 damage; Burn 5,On Cast: +10 Burn for this battle,"Jinto monster from the event choice 'Gain a foreign Rare monster. It can now appear in your shop.' (bot run, 2026-11-13, Swim Coach day 3). Read from the hover panel: Rare, Fire, 3.6 s, Deal 5 damage, Burn 5; sells for $13, so cost $26."
-Cordycant,30,Rare,Unknown,4.0,Poison 8,,Learned by the bot from the hover panel; passive NOT read yet (read it from captures/info_panels/Cordycant_20261113_202147.png). Cost is a typical Rare's.
-Kickrane,40,Rare,Unknown,4.5,Deal 30 damage; Multicast 2,,Learned by the bot from the hover panel; passive NOT read yet (read it from captures/info_panels/Kickrane_20261114_112956.png). Its shop card (captures/shop_kickrane_card.png) costs $40 and shows x2 Multicast.
-Dollhime,30,Rare,Unknown,6.0,Deal 50 damage,,Learned by the bot from the hover panel; passive NOT read yet (read it from captures/info_panels/Dollhime_20261114_213545.png). Cost is a typical Rare's.
-Shikitsune,30,Rare,Ghost,3.0,Deal 50 damage,,Learned by the bot from the hover panel; passive NOT read yet (read it from captures/info_panels/Shikitsune_20261114_222800.png). Cost is a typical Rare's.
-Sproach,30,Rare,Unknown,5.5,Deal 12 damage,,Learned by the bot from the hover panel; passive NOT read yet (read it from captures/info_panels/Sproach_20261114_234134.png). Cost is a typical Rare's.
-Steamscuttle,30,Rare,Unknown,3.5,Heal 30; Burn 5,,Learned by the bot from the hover panel; passive NOT read yet (read it from captures/info_panels/Steamscuttle_20261115_003222.png). Cost is a typical Rare's.
+Pyrokami,25,Rare,Fire,4.0,Burn 5,On Cast: +10 Burn for this battle.,"batomon.com Balance 27"
+Cordycant,25,Rare,Toxic/Bug,4.0,Poison 8,On Bought Give the next monster you buy Toxic typing and +8 Poison. Lost if sold.,"batomon.com Balance 27"
+Kickrane,40,Rare,Fighting/Flying,4.5,Deal 30 damage; Multicast 2,On Victory: This and all your allies gain +20 Damage permanently.,"batomon.com Balance 27"
+Dollhime,40,Rare,Curio,6.0,Deal 50 damage,On Trinket Gained +50 Damage permanently.,"batomon.com Balance 27"
+Shikitsune,35,Rare,Ghost,3.0,Deal 50 damage,On Cast: Knocked-out allies are revived and gain +15% Cooldown Speed for this battle.,"batomon.com Balance 27"
+Sproach,40,Rare,Bug/Grass,5.5,Deal 12 damage,On Bought +30 Damage permanently for each life lost this run.,"batomon.com Balance 27"
+Steamscuttle,40,Rare,Fire/Water,3.5,Heal 30; Burn 5,On Cast: Charge adjacent Fire and Water allies by 1 second(s). (Steamscuttle can't receive charge),"batomon.com Balance 27"

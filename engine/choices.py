@@ -32,7 +32,9 @@ def trainer_scores() -> dict[str, float]:
         for r in csv.DictReader(f):
             won = int(r.get("ed_championships") or 0)
             played = int(r.get("ed_games_played") or 0)
-            score = (won + 1) / (played + 3)          # smoothed win share
+            ed = (won + 1) / (played + 3)          # smoothed win share
+            meta_wr = data.trainer_win_rate(r["name"])
+            score = 0.5 * ed + 0.5 * (meta_wr * 1.6) if meta_wr is not None else ed
             if r["name"] in AVOID_TRAINERS:
                 score -= 1.0
             if r["name"] in knowledge.TRAINER_PREFERENCE:
@@ -45,7 +47,7 @@ def pick_trainer(offered: list[str | None]) -> tuple[int, str]:
     scores = trainer_scores()
     best = max(range(len(offered)), key=lambda k: scores.get(offered[k] or "", 0.2))
     name = offered[best] or f"card {best}"
-    return best, f"{name}: Ed's record and fit with the plan (scores {[round(scores.get(o or '', 0.2), 2) for o in offered]})"
+    return best, f"{name}: Ed's record, Ranked meta, and fit with the plan (scores {[round(scores.get(o or '', 0.2), 2) for o in offered]})"
 
 
 _INCOME = re.compile(r"Increase Income by \$(\d+)")
@@ -70,7 +72,9 @@ RARITY_PRIOR = {"Common": 0.0, "Uncommon": 0.004, "Rare": 0.008, "Super Rare": 0
 def text_prior(name: str) -> float:
     t = data.trinkets().get(name, {})
     effect = t.get("effect", "")
-    return RARITY_PRIOR.get(t.get("rarity"), 0.0) + sum(v for w, v in _PRIOR_WORDS if w in effect)
+    wr = data.trinket_win_rate(name)
+    meta_bonus = max(0.0, (wr - 0.20) * 0.15) if wr is not None else 0.0
+    return RARITY_PRIOR.get(t.get("rarity"), 0.0) + sum(v for w, v in _PRIOR_WORDS if w in effect) + meta_bonus
 
 
 def _cooldown(u) -> float:
@@ -104,6 +108,12 @@ def with_trinket_stats(team: list, name: str, owned: list[str]) -> list:
             d["damage"] += 10
         elif name == "Power Crown" and i == 1:
             d["damage"] += 20
+        elif name == "Excalibur":
+            d["damage"] += 350
+        elif name == "Master Crown" and i == 1:
+            n = owned.count("Master Crown")
+            f = (1 + 0.8 * (n + 1)) / (1 + 0.8 * n)
+            d = {k: (v if k == "multicast" else round(v * f)) for k, v in d.items()}
         elif name == "Fire Orb" and "Fire" in types:
             d["burn"] += 3
         elif name == "Poison Orb" and "Toxic" in types:

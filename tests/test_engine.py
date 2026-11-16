@@ -58,6 +58,25 @@ class Data(unittest.TestCase):
         self.assertEqual(data.income(2), 35)
         self.assertEqual(data.hp_for_day(3), 800)
 
+    def test_meta_comps_and_synergy_pairs(self):
+        meta = data.meta_comps()
+        self.assertGreaterEqual(len(meta["comps"]), 18)
+        self.assertGreater(len(meta["pairs"]), 20)
+        pairs = data.synergy_pairs()
+        self.assertGreater(pairs["Dracana"]["Onsetra"], 0.30)
+        self.assertGreater(pairs["Cobrex"]["Puffloon"], 0.25)
+        self.assertGreater(data.partner_lift("Onsetra", ["Dracana", "Formiqueen"]), 0.20)
+        self.assertGreater(data.team_synergy(["Draconarch", "Stalagrove", "Aegistruct"]), 0.25)
+        self.assertGreater(data.trainer_win_rate("Swim Coach"), 0.25)
+        self.assertGreater(data.trinket_win_rate("VIP Pass"), 0.20)
+
+    def test_foreign_jinto_roster_complete(self):
+        r = data.roster()
+        for name in ("Cordycant", "Kickrane", "Dollhime", "Shikitsune", "Sproach", "Steamscuttle"):
+            self.assertNotIn("Unknown", r[name].types)
+            self.assertTrue(r[name].passive)
+            self.assertTrue(r[name].level_text[2])
+
 
 class Model(unittest.TestCase):
     def test_third_copy_merges_and_gives_gift(self):
@@ -236,6 +255,18 @@ class Choices(unittest.TestCase):
     def test_trainer_avoids_mad_scientist(self):
         k, _ = pick_trainer(["Mad Scientist", "Painter", "Gentleman"])
         self.assertEqual(k, 1)
+
+    def test_trainer_scores_blend_ranked_meta_and_text_prior_uses_meta_trinkets(self):
+        from engine.choices import text_prior, trainer_scores, with_trinket_stats
+        sc = trainer_scores()
+        self.assertGreater(sc["Swim Coach"], sc["Black Belt"])
+        self.assertGreater(text_prior("Grow Lamp"), text_prior("Mysterious Mask"))
+        tr = data.trinkets()
+        self.assertIn("Excalibur", tr)
+        self.assertIn("Master Crown", tr)
+        u = new_unit("Panbud", 10)
+        buffed = with_trinket_stats([None, u], "Master Crown", [])[1]
+        self.assertEqual(buffed.stat("damage"), 45)
 
     def test_trinket_pick_returns_an_index(self):
         p = small_planner()

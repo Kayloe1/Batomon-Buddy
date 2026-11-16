@@ -356,10 +356,93 @@ class JintoData(unittest.TestCase):
     def test_jinto_monsters_load_and_stay_out_of_the_pantra_shop(self):
         from engine import data as edata
         sp = data.load_species()
-        for n in ("Cinnabark", "Drumire", "Miasmaw", "Quillustrous"):
+        for n in ("Cinnabark", "Drumire", "Miasmaw", "Quillustrous",
+                  "Cordycant", "Kickrane", "Dollhime", "Shikitsune", "Sproach", "Steamscuttle"):
             self.assertIn(n, sp)
         self.assertEqual(sp["Cinnabark"].levels[3].stats["poison"], 15)
         self.assertEqual(sp["Drumire"].cost, 45)
+        self.assertEqual(sp["Kickrane"].levels[1].multicast, 2)
+        self.assertEqual(sp["Cordycant"].types, ["Toxic", "Bug"])
         shop = {s.name for r in edata.RARITIES for s in edata.by_rarity(r)}
         self.assertNotIn("Cinnabark", shop)
         self.assertEqual(len(shop), 64)
+
+
+class JintoPassives(unittest.TestCase):
+    def test_miasmaw_and_drumire(self):
+        # Miasmaw copies non-Miasmaw allies' Poison (2x at Lv2); two Miasmaw do not copy each other.
+        r = simulate(team([mon("Miasmaw", 2), mon("Miasmaw", 2), mon("Venopuff")]), EMPTY, until=3.0)
+        self.assertEqual(r.statuses[1]["poison"], 36)  # 2 * (10 + 2 * 4)
+        # Drumire speeds up Toxic allies each time they cast.
+        fast = simulate(team([mon("Venopuff"), mon("Drumire", 3)]), EMPTY, until=20.0)
+        base = simulate(team([mon("Venopuff")]), EMPTY, until=20.0)
+        self.assertGreater(fast.units[0][0]["triggered"], base.units[0][0]["triggered"])
+
+    def test_cinnabark_ouroblaze_and_quillustrous_ongoing(self):
+        # Cinnabark gains extra Shield equal to 100% of enemy Poison on its 2nd cast (8 s).
+        r = simulate(team([mon("Cinnabark")]), EMPTY, until=8.0)
+        self.assertEqual(r.units[0][0]["shielded"], 5)
+        # Ouroblaze gains extra Burn equal to 50% of enemy Burn.
+        r = simulate(team([mon("Pyronade"), mon("Ouroblaze")]), EMPTY, until=8.0)
+        self.assertGreater(r.units[0][1]["inflicted_burn"], 0)
+        # Quillustrous adds 50% of allies' Damage; safe when paired with Gaiadrasil.
+        r = simulate(team([mon("Panbud", 1, damage=100), mon("Quillustrous", 1, damage=100)]), EMPTY, until=7.0)
+        self.assertEqual(r.units[0][1]["dealt"], 300)
+        r2 = simulate(team([mon("Gaiadrasil"), mon("Quillustrous")]), EMPTY, until=10.0)
+        self.assertGreater(r2.units[0][1]["dealt"], 0)
+
+    def test_bonshell_cairnage_opalion_and_snapscald(self):
+        r = simulate(team([mon("Bonshell")]), EMPTY, until=14.0)
+        self.assertEqual((r.units[0][0]["shielded"], r.units[0][0]["dealt"]), (270, 70))
+        r = simulate(team([mon("Pebbler", 1, shield=100), mon("Cairnage")]), EMPTY, until=6.0)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 92)  # 0.8 * (100 + 15)
+        r = simulate(team([mon("Opalion"), mon("Pebbler")]), EMPTY, until=6.5)
+        self.assertEqual(r.units[0][1]["triggered"], 2)  # own 5s cast + triggered by Opalion at 6.5s
+        r = simulate(team([mon("Panbud", 3), mon("Snapscald")]), EMPTY, until=5.0)
+        self.assertEqual(r.units[0][1]["triggered"], 1)  # triggered by Lv3 ally cast
+
+    def test_steamscuttle_and_charge_immunity(self):
+        # Adjacent Fire ally is charged by 1 s; another Steamscuttle and Dracana are immune to Charge.
+        r = simulate(team([mon("Magmite"), mon("Steamscuttle"), mon("Steamscuttle")]), EMPTY, until=4.5)
+        self.assertEqual(r.units[0][0]["triggered"], 1)
+        r2 = simulate(team([mon("Dracana"), mon("Steamscuttle"), mon("Steamscuttle")]), EMPTY, until=6.8)
+        self.assertEqual(r2.units[0][2]["triggered"], 1)
+        r3 = simulate(team([mon("Dracana"), mon("Steamscuttle")]), EMPTY, until=5.5)
+        self.assertEqual(r3.units[0][0]["triggered"], 1)
+
+    def test_shikitsune_vengrieve_danuki_and_oniclaw(self):
+        # Shikitsune revives Stingarde after its 6s self-KO and accelerates it (+15%).
+        r6 = simulate(team([mon("Stingarde"), mon("Shikitsune")]), EMPTY, until=6.0)
+        self.assertFalse(r6.units[0][0].get("knocked_out"))
+        r = simulate(team([mon("Stingarde"), mon("Shikitsune")]), EMPTY, until=11.5)
+        self.assertEqual(r.units[0][0]["triggered"], 2)
+        # Vengrieve knocks out the opposite enemy and gains its stats.
+        r = simulate(team([mon("Vengrieve")]), team([mon("Panbud", 1, damage=123)]), until=7.5)
+        self.assertTrue(r.units[1][0].get("knocked_out"))
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 123)
+        # Danuki gains 85% of knocked-out ally's Damage.
+        r = simulate(team([mon("Stingarde"), mon("Danuki")]), EMPTY, until=6.1)
+        self.assertEqual(r.units[0][1]["stats"]["damage"], round(40 + 0.85 * 150))
+        # Oniclaw gains +50% Damage when team inflicts Burn.
+        r = simulate(team([mon("Oniclaw")]), EMPTY, until=6.0)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 150)
+
+
+class MechanicsAndMythicals(unittest.TestCase):
+    def test_sirenade_rounds_debuff_removal_up(self):
+        # 20% of 4 Poison = 0.8 -> ceil rounds up to 1 removed (4 -> 3).
+        r = simulate(team([mon("Sirenade")], hp=5000), team([mon("Venopuff", 1, poison=4)]), until=6.0)
+        self.assertEqual(r.statuses[0]["poison"], 3)
+
+    def test_shiny_celestia_disables_only_enemies(self):
+        r = simulate(team([dict(mon("Celestia"), shiny=True), mon("Lignite")]),
+                     team([mon("Lignite")]), until=5.0)
+        self.assertEqual(r.units[0][1]["dealt"], 72)   # ally Lignite stays enabled (24 * 3 Burn)
+        self.assertEqual(r.units[1][0]["dealt"], 0)    # enemy Lignite disabled
+
+    def test_excalibur_and_master_crown(self):
+        r = simulate(team([mon("Panbud")], trinkets=["Excalibur"]), EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 375)
+        r = simulate(team([mon("Panbud"), mon("Panbud")], trinkets=["Master Crown"]), EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 25)
+        self.assertEqual(r.units[0][1]["stats"]["damage"], 45)
