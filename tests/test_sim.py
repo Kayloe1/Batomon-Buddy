@@ -496,3 +496,21 @@ class MechanicsAndMythicals(unittest.TestCase):
         self.assertEqual(r.units[0][1]["shielded"], 290)
         self.assertEqual(r.units[0][2]["dealt"], 72)
         self.assertEqual(r.units[0][4]["dealt"], 75)   # 3 hits x 25, not 5 hits x 25
+
+    def test_draconarch_triggers_battle_start_even_when_at_battle_start(self):
+        # Mid-battle Draconarch (cd=5.0) must still trigger adjacent Aegistruct's battle_start.
+        t = team([
+            mon("Runerock", 1, shield=140),
+            mon("Aegistruct", 1, shield=290),
+            mon("Draconarch", 1),
+        ])
+        t["at_battle_start"] = True
+        r = simulate(t, EMPTY, until=6.1)
+        # At 5.0 s Draconarch triggers Aegistruct (+140 -> 430), then Aegistruct casts at 6.0 s.
+        self.assertEqual(r.units[0][1]["shielded"], 430)
+
+    def test_emburn_and_cawnushi_on_knockout(self):
+        # Stingarde knocks itself out at 6.0 s: Emburn gains +3 Burn, Cawnushi (on enemy) gains +60 Damage.
+        r = simulate(team([mon("Stingarde"), mon("Emburn")]), team([mon("Cawnushi")]), until=6.1)
+        self.assertEqual(r.units[0][1]["stats"]["burn"], 9)
+        self.assertEqual(r.units[1][0]["stats"]["damage"], 110)
