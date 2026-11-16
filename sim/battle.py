@@ -67,6 +67,16 @@ class Unit:
     healed: float = 0.0
     shielded: float = 0.0
     inflicted: dict[str, float] = field(default_factory=lambda: {"poison": 0, "burn": 0, "shock": 0})
+    base_name: str = field(init=False)
+    t0_dmg: float = 0.0
+    t0_heal: float = 0.0
+    t0_burn: float = 0.0
+    t0_shock: float = 0.0
+    t0_mc: int = 0
+    _speed_cached: float = -1.0
+
+    def __post_init__(self) -> None:
+        self.base_name = data.canonical_name(self.name)
 
     @property
     def row(self) -> int:
@@ -75,10 +85,6 @@ class Unit:
     @property
     def col(self) -> int:
         return self.slot % 3
-
-    @property
-    def base_name(self) -> str:
-        return data.canonical_name(self.name)
 
     def is_(self, name: str) -> bool:
         return self.base_name == name
@@ -248,14 +254,14 @@ class Battle:
         self.next_sd = SETTINGS["sudden_death_start"]
         self.depth = 0
         self._adj: dict[int, list[Unit]] = {}
-        self._speeds: dict[int, float] | None = None   # cached speed_of; None = recompute
         self._living: list[list[Unit] | None] = [None, None]   # cached living(side); reset by knockout()
         self._dmg_visiting: set[int] = set()
-        self._t0_dmg: dict[int, float] = {}
-        self._t0_heal: dict[int, float] = {}
-        self._t0_burn: dict[int, float] = {}
-        self._t0_shock: dict[int, float] = {}
-        self._t0_mc: dict[int, int] = {}
+        self._side_names: list[set[str]] = [
+            {u.base_name for u in self.teams[0] if u},
+            {u.base_name for u in self.teams[1] if u},
+        ]
+        self._all_names: set[str] = self._side_names[0] | self._side_names[1]
+        self._has_shelldra: bool = "Shelldra" in self._all_names
 
     # ---------- setup ----------
     def _trainer(self, side: int, team: dict) -> Trainer:
@@ -320,17 +326,19 @@ class Battle:
 
     def speeds_changed(self) -> None:
         """Call after anything that can change a cooldown speed: a speed buff, a knockout."""
-        self._speeds = None
+        for side in (0, 1):
+            for u in self.teams[side]:
+                if u is not None:
+                    u._speed_cached = -1.0
 
     def speed(self, u: Unit) -> float:
         """speed_of(u), cached until speeds_changed() is called, and capped so the effective
         cooldown never drops below SETTINGS["min_cooldown"]."""
-        if self._speeds is None:
-            self._speeds = {}
-        v = self._speeds.get(id(u))
-        if v is None:
-            v = self._speeds[id(u)] = self.speed_of(u)
-        return min(v, u.cooldown / SETTINGS["min_cooldown"])
+        v = u._speed_cached
+        if v < 0.0:
+            v = min(self.speed_of(u), u.cooldown / SETTINGS["min_cooldown"])
+            u._speed_cached = v
+        return v
 
     def allies(self, u: Unit) -> list[Unit]:
         return [v for v in self.teams[u.side] if v and v is not u]
@@ -367,7 +375,9 @@ class Battle:
         return 1.0 + bonus / 100.0
 
     def damage_of(self, u: Unit) -> float:
-        return max(0.0, self._raw_damage_of(u) - self._t0_dmg.get(id(u), 0.0))
+        if u.t0_dmg:
+            return max(0.0, self._raw_damage_of(u) - u.t0_dmg)
+        return self._raw_damage_of(u)
 
     def _raw_damage_of(self, u: Unit) -> float:
         dmg = u.stats["damage"]
@@ -395,7 +405,9 @@ class Battle:
             self._dmg_visiting.discard(id(u))
 
     def heal_of(self, u: Unit) -> float:
-        return max(0.0, self._raw_heal_of(u) - self._t0_heal.get(id(u), 0.0))
+        if u.t0_heal:
+            return max(0.0, self._raw_heal_of(u) - u.t0_heal)
+        return self._raw_heal_of(u)
 
     def _raw_heal_of(self, u: Unit) -> float:
         heal = u.stats["heal"]
@@ -416,7 +428,9 @@ class Battle:
         return shld
 
     def burn_of(self, u: Unit) -> float:
-        return max(0.0, self._raw_burn_of(u) - self._t0_burn.get(id(u), 0.0))
+        if u.t0_burn:
+            return max(0.0, self._raw_burn_of(u) - u.t0_burn)
+        return self._raw_burn_of(u)
 
     def _raw_burn_of(self, u: Unit) -> float:
         burn = u.stats["burn"]
@@ -430,7 +444,9 @@ class Battle:
         return burn
 
     def shock_of(self, u: Unit) -> float:
-        return max(0.0, self._raw_shock_of(u) - self._t0_shock.get(id(u), 0.0))
+        if u.t0_shock:
+            return max(0.0, self._raw_shock_of(u) - u.t0_shock)
+        return self._raw_shock_of(u)
 
     def _raw_shock_of(self, u: Unit) -> float:
         shock = u.stats["shock"]
@@ -440,7 +456,9 @@ class Battle:
         return shock
 
     def multicast_of(self, u: Unit) -> int:
-        return max(1, self._raw_multicast_of(u) - self._t0_mc.get(id(u), 0))
+        if u.t0_mc:
+            return max(1, self._raw_multicast_of(u) - u.t0_mc)
+        return self._raw_multicast_of(u)
 
     def _raw_multicast_of(self, u: Unit) -> int:
         mc = u.multicast + u.extra_multicast
@@ -491,9 +509,10 @@ class Battle:
     def gain_shield(self, tr: Trainer, amount: float) -> None:
         amount *= tr.shield_mult
         tr.shield += amount
-        for v in self.teams[tr.side]:
-            if v and v.is_("Stalagrove") and v.active_passive() and v.param:
-                v.stats["damage"] += v.param / 100.0 * amount
+        if "Stalagrove" in self._side_names[tr.side]:
+            for v in self.teams[tr.side]:
+                if v and v.is_("Stalagrove") and v.active_passive() and v.param:
+                    v.stats["damage"] += v.param / 100.0 * amount
 
     def knockout(self, u: Unit) -> None:
         if not u.alive:
@@ -507,15 +526,20 @@ class Battle:
         self.speeds_changed()
         if u.is_("Emburn") and not u.disabled and u.param:
             u.stats["burn"] += u.param
-        for v in self.allies(u):
-            if v.is_("Danuki") and not u.is_("Danuki") and v.active_passive():
-                v.stats["damage"] += ((v.param or 85.0) / 100.0) * u.stats["damage"]
-            if v.is_("Emburn") and v.active_passive() and v.param:
-                v.stats["burn"] += v.param
-        for side in (0, 1):
-            for v in self.teams[side]:
-                if v and v is not u and v.is_("Cawnushi") and v.active_passive() and v.param:
-                    v.stats["damage"] += v.param
+        side_names = self._side_names[u.side]
+        if "Danuki" in side_names or "Emburn" in side_names:
+            for v in self.allies(u):
+                if v.is_("Danuki") and not u.is_("Danuki") and v.active_passive():
+                    v.stats["damage"] += ((v.param or 85.0) / 100.0) * u.stats["damage"]
+                if v.is_("Emburn") and v.active_passive() and v.param:
+                    v.stats["burn"] += v.param
+        if "Cawnushi" in self._all_names:
+            for side in (0, 1):
+                if "Cawnushi" not in self._side_names[side]:
+                    continue
+                for v in self.teams[side]:
+                    if v and v is not u and v.is_("Cawnushi") and v.active_passive() and v.param:
+                        v.stats["damage"] += v.param
         self.say(f"{u.name} (side {u.side}) is knocked out")
 
     def charge(self, u: Unit, seconds: float) -> None:
@@ -580,13 +604,14 @@ class Battle:
             u.stats["damage"] += 10 * me.metronome
         if u.active_passive():
             self.on_cast(u)
+        side_names = self._side_names[u.side]
         # Puffloon: trigger when adjacent Toxic allies trigger.
-        if "Toxic" in u.types and not u.is_("Puffloon"):
+        if "Puffloon" in side_names and "Toxic" in u.types and not u.is_("Puffloon"):
             for v in self.adjacent(u):
                 if v.is_("Puffloon") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
         # Drumire: give casting Toxic ally Cooldown Speed for this battle.
-        if "Toxic" in u.types and u.alive:
+        if "Drumire" in side_names and "Toxic" in u.types and u.alive:
             gained_spd = False
             for v in self.allies(u):
                 if v.is_("Drumire") and v.active_passive() and v.param:
@@ -595,30 +620,34 @@ class Battle:
             if gained_spd:
                 self.speeds_changed()
         # Snapscald: trigger when an ally of level 3 or above casts.
-        if u.level >= 3 and not u.is_("Snapscald"):
+        if "Snapscald" in side_names and u.level >= 3 and not u.is_("Snapscald"):
             for v in self.allies(u):
                 if v.is_("Snapscald") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
         # Rhizuka: trigger when an ally applies Shield.
-        if applied_shield and not u.is_("Rhizuka"):
+        if "Rhizuka" in side_names and applied_shield and not u.is_("Rhizuka"):
             for v in self.allies(u):
                 if v.is_("Rhizuka") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
 
     def on_ally_inflicts(self, u: Unit, kind: str) -> None:
-        if kind == "burn":
+        side_names = self._side_names[u.side]
+        if kind == "burn" and "Oniclaw" in side_names:
             for v in self.living(u.side):
                 if v.is_("Oniclaw") and v.active_passive() and v.param:
                     v.stats["damage"] += v.base_damage * (v.param / 100.0)
-        for v in self.allies(u):
-            if not v.active_passive():
-                continue
-            if kind == "poison" and v.is_("Thorntail") and v.param:
-                v.stats["damage"] += v.param
-            if kind == "poison" and v.is_("Cobrex") and v.param:
-                self.charge(v, v.param)
-            if kind == "shock" and v.is_("Clawnetic") and v.param:
-                self.charge(v, v.param)
+        if kind == "poison" and ("Thorntail" in side_names or "Cobrex" in side_names):
+            for v in self.allies(u):
+                if not v.active_passive():
+                    continue
+                if v.is_("Thorntail") and v.param:
+                    v.stats["damage"] += v.param
+                if v.is_("Cobrex") and v.param:
+                    self.charge(v, v.param)
+        elif kind == "shock" and "Clawnetic" in side_names:
+            for v in self.allies(u):
+                if v.active_passive() and v.is_("Clawnetic") and v.param:
+                    self.charge(v, v.param)
 
     def on_cast(self, u: Unit) -> None:
         p = u.param or 0
@@ -879,11 +908,11 @@ class Battle:
             for u in self.teams[side]:
                 if not u:
                     continue
-                self._t0_dmg[id(u)] = self._raw_damage_of(u) - u.stats["damage"]
-                self._t0_heal[id(u)] = self._raw_heal_of(u) - u.stats["heal"]
-                self._t0_burn[id(u)] = self._raw_burn_of(u) - u.stats["burn"]
-                self._t0_shock[id(u)] = self._raw_shock_of(u) - u.stats["shock"]
-                self._t0_mc[id(u)] = self._raw_multicast_of(u) - max(u.multicast + u.extra_multicast, 1)
+                u.t0_dmg = self._raw_damage_of(u) - u.stats["damage"]
+                u.t0_heal = self._raw_heal_of(u) - u.stats["heal"]
+                u.t0_burn = self._raw_burn_of(u) - u.stats["burn"]
+                u.t0_shock = self._raw_shock_of(u) - u.stats["shock"]
+                u.t0_mc = self._raw_multicast_of(u) - max(u.multicast + u.extra_multicast, 1)
         for side in self.order():
             repeats = 1 + ("Repeater Charm" in self.trainers[side].trinkets) + self.coffee[side]
             for _ in range(repeats):
@@ -914,7 +943,7 @@ class Battle:
                 for u in standing[side]:
                     v = spd[id(u)] = self.speed(u)
                     times.append(self.t + max(0.0, u.cooldown - u.progress) / v)
-                    if u.is_("Shelldra") and u.active_passive():
+                    if self._has_shelldra and u.is_("Shelldra") and u.active_passive():
                         times.append(u.shelldra_next)
             t_next = min(times)
             if t_next > limit + EPS:
@@ -947,11 +976,12 @@ class Battle:
                 tr.shock_pending = 0.0
             if not self.immortal and any(self.dead()):
                 return self._result()
-            for side in (0, 1):
-                for u in self.living(side):
-                    if u.is_("Shelldra") and u.active_passive() and u.shelldra_next <= self.t + EPS:
-                        u.extra_multicast += int(u.param or 0)
-                        u.shelldra_next += 4.0
+            if self._has_shelldra:
+                for side in (0, 1):
+                    for u in self.living(side):
+                        if u.is_("Shelldra") and u.active_passive() and u.shelldra_next <= self.t + EPS:
+                            u.extra_multicast += int(u.param or 0)
+                            u.shelldra_next += 4.0
             if abs(self.t - self.next_burn) < 1e-7:
                 for tr in (self.trainers[i] for i in self.order()):
                     if tr.burn > 0:
