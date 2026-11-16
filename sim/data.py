@@ -60,6 +60,7 @@ PASSIVE_PATTERNS: dict[str, list[str]] = {
     "Cawnushi": [r"\+(\d+) Damage"],
     "Cobrex": [r"by (\d+) second"],
     "Emburn": [r"\+(\d+) Burn"],
+    "Omnichrome": [r"(\d+)%"],
     "Draconarch": [r"by (\d+)", r"\+(\d+) per cast"],
     "Gaiadrasil": [r"(\d+)%"],
     "Galvanine": [r"\+(\d+) Shock"],
