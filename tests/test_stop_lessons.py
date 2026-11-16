@@ -309,5 +309,57 @@ class TeachStatBadges(unittest.TestCase):
         self.assertNotIn("badge_shop4", [i.key for i in stop_lessons.items_for(CAPTURE)])
 
 
+class TeachEventAndTrinket(unittest.TestCase):
+    """Event effect lines and trinket card names can be taught and replayed."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        tmp = Path(self.tmp.name)
+        self.glyph_file = tmp / "glyphs.json"
+        raw = json.loads(glyphs.TEMPLATE_FILE.read_text(encoding="utf-8"))
+        raw["event"] = [e for e in raw["event"] if e["label"] not in set("DragoE")]
+        raw["caps"] = [e for e in raw["caps"] if e["label"] not in set("FIREB")]
+        self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
+        self.user_lessons = tmp / "user_lessons.json"
+        for target, name, value in ((glyphs, "TEMPLATE_FILE", self.glyph_file),
+                                    (stop_lessons, "USER_LESSONS", self.user_lessons)):
+            p = mock.patch.object(target, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+        reader.reload_templates()
+        self.addCleanup(reader.reload_templates)
+
+    def test_event_line_is_offered_taught_and_replayed(self):
+        ev = ROOT / "captures" / "event_dragon_hoard.png"
+        self.assertIn("event0", [i.key for i in stop_lessons.items_for(ev)])
+        r = stop_lessons.apply(ev, {"event0": "Gain Dragon Egg"})
+        self.assertTrue(r.ok, r.message)
+        self.assertNotIn("event0", [i.key for i in stop_lessons.items_for(ev)])
+        raw = json.loads(self.glyph_file.read_text(encoding="utf-8"))
+        raw["event"] = [e for e in raw["event"] if e["label"] not in set("DragoE")]
+        self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
+        reader.reload_templates()
+        self.assertIn("event0", [i.key for i in stop_lessons.items_for(ev)])
+        with mock.patch("builtins.print"):
+            teach.main(lessons=stop_lessons.load_user_lessons())
+        self.assertNotIn("event0", [i.key for i in stop_lessons.items_for(ev)])
+
+    def test_trinket_name_is_offered_taught_and_replayed(self):
+        tr = ROOT / "captures" / "trinket_pick.png"
+        self.assertIn("trinket0", [i.key for i in stop_lessons.items_for(tr)])
+        r = stop_lessons.apply(tr, {"trinket0": "Fire Bell"})
+        self.assertTrue(r.ok, r.message)
+        self.assertNotIn("trinket0", [i.key for i in stop_lessons.items_for(tr)])
+        raw = json.loads(self.glyph_file.read_text(encoding="utf-8"))
+        raw["caps"] = [e for e in raw["caps"] if e["label"] not in set("FIREB")]
+        self.glyph_file.write_text(json.dumps(raw), encoding="utf-8")
+        reader.reload_templates()
+        self.assertIn("trinket0", [i.key for i in stop_lessons.items_for(tr)])
+        with mock.patch("builtins.print"):
+            teach.main(lessons=stop_lessons.load_user_lessons())
+        self.assertNotIn("trinket0", [i.key for i in stop_lessons.items_for(tr)])
+
+
 if __name__ == "__main__":
     unittest.main()
