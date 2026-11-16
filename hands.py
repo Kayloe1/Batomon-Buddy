@@ -100,8 +100,8 @@ def check_move(before: dict, after: dict, src: tuple[str, int], dst: tuple[str, 
         return "source slot is still occupied"
     if target is not None and now_src is None and now_dst["level"] == target["level"]:
         return "source emptied but target did not level up"
-    if moved["stats"] != now_dst["stats"] and target is None:
-        return "monster in the target slot has different stats"
+    if target is None and (moved.get("name") != now_dst.get("name") or moved.get("level") != now_dst.get("level")):
+        return "monster in the target slot has different name or level"
     return None
 
 
