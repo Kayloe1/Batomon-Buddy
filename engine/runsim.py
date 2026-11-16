@@ -9,8 +9,10 @@ more HP), 10 badges to win. Each battle is against one opponent drawn from a
 SEPARATE pool (different seed) from the one the engine plans with, so the engine
 is not graded on the opponents it practised against.
 
-Not modelled: trainers' abilities, events, shop items, and the trinket effects the
-simulator does not know. Both policies get the same shops (same seed per run), so
+Trainers and gift trinkets are picked as in live play (engine/choices.py: three trainers offered
+on day 1, three trinkets per gift, the trinket's badge bonuses applied to the monsters owned);
+`--random-choices` restores the old behaviour (no trainer, a random trinket, no badge bonuses).
+Not modelled: trainers' shop abilities, events, and the trinket effects the simulator does not know. Both policies get the same shops (same seed per run), so
 the comparison is fair even though the absolute numbers are only as good as the
 simulator and the opponent pool.
 """
@@ -88,10 +90,31 @@ def pick_gift(s: RunState, rarity: str, rng: random.Random) -> str | None:
     return rng.choice(opts) if opts else None
 
 
+def trainer_names() -> list[str]:
+    import csv
+    with open(data.DATA / "trainers.csv", encoding="utf-8") as f:
+        return [r["name"] for r in csv.DictReader(f)]
+
+
+def choose_gift(planner: Planner, s: RunState, rarity: str, rng: random.Random) -> str | None:
+    """Three trinkets of the gift's rarity offered, picked as in live play; the badges of the monsters
+    owned then show the trinket's bonuses, as they do on screen."""
+    from .choices import pick_trinket, with_trinket_stats
+    opts = sorted(n for n, t in data.trinkets().items() if t["rarity"] == rarity)
+    if not opts:
+        return None
+    offered = rng.sample(opts, min(3, len(opts)))
+    name = offered[pick_trinket(planner, s, offered)[0]]
+    s.team = with_trinket_stats(s.team, name, s.trinkets)
+    s.bench = with_trinket_stats(s.bench, name, s.trinkets)
+    return name
+
+
 def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int = 24,
-             verbose: bool = False, field: str = "ghosts") -> dict:
+             verbose: bool = False, field: str = "ghosts", live_choices: bool = True) -> dict:
     rng = random.Random(seed)          # shops and gifts: identical for both policies
     shop_rng = random.Random(seed * 7 + 1)
+    choice_rng = random.Random(seed * 13 + 5)     # trainer and trinket offers (own stream: shops unchanged)
     # ghosts only in both pools: the recorded real teams would sit at the front of both, and the
     # engine would be graded on the opponents it planned against
     if field == "gold":                     # the Gold-rank opponents the bot met (engine/practice.py)
@@ -104,6 +127,11 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
         planner = Planner(Evaluator(opponents.pools(n=pool_n, seed=1, recorded=False)), params or Params(),
                           seed=seed)
     s = RunState(day=1, money=0, rank=1)
+    live_choices = live_choices and planner is not None
+    if live_choices:
+        from .choices import pick_trainer
+        offered = choice_rng.sample(trainer_names(), 3)
+        s.trainer = offered[pick_trainer(offered)[0]]
     history = []
     log: list[str] = []
     locked_shop = None
@@ -121,7 +149,9 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
             s = simple_policy_turn(s, shop_rng)
         locked_shop = list(s.shop) if s.locked else None
         for r in s.gifts:
-            t = pick_gift(s, r, rng)
+            t = pick_gift(s, r, rng)           # always drawn, so later opponent draws stay the same
+            if live_choices:
+                t = choose_gift(planner, s, r, choice_rng)
             if t:
                 s.trinkets.append(t)
         s.gifts = []
@@ -143,23 +173,26 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
             team = [f"{u.name}{u.level}" if u else "-" for u in s.team]
             print(f"day {day}: {'W' if won else 'L'} lives {s.lives} badges {s.badges} ${s.money} {team}")
         if s.badges >= data.BADGES_TO_WIN:
-            return {"seed": seed, "won": True, "badges": s.badges, "day": day, "arc": "".join(history)}
+            return {"seed": seed, "won": True, "badges": s.badges, "day": day, "arc": "".join(history),
+                    "trainer": s.trainer}
         if s.lives <= 0:
             if s.rescue_used:
-                return {"seed": seed, "won": False, "badges": s.badges, "day": day, "arc": "".join(history)}
+                return {"seed": seed, "won": False, "badges": s.badges, "day": day, "arc": "".join(history),
+                        "trainer": s.trainer}
             s.rescue_used = True
             s.lives = 1
-    return {"seed": seed, "won": False, "badges": s.badges, "day": MAX_DAYS, "arc": "".join(history)}
+    return {"seed": seed, "won": False, "badges": s.badges, "day": MAX_DAYS, "arc": "".join(history),
+            "trainer": s.trainer}
 
 
 def _job(args):
-    seed, policy, params, field = args
-    return play_run(seed, policy, Params(**params) if params else None, field=field)
+    seed, policy, params, field, live_choices = args
+    return play_run(seed, policy, Params(**params) if params else None, field=field, live_choices=live_choices)
 
 
 def run_many(policy: str, seeds: list[int], params: Params | None = None, workers: int = DEFAULT_WORKERS,
-             field: str = "ghosts") -> list[dict]:
-    jobs = [(s, policy, asdict(params) if params else None, field) for s in seeds]
+             field: str = "ghosts", live_choices: bool = True) -> list[dict]:
+    jobs = [(s, policy, asdict(params) if params else None, field, live_choices) for s in seeds]
     if policy == "engine":
         opponents.pools(n=24, seed=1, recorded=False)
     if field == "gold":
@@ -190,16 +223,19 @@ def main() -> int:
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--field", choices=["ghosts", "gold"], default="ghosts",
                     help="who the runs fight: the ghosts (default) or the Gold-rank practice field")
+    ap.add_argument("--random-choices", action="store_true",
+                    help="old behaviour: no trainer, random gift trinkets without badge bonuses")
     ap.add_argument("--params", default="", help='JSON of Params overrides, e.g. {"w_next": 0.3}')
     args = ap.parse_args()
     params = Params(**json.loads(args.params)) if args.params else None
     t = time.time()
     if args.verbose:
-        r = play_run(args.first_seed, args.policy, params, verbose=True, field=args.field)
+        r = play_run(args.first_seed, args.policy, params, verbose=True, field=args.field,
+                     live_choices=not args.random_choices)
         print(r)
         return 0
     res = run_many(args.policy, list(range(args.first_seed, args.first_seed + args.runs)), params, args.workers,
-                   field=args.field)
+                   field=args.field, live_choices=not args.random_choices)
     for r in res:
         print(r)
     print(json.dumps(summary(res)), f"({time.time() - t:.0f} s)")

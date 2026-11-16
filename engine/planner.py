@@ -63,6 +63,9 @@ class Params:
     screen: int = 2            # cards tried per greedy step (best by a quick estimate)
     final_rounds: int = 3
     margin_weight: float = 0.3   # how much "closer battles" count next to battles won
+    merge_odds: bool = False     # merge progress from the exact chance of finding the missing copies in the
+                                 # cards the money can still see (singles count too), instead of the flat
+                                 # "32 cards ahead" pair bonus (experiment, 2026-11-16)
     grow_next: bool = False      # score tomorrow with the permanent growth one battle gives (Thorntail,
                                  # Noxalith->Fumungus...). Off: 8 offline runs each, seeds 2000+, gave
                                  # 25% won / 5.88 badges with it and 37.5% / 6.12 without (2026-11-12)
@@ -173,6 +176,62 @@ class Planner:
         p_card = (odds[r] / 100.0) / n
         return 1.0 - (1.0 - p_card) ** self.CARDS_AHEAD
 
+    def cards_ahead(self, s: RunState) -> int:
+        """Monster cards the run will still see before tomorrow's battle: today's and tomorrow's shops, with
+        rerolls paid from a quarter of each day's income (the rest buys the copies that turn up and the team).
+
+        Deliberately not from the money in hand: then every sale raised the chance of every merge, and
+        selling looked like progress (2026-11-16 test: twice the Lv1 sales and fewer merges)."""
+        price = max(1, s.reroll_price or data.REROLL_PRICE)
+        left = max(0, self.p.max_rerolls - s.rerolls)
+        today = min(left, data.income(s.day) // (4 * price))
+        tomorrow = 1 + min(self.p.max_rerolls, data.income(s.day + 1) // (4 * price))
+        return data.SHOP_MONSTERS * (today + tomorrow)
+
+    def copies_chance(self, s: RunState, name: str, need: int, cards: int) -> float:
+        """Chance that at least `need` more copies of `name` show up among `cards` monster cards
+        (binomial on the shop odds: one card is this species with p = rarity share / species of that rarity)."""
+        sp = data.species(name)
+        if sp is None or sp.foreign or need <= 0:
+            return 0.0 if need > 0 else 1.0
+        odds = s.odds or data.rank_odds(s.rank)
+        r = data.RARITIES.index(sp.rarity)
+        p = (odds[r] / 100.0) / max(1, len(data.by_rarity(sp.rarity)))
+        if p <= 0:
+            return 0.0
+        below = sum(math.comb(cards, k) * p ** k * (1 - p) ** (cards - k) for k in range(min(need, cards + 1)))
+        return max(0.0, 1.0 - below)
+
+    def merge_progress(self, s: RunState, team: list[Unit | None] | None) -> float:
+        """Value of the merges the monsters owned are working toward: for each species, the next merge
+        (Lv1 copies to a Lv2, or a Lv2 with Lv1 copies to a Lv3) x the chance that the missing copies
+        show up in the cards still to come. Only merges whose result would play count."""
+        fielded = [u for u in (team or []) if u is not None]
+        weakest = min((power(u) for u in fielded), default=0.0) if len(fielded) >= 6 else 0.0
+        c1: dict[str, int] = {}
+        c2: dict[str, int] = {}
+        for _, _, u in s.owned():
+            if u.name and u.level == 1:
+                c1[u.name] = c1.get(u.name, 0) + 1
+            elif u.name and u.level == 2:
+                c2[u.name] = c2.get(u.name, 0) + 1
+        cards = self.cards_ahead(s)
+        v = 0.0
+        for name in set(c1) | set(c2):
+            sp = data.species(name)
+            if sp is None or sp.foreign or knowledge.is_egg(name):
+                continue
+            a, b = c1.get(name, 0), c2.get(name, 0)
+            if b >= 1 and data.MAX_READABLE_LEVEL >= 3:
+                # a Lv3 needs a second Lv2: three Lv1 copies, minus those already owned
+                need, level = max(0, 3 - a), 3
+            else:
+                need, level = 3 - a, 2
+            if power(model.new_unit(name, 0, level)) <= weakest:
+                continue
+            v += self.merge_value(sp.rarity) * self.copies_chance(s, name, need, cards)
+        return v
+
     def merge_value(self, rarity: str) -> float:
         """What finishing a merge of this rarity is worth (its gift and the level-up), before chance."""
         r = data.RARITIES.index(rarity) if rarity in data.RARITIES else 0
@@ -200,6 +259,8 @@ class Planner:
             if u.level == 2 and u.name:
                 lv2[u.name] = lv2.get(u.name, 0) + 1
         on_team = {u.name for u in fielded if u.name}
+        if self.p.merge_odds:
+            return v + self.merge_progress(s, team)
         use_syn = bool(self.p.synergy_weight and s.day >= 8)
         if use_syn and len(on_team) >= 2:
             v += self.p.synergy_weight * data.team_synergy(on_team)
