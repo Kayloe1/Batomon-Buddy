@@ -66,6 +66,11 @@ class Params:
     merge_odds: bool = False     # merge progress from the exact chance of finding the missing copies in the
                                  # cards the money can still see (singles count too), instead of the flat
                                  # "32 cards ahead" pair bonus (experiment, 2026-11-16)
+    keep_merges: bool = False    # never reroll away a card that completes a merge now (practice runs 2026-11-16:
+                                 # 27 of 138 affordable merge-finishing copies were rerolled away)
+    merge_sim: bool = False      # a pair (or Lv2 + two Lv1) is worth what the finished merge does for THIS team
+                                 # in the simulator, x the chance of the last copy (carry check 2026-11-16:
+                                 # merging beat replacing on 33 of 33 Gold boards, +0.11 win chance)
     gift_sim: bool = False       # a merge's trinket gift is worth what the trinkets of that rarity add to THIS
                                  # team in the simulator (best of 3 offered), not a flat 0.025-0.09
     gift_sample: int = 6         # trinkets of a rarity simulated for that estimate
@@ -124,6 +129,7 @@ class Planner:
         self._arranged: dict[tuple, tuple[list, list]] = {}
         self._grown: dict[tuple, list] = {}
         self._gift_cache: dict[tuple, float] = {}
+        self._merge_cache: dict[tuple, float] = {}
         self._gift_now: dict[str, float] = {}
 
     # ------------------------------------------------------------ scoring ----
@@ -261,6 +267,37 @@ class Planner:
         self._gift_cache[key] = hit
         return hit
 
+    def merge_gain(self, s: RunState, team: list[Unit | None], name: str, level: int) -> float:
+        """What finishing the next merge of `name` (its copy at `level` levelled up) adds to this team's score:
+        the fielded copy levelled up in place, or a bench copy levelled up into the weakest team slot."""
+        key = (team_key(team), name, level, s.day, tuple(s.trinkets), s.trainer, s.rescue_used)
+        hit = self._merge_cache.get(key)
+        if hit is not None:
+            return hit
+        from .events import _level_up
+        base = self.team_score(s, team, self.p.k_quick)
+        best = 0.0
+        on = [i for i, u in enumerate(team) if u is not None and u.name == name and u.level == level]
+        if on:
+            up = _level_up(team[on[0]])
+            if up is not None:
+                t = list(team)
+                t[on[0]] = up
+                best = self.team_score(s, t, self.p.k_quick) - base
+        else:
+            src = next((u for _, _, u in s.owned() if u.name == name and u.level == level), None)
+            up = _level_up(src) if src is not None else None
+            fielded = [i for i, u in enumerate(team) if u is not None]
+            if up is not None and not bench_only(up):
+                slots = [i for i, u in enumerate(team) if u is None] or                         sorted(fielded, key=lambda i: power(team[i]))[:2]
+                for i in slots:
+                    t = list(team)
+                    t[i] = up
+                    best = max(best, self.team_score(s, t, self.p.k_quick) - base)
+        best = max(0.0, best)
+        self._merge_cache[key] = best
+        return best
+
     def merge_value(self, rarity: str) -> float:
         """What finishing a merge of this rarity is worth (its gift and the level-up), before chance."""
         if self.p.gift_sim and rarity in self._gift_now:
@@ -292,6 +329,21 @@ class Planner:
         on_team = {u.name for u in fielded if u.name}
         if self.p.merge_odds:
             return v + self.merge_progress(s, team)
+        if self.p.merge_sim and team is not None:
+            for name in set(counts) | set(lv2):
+                sp = data.species(name)
+                if sp is None or sp.foreign or knowledge.is_egg(name):
+                    continue
+                c1, c2 = counts.get(name, 0), lv2.get(name, 0)
+                gift = GIFT_VALUE.get(sp.rarity, 0.03)
+                p = self.third_copy_chance(s, name)
+                if c1 >= 2:
+                    # one copy from a Lv2 (and, with a Lv2 already owned, from the Lv3 it then makes)
+                    lvl = 2 if c2 >= 1 and data.MAX_READABLE_LEVEL >= 3 else 1
+                    v += p * (self.merge_gain(s, team, name, lvl) + gift * (2 if lvl == 2 else 1))
+                elif c1 == 1 and c2 >= 1 and data.MAX_READABLE_LEVEL >= 3:
+                    v += p * p * (self.merge_gain(s, team, name, 2) + 2 * gift)   # two copies from the Lv3
+            return v
         use_syn = bool(self.p.synergy_weight and s.day >= 8)
         if use_syn and len(on_team) >= 2:
             v += self.p.synergy_weight * data.team_synergy(on_team)
@@ -588,6 +640,7 @@ class Planner:
         best_label, best_actions, best_v, best_imm = "end turn", [], base, base
         best_after: tuple[RunState, list, list] | None = None
         considered = []
+        best_merge = None                 # the best candidate that finishes a merge right away
         win_now = self.win_today(s, team) if any(team) else 0.0
         for label, actions, states in self._candidates(s):
             total = 0.0
@@ -602,6 +655,8 @@ class Planner:
             v = total / len(states)
             v_imm_avg = total_imm / len(states)
             considered.append((label, v - base))
+            if len(states) == 1 and len(states[0].gifts) > len(s.gifts) and (best_merge is None or v > best_merge[2]):
+                best_merge = (label, actions, v)
             if v > best_v + self.p.min_gain or (
                 abs(v - best_v) <= 1e-6 and best_actions and v_imm_avg > best_imm + 1e-6
             ):
@@ -619,6 +674,11 @@ class Planner:
                     and (rv_after := self._reroll_value(*best_after)) is not None
                     and rv_after >= rv - 1e-6
                 )
+                if self.p.keep_merges and best_merge is not None and best_merge[2] > base:
+                    # a merge in hand beats a shop that might hold something better: rerolling it away
+                    # trades a certain Lv2 and trinket gift for a sampled guess
+                    keep_merge = True
+                    best_label, best_actions, best_v = best_merge
                 if not keep_merge:
                     best_label, best_actions, best_v = "reroll", [Action("reroll")], rv
         if best_actions:
