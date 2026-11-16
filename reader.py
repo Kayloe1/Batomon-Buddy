@@ -674,6 +674,27 @@ def read_run_over(pic: np.ndarray) -> dict:
     return {"badges": gold, "problems": []}
 
 
+def read_rank_result(pic: np.ndarray) -> dict:
+    """Stars (0-5), Rank Up! flag, and division digit on the post-run Ranked card."""
+    stars = 0
+    for i in range(5):
+        x0 = 1015 + i * 114
+        sub = pic[875:945, x0:x0 + 100]
+        if ((sub[..., 2] > 180) & (sub[..., 0] < 200)).sum() > 500:
+            stars += 1
+    ru = pic[380:445, 1220:1520]
+    rank_up = bool(((ru[..., 0] > 200) & (ru[..., 1] > 180) & (ru[..., 2] < 100)).sum() > 100)
+    # White rank label sits on a white card with a dark outline; flood-fill from the
+    # border to isolate the enclosed letter interiors, then read the trailing division digit.
+    band = pic[700:785, 1100:1480]
+    ff = (band.min(axis=2) > 200).astype(np.uint8)
+    mask_ff = np.zeros((ff.shape[0] + 2, ff.shape[1] + 2), np.uint8)
+    cv2.floodFill(ff, mask_ff, (0, 0), 2)
+    gl = glyphs.segment(ff == 1)
+    division = _to_int(store().classify("chunky", gl[-1].bitmap)[0]) if gl else None
+    return {"stars": stars, "rank_up": rank_up, "division": division, "problems": []}
+
+
 def detect_screen(pic: np.ndarray) -> str:
     if pic.max() < 40:
         return "blank"                    # fade between screens
@@ -1835,11 +1856,12 @@ def read_state(image: Image.Image) -> dict:
     state: dict = {"screen": detect_screen(pic)}
     if state["screen"] == "shop":
         state.update(read_shop(pic))
-    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm",
-                             "rank_result"):
+    elif state["screen"] in ("result", "stats", "matchmaking", "blank", "battle", "main_menu", "main_menu_continue", "cash_in", "title", "take_one_confirm"):
         # recognised. The battle field is read with read_battle() only on request: it takes
         # a few seconds, too slow for every frame while waiting.
         state["problems"] = []            # recognised; nothing on them is read yet
+    elif state["screen"] == "rank_result":
+        state.update(read_rank_result(pic))
     elif state["screen"] == "run_over":
         state.update(read_run_over(pic))
     elif state["screen"] == "continue_confirm":

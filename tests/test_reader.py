@@ -488,3 +488,45 @@ class GreyedShinyCard(unittest.TestCase):
                 self.assertEqual(st["shop"][1]["name"], "Formiqueen")
                 self.assertEqual(st["shop"][1]["price"], 25)
                 self.assertTrue(st["shop"][1]["greyed"])
+
+
+class RankResult(unittest.TestCase):
+    """Post-run Ranked card: stars, Rank Up! flag, and division digit."""
+
+    def test_synthetic_rank_result_reads_stars_and_rank_up(self):
+        import numpy as np
+        pic = np.zeros((window.CANON_H, window.CANON_W, 3), np.uint8)
+        for x, y, col in reader.SCREENS["rank_result"]:
+            pic[y - 2:y + 3, x - 2:x + 3] = col
+        # Light up 3 stars and add yellow Rank Up! pixels
+        for i in range(3):
+            x0 = 1015 + i * 114
+            pic[890:920, x0 + 20:x0 + 50] = (150, 220, 255)
+        pic[395:420, 1300:1320] = (255, 220, 40)
+        st = reader.read_state(Image.fromarray(pic))
+        self.assertEqual(st["screen"], "rank_result")
+        self.assertEqual(st["stars"], 3)
+        self.assertTrue(st["rank_up"])
+        self.assertIsNone(st["division"])
+        self.assertEqual(st["problems"], [])
+
+    def test_saved_rank_captures_read_cleanly(self):
+        cases = [
+            ("rank_20261115_214832.png", 2, True, 6),
+            ("rank_20261115_021138.png", 4, False, 1),
+        ]
+        ran = False
+        for fn, stars, rank_up, div in cases:
+            p = CAPTURES / fn
+            if not p.exists():
+                continue
+            ran = True
+            with self.subTest(capture=fn):
+                st = reader.read_state(Image.open(p))
+                self.assertEqual(st["screen"], "rank_result")
+                self.assertEqual(st["stars"], stars)
+                self.assertEqual(st["rank_up"], rank_up)
+                self.assertEqual(st["division"], div)
+                self.assertEqual(st["problems"], [])
+        if not ran:
+            self.skipTest("no rank_20261115_*.png captures here")
