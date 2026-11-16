@@ -530,3 +530,22 @@ class RankResult(unittest.TestCase):
                 self.assertEqual(st["problems"], [])
         if not ran:
             self.skipTest("no rank_20261115_*.png captures here")
+
+
+class InfoPanelName(unittest.TestCase):
+    """2026-11-15: '?ORMI?UEEN'.title() became '?Ormi?Ueen' and failed case-sensitive resolve()."""
+
+    def test_resolve_ignore_case_handles_midword_question_mark(self):
+        self.assertEqual(reader.resolve("?ORMI?UEEN", reader.MONSTER_NAMES, ignore_case=True), "Formiqueen")
+
+    def test_unread_info_panel_213652_reads_formiqueen(self):
+        p = CAPTURES / "info_panels" / "unread_20261115_213652.png"
+        if not p.exists():
+            self.skipTest("captures/info_panels/unread_20261115_213652.png not here")
+        import numpy as np
+        pic = np.asarray(window.canonical_picture(Image.open(p)))
+        panel = reader.read_info_panel(pic)
+        self.assertIsNotNone(panel)
+        self.assertEqual(panel["name"], "Formiqueen")
+        self.assertEqual(panel["rarity"], "Rare")
+        self.assertEqual(panel["cooldown"], 4.0)

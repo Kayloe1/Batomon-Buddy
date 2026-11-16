@@ -761,7 +761,7 @@ def read_info_panel(pic: np.ndarray) -> dict | None:
     raw["name"] = s.read("caps", glyphs.white(crop(pic, INFO_NAME)), space_gap=7).strip()
     raw["rarity"] = s.read("caps", glyphs.white(crop(pic, INFO_RARITY)), space_gap=7).strip()
     raw["type"] = s.read("caps", glyphs.white(crop(pic, INFO_TYPE)), space_gap=7).strip()
-    name = resolve(raw["name"].title(), MONSTER_NAMES) or (raw["name"].title() if "?" not in raw["name"] else None)
+    name = resolve(raw["name"], MONSTER_NAMES, ignore_case=True) or (raw["name"].title() if "?" not in raw["name"] else None)
     rarity = next((r for r in RARITIES if r.upper() == raw["rarity"]), None)
     mtype = _match_masked(raw["type"], TYPE_NAMES)
     # cooldown: digits plus a small dot glyph
