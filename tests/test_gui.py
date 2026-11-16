@@ -923,6 +923,46 @@ class WindowTests(Quiet):
         release3.set()
         self.pump(lambda: app.mode == "idle", what="second endless session stop")
 
+    def test_teach_dialog_renders_and_wraps_long_item(self):
+        from types import SimpleNamespace
+        from PIL import Image
+        import stop_lessons
+
+        item = SimpleNamespace(
+            key="event0", label="Event choice 1",
+            picture=Image.new("RGB", (60, 20), (30, 30, 30)),
+            guess="Gain +20 Damage on your entire team",
+            example="All allies gain +20 Damage and +10 Health",
+        )
+        cap = Path(self.tmp.name) / "captures" / "unread_ev.png"
+        cap.write_bytes(b"png")
+        with mock.patch.object(stop_lessons, "items_for", return_value=[item]), \
+             mock.patch.object(stop_lessons, "unteachable", return_value=[]):
+            dlg = gui.TeachDialog(self.root, cap)
+            try:
+                self.assertIn("event0", dlg.entries)
+            finally:
+                dlg.top.destroy()
+
+    def test_batch_runs_zero_endless_and_negative_validation(self):
+        import batch
+        with mock.patch("sys.stderr", io.StringIO()):
+            self.assertEqual(batch.main(["--runs", "-1"]), 2)
+
+        calls = []
+
+        def fake_play(argv):
+            calls.append(argv)
+            if len(calls) >= 2:
+                raise KeyboardInterrupt()
+            return 0
+
+        with mock.patch.object(batch, "LOG_DIR", self.logs), \
+             mock.patch.object(batch.play, "main", side_effect=fake_play):
+            self.assertEqual(batch.main(["--runs", "0", "--ranked"]), 1)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0], ["--new-run", "--ranked"])
+
 
 if __name__ == "__main__":
     unittest.main()

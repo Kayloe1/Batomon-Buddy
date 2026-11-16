@@ -507,13 +507,13 @@ class TeachDialog:
             img = tk.PhotoImage(data=base64.b64encode(buf.getvalue()))
             self.pictures.append(img)
             tk.Label(self.top, image=img, bg="#222").grid(row=row + 1, column=0, columnspan=2, sticky="w", **pad)
-            ttk.Label(self.top, text=f"The bot reads: {item.guess or '(nothing)'}").grid(
-                row=row + 2, column=0, sticky="w", **pad)
+            ttk.Label(self.top, text=f"The bot reads: {item.guess or '(nothing)'}",
+                      wraplength=260, justify="left").grid(row=row + 2, column=0, sticky="w", **pad)
             var = tk.StringVar()
             self.entries[item.key] = var
             ttk.Entry(self.top, textvariable=var, width=36).grid(row=row + 2, column=1, sticky="w", **pad)
-            ttk.Label(self.top, text=f"It says (like: {item.example})", foreground="#666").grid(
-                row=row + 3, column=1, sticky="w", padx="8p")
+            ttk.Label(self.top, text=f"It says (like: {item.example})", foreground="#666",
+                      wraplength=300, justify="left").grid(row=row + 3, column=1, sticky="w", padx="8p")
             row += 4
         if rest:
             ttk.Label(self.top, wraplength=520, justify="left", foreground="#a00",
