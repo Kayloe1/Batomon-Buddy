@@ -59,13 +59,20 @@ for _i in range(reader.TEAM_COLS * reader.TEAM_ROWS):
 for _i in range(reader.BENCH_SLOTS):
     _x0, _y0, _, _ = reader.bench_slot(_i)
     _BOXES[f"level_bench{_i}"] = (f"Bench slot {_i + 1} level", (_x0, _y0, _x0 + 110, _y0 + 40), "4")
+for _i in range(reader.SHOP_SLOTS):
+    _BOXES[f"badge_shop{_i}"] = (f"Shop card {_i + 1} stat badges", reader.badge_band(f"badge_shop{_i}"), "24 x3")
+for _i in range(reader.TEAM_COLS * reader.TEAM_ROWS):
+    _BOXES[f"badge_team{_i}"] = (f"Team slot {_i + 1} stat badges", reader.badge_band(f"badge_team{_i}"), "24 x3")
+for _i in range(reader.BENCH_SLOTS):
+    _BOXES[f"badge_bench{_i}"] = (f"Bench slot {_i + 1} stat badges", reader.badge_band(f"badge_bench{_i}"), "24 x3")
 
 # A problem line from the reader -> the region it is about.
 _PROBLEM = re.compile(
     r"^(?:(?P<shop>shop) (?P<i>\d): (?:unknown name|cannot read price|cannot split name and price|no text found)"
     r"|(?P<key>lives|day|badges|trainer|money|hp|reroll): (?:cannot read|unknown name)"
     r"|(?P<rank>rank bar): cannot read"
-    r"|(?P<slot>team|bench) (?P<si>\d+): cannot read level)")
+    r"|(?P<slot>team|bench) (?P<si>\d+): cannot read level"
+    r"|(?P<bwhere>shop|team|bench) (?P<bi>\d+): cannot read a stat badge)")
 
 
 @dataclass
@@ -90,6 +97,8 @@ def _picture_of(image: Image.Image) -> np.ndarray:
 
 
 def _guess(pic: np.ndarray, key: str) -> str:
+    if key.startswith("badge_"):
+        return " ".join(b["raw"] for b in reader.read_stat_badges(pic, _BOXES[key][1]))
     font, mask, opts = reader.text_masks(pic)[key]
     if key.startswith("shop"):
         parts = reader._split_name_price(mask)
@@ -112,7 +121,8 @@ def items_for(capture: Path | str) -> list[Item]:
         if not m:
             continue
         key = (f"shop{m['i']}" if m["shop"] else "rank_bar" if m["rank"]
-               else f"level_{m['slot']}{m['si']}" if m["slot"] else m["key"])
+               else f"level_{m['slot']}{m['si']}" if m["slot"]
+               else f"badge_{m['bwhere']}{m['bi']}" if m["bwhere"] else m["key"])
         if key not in keys:
             keys.append(key)
     out = []
@@ -167,11 +177,18 @@ def _truth(key: str, typed: str) -> str:
         if not m:
             raise ValueError("type the level number (a single digit, like 4)")
         return m[1]
+    if key.startswith("badge_"):
+        s = re.sub(r"[\s,|]+", "", typed).lower()
+        if not re.fullmatch(r"[0-9x]+", s):
+            raise ValueError("type the stat badge numbers left to right, like  24 x3")
+        return s
     return typed.replace(" ", "")
 
 
 def _reads_as(pic: np.ndarray, key: str, truth: str) -> bool:
     """Does the region, read with the glyphs now known, say `truth`?"""
+    if key.startswith("badge_"):
+        return "".join(b["raw"] for b in reader.read_stat_badges(pic, _BOXES[key][1])) == truth
     font, mask, opts = reader.text_masks(pic)[key]
     st = reader.store()
     if "|" in truth:
@@ -238,6 +255,13 @@ def apply(capture: Path | str, answers: dict[str, str], override: bool = False) 
     try:
         masks = reader.text_masks(pic)
         for key, truth in truths.items():
+            if key.startswith("badge_"):
+                bitmaps = reader.badge_digit_glyphs(pic, _BOXES[key][1])
+                if len(bitmaps) != len(truth):
+                    raise ValueError(f"{_BOXES[key][0]}: {len(bitmaps)} marks in the picture, {len(truth)} characters typed")
+                for bm, ch in zip(bitmaps, truth):
+                    store.add("badge", ch, bm)
+                continue
             font, mask, _ = masks[key]
             if "|" in truth:
                 name, price = truth.split("|")

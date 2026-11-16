@@ -284,6 +284,9 @@ def main(lessons: list | None = None, rebuild: bool = False) -> None:
         pic = np.asarray(window.canonical_picture(Image.open(ROOT / lesson["file"])))
         masks = reader.text_masks(pic)
         for key, truth in lesson.get("text", {}).items():
+            if key.startswith("badge_"):
+                _teach_digits(store, "badge", reader.badge_digit_glyphs(pic, reader.badge_band(key)), truth, key)
+                continue
             font, mask, _ = masks[key]
             if "|" in truth:
                 name, price = truth.split("|")

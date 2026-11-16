@@ -985,6 +985,17 @@ def badge_digit_glyphs(pic: np.ndarray, band: Box) -> list[np.ndarray]:
     return [g.bitmap for g in glyphs.segment_blobs(glyphs.white(region, 235) & inside)]
 
 
+def badge_band(key: str) -> Box | None:
+    """Badge band box for a stop_lessons key ('badge_shop0', 'badge_team2', 'badge_bench1')."""
+    if key.startswith("badge_shop"):
+        return _card_badges(int(key[len("badge_shop"):]))
+    if key.startswith("badge_team"):
+        return owned_badge_band(team_slot(int(key[len("badge_team"):])))
+    if key.startswith("badge_bench"):
+        return owned_badge_band(bench_slot(int(key[len("badge_bench"):])))
+    return None
+
+
 # --------------------------------------------------------------- sprites ----
 
 _sprites: list[tuple[str, np.ndarray]] | None = None
