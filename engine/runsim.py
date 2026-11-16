@@ -60,8 +60,19 @@ def simple_policy_turn(s: RunState, rng: random.Random) -> RunState:
         s = model.buy(s, -ni)
 
 
-def engine_turn(s: RunState, planner: Planner, rng: random.Random, log: list | None = None) -> RunState:
+def engine_turn(s: RunState, planner: Planner, rng: random.Random, log: list | None = None,
+                key: str | None = None) -> RunState:
+    """One shop turn. With `key`, every reroll and item draws from its own stream (key, what, count), so
+    two policies that differ in one decision still see the same later shops (paired comparisons)."""
+    items = 0
+
+    def stream(what: str, n: int) -> random.Random:
+        return random.Random(f"{key}-{what}-{n}") if key is not None else rng
     for _ in range(90):
+        if key is not None:
+            # the planner's own sampling (reroll look-ahead) depends only on the state, not on the history
+            import hashlib
+            planner.rng.seed(hashlib.md5(f"{key}-{s.rerolls}-{s.money}-{s.team}-{s.bench}-{s.shop}".encode()).hexdigest())
         plan = planner.decide(s)
         a = plan.actions[0]
         if log is not None and a.kind not in ("move", "battle", "lock"):
@@ -69,11 +80,12 @@ def engine_turn(s: RunState, planner: Planner, rng: random.Random, log: list | N
         if a.kind == "buy":
             s = model.buy(s, a.index)
         elif a.kind == "item":
-            s = model.use_item(s, a.index, rng)
+            s = model.use_item(s, a.index, stream("item", items))
+            items += 1
         elif a.kind == "sell":
             s = model.sell(s, *a.src)
         elif a.kind == "reroll":
-            s = model.reroll(s, rng)
+            s = model.reroll(s, stream("reroll", s.rerolls))
         else:
             team, bench = planner.final_layout(s)
             s.team, s.bench = list(team), list(bench)
@@ -112,9 +124,12 @@ def choose_gift(planner: Planner, s: RunState, rarity: str, rng: random.Random) 
 
 def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int = 24,
              verbose: bool = False, field: str = "ghosts", live_choices: bool = True) -> dict:
-    rng = random.Random(seed)          # shops and gifts: identical for both policies
-    shop_rng = random.Random(seed * 7 + 1)
-    choice_rng = random.Random(seed * 13 + 5)     # trainer and trinket offers (own stream: shops unchanged)
+    # Every random draw has its own stream keyed by (seed, day, what, count): two policies that differ in
+    # one decision still get the same later shops, rerolls, gifts and opponents, so runs stay paired and
+    # small differences between policies can be measured (2026-11-16: with shared streams, one different
+    # merge reshuffled every later shop and opponent, and 96 runs could not see half a badge).
+    def stream(*what) -> random.Random:
+        return random.Random("-".join(map(str, (seed,) + what)))
     # ghosts only in both pools: the recorded real teams would sit at the front of both, and the
     # engine would be graded on the opponents it planned against
     if field == "gold":                     # the Gold-rank opponents the bot met (engine/practice.py)
@@ -130,7 +145,7 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
     live_choices = live_choices and planner is not None
     if live_choices:
         from .choices import pick_trainer
-        offered = choice_rng.sample(trainer_names(), 3)
+        offered = stream("trainer").sample(trainer_names(), 3)
         s.trainer = offered[pick_trainer(offered)[0]]
     history = []
     log: list[str] = []
@@ -141,20 +156,22 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
         s.items_left = 1
         s.bought, s.rerolls = [], 0
         s.gifts = []
-        s.shop = locked_shop if locked_shop else model.random_shop(s.rank, shop_rng)
+        s.shop = locked_shop if locked_shop else model.random_shop(s.rank, stream(day, "shop"))
         s.locked = False
         if policy == "engine":
-            s = engine_turn(s, planner, shop_rng, log if verbose else None)
+            s = engine_turn(s, planner, stream(day, "turn"), log if verbose else None, key=f"{seed}-{day}")
         else:
-            s = simple_policy_turn(s, shop_rng)
+            s = simple_policy_turn(s, stream(day, "turn"))
         locked_shop = list(s.shop) if s.locked else None
-        for r in s.gifts:
-            t = pick_gift(s, r, rng)           # always drawn, so later opponent draws stay the same
+        for j, r in enumerate(s.gifts):
             if live_choices:
-                t = choose_gift(planner, s, r, choice_rng)
+                t = choose_gift(planner, s, r, stream(day, "gift", j))
+            else:
+                t = pick_gift(s, r, stream(day, "gift", j))
             if t:
                 s.trinkets.append(t)
         s.gifts = []
+        rng = stream(day, "battle")
         opp = rng.choice(fight_pools[min(day, max(fight_pools))])
         hp = data.hp_for_day(day) * (1.25 if s.rescue_used else 1)
         mine = team_spec(s.team, int(hp), s.trainer, s.trinkets)
