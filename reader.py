@@ -811,7 +811,12 @@ def card_text_mask(rgb: np.ndarray) -> np.ndarray:
         return glyphs.white(rgb)
     # same share of the anti-aliased edge as the white rule keeps (215/255)
     v = rgb.astype(int)
-    soft_grey = (v.min(axis=2) >= 153) & (v.max(axis=2) - v.min(axis=2) <= 12)
+    neutral = (v.max(axis=2) - v.min(axis=2)) <= 12
+    # a shiny card's glimmer sweeps across a greyed card at ~172 grey;
+    # keep anti-aliased edges (153+) only within 1px of a real 182-grey letter core
+    core_grey = (v.min(axis=2) >= 178) & neutral
+    near_core = cv2.dilate(core_grey.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+    soft_grey = (v.min(axis=2) >= 153) & neutral & near_core
     soft_red = (v[..., 0] >= 215) & (v[..., 1] <= 120) & (v[..., 2] <= 150)
     soft_red[:6] = False              # lower edge of a red or orange stat badge
     mask = soft_grey | soft_red

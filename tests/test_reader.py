@@ -457,3 +457,34 @@ class JintoSprites(unittest.TestCase):
             slot = np.full((200, 260, 3), 255, np.uint8)
             slot[36:140, 40:200] = bobbed
             self.assertEqual(reader.species_of(reader.match_sprite(slot)[0]), name)
+
+
+class GreyedShinyCard(unittest.TestCase):
+    """2026-11-15: a greyed-out card's shiny glimmer (~172 grey) merged with the red price."""
+
+    def test_greyed_glimmer_is_excluded_from_card_text_mask(self):
+        import numpy as np
+        rgb = np.full((52, 284, 3), 53, np.uint8)
+        rgb[15:40, 10:40] = reader.CARD_GREY          # >= 300px grey name
+        rgb[15:40, 220:250] = reader.CARD_RED         # red price
+        rgb[:, 170:215] = 172                         # ~172 shiny glimmer band
+        mask = reader.card_text_mask(rgb)
+        self.assertTrue(mask[20:35, 15:35].all())
+        self.assertTrue(mask[20:35, 225:245].all())
+        self.assertFalse(mask[:, 175:210].any())
+
+    def test_greyed_shiny_shop_captures_read_cleanly(self):
+        for fn in (
+            "unread_20261115_212255_505412.png",
+            "unread_20261115_212301_606343.png",
+            "unread_20261115_212414_940869.png",
+        ):
+            p = CAPTURES / fn
+            if not p.exists():
+                self.skipTest(f"captures/{fn} not here")
+            with self.subTest(capture=fn):
+                st = reader.read_state(Image.open(p))
+                self.assertEqual(st["problems"], [])
+                self.assertEqual(st["shop"][1]["name"], "Formiqueen")
+                self.assertEqual(st["shop"][1]["price"], 25)
+                self.assertTrue(st["shop"][1]["greyed"])
