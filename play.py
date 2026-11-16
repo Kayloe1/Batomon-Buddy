@@ -502,12 +502,22 @@ def _play(argv, control: Control, hands, brain) -> int:
             if not r.ok:
                 return stop(f"after the title screen: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
         elif screen == "rank_result":
-            # Ranked, end of the run: the rank card (kept as a picture; the rank is not read yet)
+            # Ranked, end of the run: the rank card (stars, Rank Up!, and division from reader.read_rank_result)
             pic_name = f"rank_{datetime.now():%Y%m%d_%H%M%S}.png"
             h.last_image.save(hands_mod.CAPTURE_DIR / pic_name)
+            stars, rank_up, division = state.get("stars"), state.get("rank_up"), state.get("division")
             r = h.confirm_rank()
-            think([f"Ranked: the rank card showed at the end of the run (saved as {pic_name}). I press Confirm. ({r.message})"])
-            log("rank_result", capture=pic_name, ok=r.ok, message=r.message)
+            parts = []
+            if division is not None:
+                parts.append(f"Div {division}")
+            if stars is not None:
+                parts.append(f"{stars}/5 stars")
+            if rank_up:
+                parts.append("Rank Up!")
+            info = f" ({', '.join(parts)})" if parts else ""
+            think([f"Ranked: the rank card showed{info} (saved as {pic_name}). I press Confirm. ({r.message})"])
+            log("rank_result", capture=pic_name, stars=stars, rank_up=rank_up, division=division,
+                ok=r.ok, message=r.message)
             played = True
             if not r.ok:
                 return stop(f"after Confirm on the rank card: {r.message} (capture: {(r.after or {}).get('saved_capture')})", r.after)
