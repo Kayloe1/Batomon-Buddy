@@ -73,6 +73,23 @@ class Brain:
         if day is not None and state.get("lives") is not None:
             self.memory["last_day"], self.memory["last_lives"] = day, state["lives"]
             self.memory["last_badges"] = state.get("badges")
+        if state.get("team") is not None or state.get("bench") is not None:
+            paid = self.memory.setdefault("paid", {})
+            need: dict[str, int] = {}
+            for slot in (state.get("team") or []) + (state.get("bench") or []):
+                if slot and slot.get("name"):
+                    lv = slot.get("level") or 1
+                    need[slot["name"]] = need.get(slot["name"], 0) + data.COPIES_FOR_LEVEL.get(lv, 1)
+            for name in list(paid):
+                if name not in need:
+                    del paid[name]
+                elif len(paid[name]) > need[name]:
+                    paid[name] = paid[name][-need[name]:]
+            if not new_run and day == 1 or self.memory.get("turn_day") is not None:
+                for name, cnt in need.items():
+                     prices = paid.setdefault(name, [])
+                     while len(prices) < cnt:
+                         prices.append(0)
         self.save()
         return new_run
 
@@ -88,6 +105,8 @@ class Brain:
             card = (state.get("shop") or [None] * 5)[index]
             if card and card.get("kind") == "monster" and card.get("name"):
                 self.memory["bought"].append(card["name"])
+                if card.get("price") is not None:
+                    self.memory.setdefault("paid", {}).setdefault(card["name"], []).append(int(card["price"]))
         elif kind == "reroll":
             self.memory["rerolls"] = self.memory.get("rerolls", 0) + 1
         self.save()

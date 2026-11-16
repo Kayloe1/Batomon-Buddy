@@ -13,6 +13,7 @@ templates/glyphs.json.bak
 
 # Run and action logs written by play.py
 logs/
+data/ghost_pools_cache.json
 
 # Temporary and editor files
 *.tmp

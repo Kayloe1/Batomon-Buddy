@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import random
 from pathlib import Path
 
@@ -306,7 +307,7 @@ _CACHE: dict[tuple, dict] = {}
 
 def pools(n: int = 48, seed: int = 1, recorded: bool = True) -> dict[int, list[dict]]:
     """Ghost teams per day, with the recorded real teams mixed in (recorded=False: ghosts only)."""
-    key = (n, seed, recorded)
+    key = (n, seed, recorded, POWER_RAMP)
     if key not in _CACHE:
         _CACHE[key] = build_pools(n=n, seed=seed, recorded=recorded)
     return _CACHE[key]

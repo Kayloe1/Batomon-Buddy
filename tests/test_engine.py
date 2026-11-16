@@ -522,15 +522,27 @@ class WastefulPlay(unittest.TestCase):
         from engine.bot import Brain
         b = Brain(Params(), pool_size=4)
         b.memory = {"trinkets": []}
-        st = {"day": 3, "shop": [{"name": "Velocect", "kind": "monster", "price": 15}] + [None] * 4}
+        st = {"day": 3, "shop": [{"name": "Velocect", "kind": "monster", "price": 5}] + [None] * 4}
         b.note_action("buy", st, 0)
         b.note_action("reroll", st)
         self.assertEqual((b.memory["bought"], b.memory["rerolls"]), (["Velocect"], 1))
-        s = model.from_reader({**st, "team": [None] * 6, "bench": [None] * 4, "money": 5, "shop_rank": 3},
+        s = model.from_reader({**st, "team": [{"name": "Velocect", "level": 1, "stats": []}] + [None] * 5,
+                               "bench": [None] * 4, "money": 5, "shop_rank": 3},
                               b.memory)
         self.assertEqual((s.bought, s.rerolls), (["Velocect"], 1))
+        self.assertEqual((s.team[0].paid, s.team[0].sell_price()), (5, 3))
         s2 = model.from_reader({**st, "day": 4, "team": [None] * 6, "bench": [None] * 4, "money": 5}, b.memory)
         self.assertEqual((s2.bought, s2.rerolls), ([], 0))
+        # A monster that appeared without a buy (e.g. Summon Potion or event) is recorded at $0 paid
+        b.observe_shop({"day": 4, "lives": 8, "badges": 2,
+                        "team": [{"name": "Velocect", "level": 1, "stats": []},
+                                 {"name": "Panbud", "level": 2, "stats": []}] + [None] * 4,
+                        "bench": [None] * 4})
+        s3 = b.run_state({"day": 4, "team": [{"name": "Velocect", "level": 1, "stats": []},
+                                             {"name": "Panbud", "level": 2, "stats": []}] + [None] * 4,
+                          "bench": [None] * 4})
+        self.assertEqual((s3.team[0].paid, s3.team[0].sell_price()), (5, 3))
+        self.assertEqual((s3.team[1].paid, s3.team[1].sell_price()), (0, 0))
 
 
 class TrinketStatsOnBadges(unittest.TestCase):

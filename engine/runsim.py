@@ -42,6 +42,9 @@ def default_workers() -> int:
     return max(1, (os.cpu_count() or 4) - 2)
 
 
+DEFAULT_WORKERS = default_workers()
+
+
 def simple_policy_turn(s: RunState, rng: random.Random) -> RunState:
     """play.py's old rules: buy the dearest affordable monster while a team slot is empty."""
     while True:
@@ -91,10 +94,11 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
     shop_rng = random.Random(seed * 7 + 1)
     # ghosts only in both pools: the recorded real teams would sit at the front of both, and the
     # engine would be graded on the opponents it planned against
-    fight_pools = opponents.pools(n=48, seed=9001, recorded=False)        # who we really meet
     if field == "gold":                     # the Gold-rank opponents the bot met (engine/practice.py)
         from . import practice
         fight_pools = practice.gold_pools()
+    else:
+        fight_pools = opponents.pools(n=48, seed=9001, recorded=False)        # who we really meet
     planner = None
     if policy == "engine":
         planner = Planner(Evaluator(opponents.pools(n=pool_n, seed=1, recorded=False)), params or Params(),
@@ -153,9 +157,16 @@ def _job(args):
     return play_run(seed, policy, Params(**params) if params else None, field=field)
 
 
-def run_many(policy: str, seeds: list[int], params: Params | None = None, workers: int = 4,
+def run_many(policy: str, seeds: list[int], params: Params | None = None, workers: int = DEFAULT_WORKERS,
              field: str = "ghosts") -> list[dict]:
     jobs = [(s, policy, asdict(params) if params else None, field) for s in seeds]
+    if policy == "engine":
+        opponents.pools(n=24, seed=1, recorded=False)
+    if field == "gold":
+        from . import practice
+        practice.gold_pools()
+    else:
+        opponents.pools(n=48, seed=9001, recorded=False)
     if workers <= 1:
         return [_job(j) for j in jobs]
     with ProcessPoolExecutor(workers) as ex:

@@ -62,9 +62,16 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   with the unseen strength estimated from each real battle (`engine/practice.py`, `data/practice_gold.jsonl`).
   The unchanged bot averages about 6-7 badges there, like the real Gold runs, so it can judge fixes offline.
 - Tried against it (24 runs each, seeds 3100-3123): unchanged 7 won / 6.3 badges; `POWER_RAMP` 0.45 (expect
-  stronger opponents) 7 / 6.0; `copy_progress` 0.10 (value pairs more) 6 / 6.1. Neither kept.
-- Next idea: a shopping change that commits to finishing merges (keep pairs, hunt the third copy) and test it
-  on the practice field.
+  stronger opponents) 7 / 6.0; `copy_progress` 0.10 (value pairs more) 6 / 6.1; holding single Lv1 bench
+  monsters + Lv2 bonus 2 / 4.79; keeping all pairs unconditionally + Lv2 bonus 5 / 5.67; extra mid-game
+  ramp (`MID_RAMP` 0.25) 2 / 5.38 (pushing ghosts past the 50/50 mark makes single shop buys look flat).
+  Original shopping and ramp settings kept.
+- **Kept improvements (2026-11-15):**
+  - Ghost pools are cached on disk (`data/ghost_pools_cache.json`) and `runsim.py` / `train/learn.py` use all
+    available CPU cores (`cpu_count - 2`), cutting 24-run practice tests from ~25 minutes to ~6.5 minutes.
+  - `Brain` (`engine/bot.py`, `engine/model.py`) now records the exact prices paid for monsters during a run
+    (including `$0` for free monsters from potions or events and discounted prices from Coupon / Bug Catcher),
+    so the planner no longer overestimates what selling a free or discounted monster will refund.
 
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
