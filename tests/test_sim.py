@@ -534,3 +534,18 @@ class MechanicsAndMythicals(unittest.TestCase):
         r = simulate(team([mon("Panbud", 1), mon("Talonite", 1)], trinkets=["Candy Jar"]), EMPTY, until=0.1)
         self.assertEqual(r.units[0][0]["level"], 3)
         self.assertEqual(r.units[0][1]["level"], 1)   # Rare is unchanged
+
+    def test_scrap_sword_fancy_sword_and_tengusto(self):
+        # Scrap Sword (+2 per Common trinket: Gold Nugget x2 = +4) and Fancy Sword (+3% per trinket: 4 -> x1.12).
+        r = simulate(team([mon("Panbud", 1)], trinkets=["Scrap Sword", "Gold Nugget", "Gold Nugget"]),
+                     EMPTY, until=0.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 29)
+        r = simulate(team([mon("Brawlmantis", 1)], trinkets=["Fancy Sword", "Gold Nugget", "Warhorn"]),
+                     EMPTY, until=0.1)
+        # Brawlmantis 50 * 1.09 = 54.5, then Warhorn +10 = 64.5 -> 64
+        self.assertEqual(round(r.units[0][0]["stats"]["damage"]), 64)
+        # Tengusto: +60 Damage per Badge (50 base + 3 * 60 = 230, x2 Multicast = 460).
+        t = team([mon("Tengusto", 1)])
+        t["badges"] = 3
+        r = simulate(t, EMPTY, until=4.6)
+        self.assertEqual(r.units[0][0]["dealt"], 460)

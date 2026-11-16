@@ -61,6 +61,7 @@ PASSIVE_PATTERNS: dict[str, list[str]] = {
     "Cobrex": [r"by (\d+) second"],
     "Emburn": [r"\+(\d+) Burn"],
     "Omnichrome": [r"(\d+)%"],
+    "Tengusto": [r"\+(\d+) Damage"],
     "Draconarch": [r"by (\d+)", r"\+(\d+) per cast"],
     "Gaiadrasil": [r"(\d+)%"],
     "Galvanine": [r"\+(\d+) Shock"],
@@ -240,3 +241,13 @@ def species(name: str) -> Species:
 
 def canonical_name(name: str) -> str:
     return EVOLVED_NAMES.get(name, name)
+
+
+@lru_cache(maxsize=1)
+def trinket_rarities() -> dict[str, str]:
+    """Map trinket name -> rarity from data/trinkets.csv."""
+    p = DATA / "trinkets.csv"
+    if not p.exists():
+        return {}
+    with open(p, newline="", encoding="utf-8") as f:
+        return {r["name"]: r["rarity"] for r in csv.DictReader(f) if r.get("name")}

@@ -126,6 +126,6 @@ RULES = [
 NOT_SIMULATED = [
     "Shop-phase effects (Guardiant, Cinderfly and Shogapede growth, Brawlmantis/Ninflora/Kickrane On Victory, Gildshell, Berroon, Plunderbird $, Craghorn items) - they change the badges the reader sees or economy, not the battle.",
     "Shiny variants beyond explicit rules (SHINY_BATTLE_START, SHINY_PARAM_MULT, SHINY_COOLDOWN_MULT, Shiny Celestia, Shiny Shrinell).",
-    "Trinkets: Fancy Sword, Scrap Sword, Zenith Stone, Magic Lasso, and Holy Grail/Mystic Incense/Rainbow Pearl/Ultra Duplicator non-battle effects.",
+    "Trinkets: Zenith Stone, Magic Lasso, and Holy Grail/Mystic Incense/Rainbow Pearl/Ultra Duplicator non-battle effects.",
     "Complex shop-transform/summon passives (Aerophim, Riglet/Rigalord, Omnichrome, Cosmivore, Goldora, Gachapod, Sarudo, Ignit evolution) and non-combat event monsters.",
 ]
