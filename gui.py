@@ -98,6 +98,7 @@ class Session(play.Control):
         self._cond = threading.Condition()
         self._pause = False
         self._stop = False
+        self._stop_after_run = False
         self._run_num = 0
         self._run_saw_day_limit = False
         self._run_saw_stop_logged = False
@@ -120,6 +121,10 @@ class Session(play.Control):
     @property
     def stop_asked(self) -> bool:
         return self._stop
+
+    @property
+    def stop_after_run_asked(self) -> bool:
+        return self._stop_after_run
 
     def pause_point(self) -> bool:
         with self._cond:
@@ -150,12 +155,14 @@ class Session(play.Control):
                 self._run_saw_day_limit = False
                 self._run_saw_stop_logged = False
                 code = self._runner(run_argv, control=self, hands=self._hands, brain=self._brain)
-                if code != 0 or self._stop or self._run_saw_day_limit:
+                if code != 0 or self._stop or self._run_saw_day_limit or self._stop_after_run:
                     break
             if self._stop and not self._run_saw_stop_logged:
                 self.event("log", record="stop", data={"why": STOPPED_HERE})
                 if code is None:
                     code = 0
+            elif self._stop_after_run and code == 0:
+                self.event("stopped_after_run", run=run_num)
         except BaseException as e:                      # shown in the window; the thread ends cleanly
             if type(e).__name__ == "FailSafeException":
                 text = ("Emergency stop: the mouse was pushed into a corner of the screen. "
@@ -185,6 +192,10 @@ class Session(play.Control):
         with self._cond:
             self._stop = True
             self._cond.notify_all()
+
+    def stop_after_run(self) -> None:
+        with self._cond:
+            self._stop_after_run = True
 
     @property
     def running(self) -> bool:
@@ -328,6 +339,8 @@ class Status:
                 self.ended = "The number of battles you set is played. Stopped before pressing BATTLE!."
             elif name == "stop" and rec.get("why") == STOPPED_HERE:
                 self.ended = "Stopped, as you asked."
+        elif kind == "stopped_after_run":
+            self.ended = f"Stopped after run {data.get('run')}, as you asked."
         elif kind == "finished":
             if data.get("code") == 0 and self.ended is None:
                 target = data.get("target_runs")
@@ -629,7 +642,9 @@ class App:
         self.start_button = ttk.Button(bar, text="Start", style="Go.TButton", command=self.start)
         self.pause_button = ttk.Button(bar, text="Pause", style="Go.TButton", command=self.pause_resume)
         self.stop_button = ttk.Button(bar, text="Stop", style="Go.TButton", command=self.stop)
-        for b in (self.start_button, self.pause_button, self.stop_button):
+        self.stop_after_run_button = ttk.Button(bar, text="Stop after run", style="Go.TButton",
+                                                 command=self.stop_after_run)
+        for b in (self.start_button, self.pause_button, self.stop_button, self.stop_after_run_button):
             b.pack(side="left", padx=(0, "6p"))
         self.scorecard_button = ttk.Button(bar, text="Scorecard", command=self.open_scorecard)
         self.scorecard_button.pack(side="right")
@@ -895,6 +910,12 @@ class App:
         self.session.stop()
         self._set_mode("stopping")
 
+    def stop_after_run(self) -> None:
+        if self.session is None or not self.session.running:
+            return
+        self.session.stop_after_run()
+        self._set_mode(self.mode)
+
     def close(self) -> None:
         """The window's X: the bot first finishes what it is doing, so no click or drag is cut in half."""
         if self.session is not None and self.session.running:
@@ -1016,6 +1037,8 @@ class App:
             if "window not found" in text:
                 text += ". Open the game first, then press Start."
             self._show_banner("error", "THE BOT STOPPED", text, None, None)
+        elif kind == "stopped_after_run":
+            self.ended = f"Stopped after run {data.get('run')}, as you asked."
         elif kind == "finished":
             self._set_mode("idle")
             if self.banner_kind is None:
@@ -1043,12 +1066,22 @@ class App:
     # -- showing --
     def _set_mode(self, mode: str) -> None:
         self.mode = mode
-        self.mode_text.set(MODES[mode])
+        pending_sar = (self.session is not None and self.session.stop_after_run_asked
+                       and mode in ("starting", "playing", "pausing", "paused"))
+        if mode == "playing" and pending_sar:
+            self.mode_text.set("Playing (will stop after this run).")
+        else:
+            self.mode_text.set(MODES[mode])
         running = mode != "idle"
+        active = mode in ("starting", "playing", "pausing", "paused")
+        multi = self.session is not None and (getattr(self.session, "runs", 1) == 0 or getattr(self.session, "runs", 1) > 1)
         self.start_button.configure(state="disabled" if running else "normal")
-        self.pause_button.configure(state="normal" if mode in ("starting", "playing", "pausing", "paused") else "disabled",
+        self.pause_button.configure(state="normal" if active else "disabled",
                                     text="Resume" if mode in ("pausing", "paused") else "Pause")
-        self.stop_button.configure(state="normal" if mode in ("starting", "playing", "pausing", "paused") else "disabled")
+        self.stop_button.configure(state="normal" if active else "disabled")
+        self.stop_after_run_button.configure(
+            state="normal" if (active and multi and not pending_sar) else "disabled",
+            text="Stopping after run..." if pending_sar else "Stop after run")
         for w in self.option_widgets:
             w.configure(state="disabled" if running else "normal")
 

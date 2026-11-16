@@ -408,6 +408,21 @@ class SessionTests(Quiet):
         self.assertEqual(events[-1][1]["runs_completed"], 2)
         self.assertTrue(any(k == "needs_you" for k, _ in events))
 
+    def test_stop_after_run_finishes_current_run_and_stops(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=5)
+        self.sessions.append(s)
+        entered, release = held_inside(game, "battle")
+        s.start()
+        self.assertTrue(entered.wait(10))
+        s.stop_after_run()
+        release.set()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 0)
+        self.assertEqual(events[-1][1]["runs_completed"], 1)
+        self.assertEqual(game.calls, ["buy", "battle", "confirm"])
+        self.assertIn(("stopped_after_run", {"run": 1}), events)
+
 
 class TerminalStillWorks(Quiet):
     """python play.py and batch.py: no Control is passed, and play.LAST_LOG names the log."""
@@ -837,6 +852,47 @@ class WindowTests(Quiet):
             self.assertFalse(app3.ranked.get())
         finally:
             app3.destroy()
+
+    def test_stop_after_run_button_behavior_and_reset(self):
+        app = self.app
+        self.game.days = 1
+        # disabled for single-run sessions
+        self.assertEqual(self.state(app.stop_after_run_button), "disabled")
+        entered1, release1 = held_inside(self.game, "battle")
+        app.start_button.invoke()
+        self.pump(entered1.is_set, what="single run battle")
+        self.assertEqual(self.state(app.stop_after_run_button), "disabled")
+        release1.set()
+        self.pump(lambda: app.mode == "idle", what="single run end")
+
+        # enabled for endless / multi-run sessions
+        app.runs.set("0")
+        self.game.start_run()
+        self.game.calls.clear()
+        entered2, release2 = held_inside(self.game, "battle")
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "playing" and entered2.is_set(), what="endless run 1 battle")
+        self.assertEqual(self.state(app.stop_after_run_button), "normal")
+        app.stop_after_run_button.invoke()
+        self.assertEqual(self.state(app.stop_after_run_button), "disabled")
+        self.assertEqual(str(app.stop_after_run_button.cget("text")), "Stopping after run...")
+        self.assertEqual(app.mode_text.get(), "Playing (will stop after this run).")
+        release2.set()
+        self.pump(lambda: app.mode == "idle", what="stop after run 1")
+        self.assertEqual(self.game.calls, ["buy", "battle", "confirm"])
+        self.assertEqual(app.banner_title.cget("text"), "Stopped after run 1, as you asked.")
+        self.assertEqual(str(app.stop_after_run_button.cget("text")), "Stop after run")
+
+        # starting a new endless session resets the button cleanly
+        self.game.start_run()
+        entered3, release3 = held_inside(self.game, "battle")
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "playing" and entered3.is_set(), what="second endless session")
+        self.assertEqual(self.state(app.stop_after_run_button), "normal")
+        self.assertEqual(str(app.stop_after_run_button.cget("text")), "Stop after run")
+        app.stop_button.invoke()
+        release3.set()
+        self.pump(lambda: app.mode == "idle", what="second endless session stop")
 
 
 if __name__ == "__main__":
