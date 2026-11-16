@@ -440,6 +440,35 @@ class TerminalStillWorks(Quiet):
         self.assertFalse(c.stop_asked)
         self.assertIsNone(c.event("state", state={}))
 
+    def test_play_logs_rank_result_fields(self):
+        game = FakeHands(days=1, full_team=True)
+        orig_look = game.look
+
+        def look_with_rank(save_if_unreadable=True):
+            st = orig_look(save_if_unreadable)
+            if st["screen"] == "rank_result":
+                st.update({"stars": 3, "rank_up": False, "division": 6})
+            return st
+
+        def confirm_result_to_rank():
+            game._did("confirm")
+            game.badges += 1
+            game.day += 1
+            game.screen = "rank_result"
+            return hands.Result(True, "now on 'rank_result'")
+
+        def confirm_rank():
+            game._did("confirm_rank")
+            game.screen = "run_over"
+            return hands.Result(True, "now on 'run_over'")
+
+        game.look = look_with_rank
+        game.confirm_result = confirm_result_to_rank
+        game.confirm_rank = confirm_rank
+        self.assertEqual(play.main(["--simple"], hands=game), 0)
+        rank_rec = next(r for r in self.log_records() if r["kind"] == "rank_result")
+        self.assertEqual((rank_rec["stars"], rank_rec["rank_up"], rank_rec["division"]), (3, False, 6))
+
 
 class StatusTests(unittest.TestCase):
     def test_team_shop_decision_and_results_are_kept_for_the_dashboard(self):

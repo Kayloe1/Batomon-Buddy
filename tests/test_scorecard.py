@@ -72,6 +72,28 @@ class Scorecard(unittest.TestCase):
         self.assertIn("<td>50%</td>", page)
         self.assertIn("<td>8.0</td>", page)
 
+    def test_rank_summary_and_ranked_column(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            r1 = write(d, "run_20261115_010000.jsonl", [
+                {"time": "2026-11-15T01:00:00", "kind": "new_run", "mode": "ranked", "ok": True},
+                {"kind": "trainer", "offered": ["Chef"], "picked": 0, "ok": True},
+                shop(1, 0), {"kind": "battle"},
+                {"kind": "rank_result", "stars": 4, "rank_up": True, "division": 5, "ok": True},
+                {"kind": "run_over", "badges": 10}])
+            r2 = write(d, "run_20261115_020000.jsonl", [
+                {"time": "2026-11-15T02:00:00", "kind": "new_run", "mode": "ranked", "ok": True},
+                {"kind": "trainer", "offered": ["Witch"], "picked": 0, "ok": True},
+                shop(1, 0, trainer="Witch"), {"kind": "battle"},
+                {"kind": "run_over", "badges": 5}])
+            rs = scorecard.rows([r1, r2])
+        self.assertEqual(rs[0]["rank"], "Div 5 4/5 Rank Up!")
+        self.assertIsNone(rs[1]["rank"])
+        page = scorecard.page(rs)
+        self.assertIn("<th>Rank</th>", page)
+        self.assertIn("<td>Div 5 4/5 Rank Up!</td>", page)
+        self.assertIn("<td>-</td>", page)
+
 
 if __name__ == "__main__":
     unittest.main()
