@@ -86,19 +86,33 @@ class Session(play.Control):
     The window's side: start(), pause(), resume(), stop(). Nothing in here touches Tk.
     """
 
-    def __init__(self, argv: list[str], hands=None, brain=None, runner=None) -> None:
+    def __init__(self, argv: list[str], hands=None, brain=None, runner=None, runs: int = 1) -> None:
         self.argv = list(argv)
+        self.runs = runs                                # 0 = endless, N > 0 = play N runs
         self.events: queue.Queue = queue.Queue()
         self._hands, self._brain = hands, brain         # only the tests pass these
         self._runner = runner or play.main
         self._cond = threading.Condition()
         self._pause = False
         self._stop = False
+        self._run_num = 0
+        self._run_saw_day_limit = False
+        self._run_saw_stop_logged = False
         self.thread: threading.Thread | None = None
 
     # -- the bot's side (called from the worker thread) --
     def event(self, kind: str, **data) -> None:
+        if kind == "log":
+            rec = data.get("record")
+            why = (data.get("data") or {}).get("why")
+            if rec == "stop":
+                if why == "day limit":
+                    self._run_saw_day_limit = True
+                elif why == STOPPED_HERE:
+                    self._run_saw_stop_logged = True
         self.events.put((kind, data))
+        if kind == "start":
+            self.events.put(("run_start", {"run": self._run_num, "total": self.runs}))
 
     @property
     def stop_asked(self) -> bool:
@@ -119,8 +133,26 @@ class Session(play.Control):
 
     def _work(self) -> None:
         code = None
+        run_num = 0
         try:
-            code = self._runner(self.argv, control=self, hands=self._hands, brain=self._brain)
+            while not self._stop and (self.runs == 0 or run_num < self.runs):
+                if run_num > 0 and self.pause_point() and self._stop:
+                    code = 0
+                    break
+                run_num += 1
+                self._run_num = run_num
+                run_argv = list(self.argv)
+                if run_num > 1 and "--new-run" not in run_argv:
+                    run_argv = ["--new-run", *run_argv]
+                self._run_saw_day_limit = False
+                self._run_saw_stop_logged = False
+                code = self._runner(run_argv, control=self, hands=self._hands, brain=self._brain)
+                if code != 0 or self._stop or self._run_saw_day_limit:
+                    break
+            if self._stop and not self._run_saw_stop_logged:
+                self.event("log", record="stop", data={"why": STOPPED_HERE})
+                if code is None:
+                    code = 0
         except BaseException as e:                      # shown in the window; the thread ends cleanly
             if type(e).__name__ == "FailSafeException":
                 text = ("Emergency stop: the mouse was pushed into a corner of the screen. "
@@ -130,7 +162,7 @@ class Session(play.Control):
                 text = str(e) if isinstance(e, RuntimeError) and str(e) else f"{type(e).__name__}: {e}"
             self.event("error", text=text)
         finally:
-            self.event("finished", code=code)
+            self.event("finished", code=code, runs_completed=run_num, target_runs=self.runs)
 
     # -- the window's side --
     def start(self) -> None:
@@ -229,10 +261,17 @@ class Status:
         self.trainer_hp: int | None = None
         self.why: str | None = None          # the bot's latest decision, in its own words (from the thinking lines)
         self.results: list[tuple[int, bool]] = []   # (day, won) for every day finished in this session
+        self.run_number: int | None = None
+        self.target_runs: int | None = None         # 0 = endless, N > 0 = target run count
         self.started = datetime.now()
 
     def apply(self, kind: str, data: dict) -> None:
-        if kind == "state":
+        if kind == "run_start":
+            self.run_number = data.get("run")
+            self.target_runs = data.get("total")
+            if self.run_number and self.run_number > 1:
+                self.win_now = None
+        elif kind == "state":
             s = data["state"]
             self.screen, self.doing = s.get("screen"), None
             if self.screen == "shop":
@@ -264,13 +303,27 @@ class Status:
             if name == "day_result":
                 self.results.append((rec.get("day"), (rec.get("badges") or 0) > 0))
             if name == "run_over":
-                self.ended = "The run is over."
+                if not self.target_runs or self.target_runs == 1:
+                    self.ended = "The run is over."
             elif name == "stop" and rec.get("why") == "day limit":
                 self.ended = "The number of battles you set is played. Stopped before pressing BATTLE!."
             elif name == "stop" and rec.get("why") == STOPPED_HERE:
                 self.ended = "Stopped, as you asked."
+        elif kind == "finished":
+            if data.get("code") == 0 and self.ended is None:
+                target = data.get("target_runs")
+                if target and target > 1 and data.get("runs_completed") == target:
+                    self.ended = f"All {target} runs finished."
 
     # -- texts --
+    def runs_line(self) -> str:
+        if self.run_number is None:
+            return "-"
+        if self.target_runs == 0:
+            return f"Run {self.run_number} (endless)"
+        if self.target_runs:
+            return f"Run {self.run_number} / {self.target_runs}"
+        return f"Run {self.run_number}"
     def run_line(self) -> str:
         def show(v, pre=""):
             return "-" if v is None else f"{pre}{v}"
@@ -561,7 +614,7 @@ class App:
         self.warning_label = tk.Label(body, textvariable=self.warning, fg=AMBER, bg=BG, font=self.f_bold,
                                       anchor="w", justify="left", wraplength=self.wrap)
         self.v = {name: tk.StringVar(value="-") for name in
-                  ("run", "trainer", "screen", "win", "action", "game", "day", "lives", "badges", "money",
+                  ("run", "runs", "trainer", "screen", "win", "action", "game", "day", "lives", "badges", "money",
                    "shop", "bench", "why", "tally", "team0", "team1", "team2", "team3", "team4", "team5")}
         self.value_labels = {}
 
@@ -607,7 +660,7 @@ class App:
                  wraplength=self.wrap * 6 // 10).pack(fill="x", padx=10, pady=(0, 8))
         info = self._card(mid, "The run")
         info.grid(row=0, column=1, sticky="nsew", padx=(3, 0))
-        for key, caption in (("trainer", "Trainer"), ("shop", "Shop tier"), ("screen", "Screen"),
+        for key, caption in (("runs", "Run"), ("trainer", "Trainer"), ("shop", "Shop tier"), ("screen", "Screen"),
                              ("tally", "This session")):
             tk.Label(info, text=caption, bg=CARD, fg=GREY, font=self.f_tiny, anchor="w").pack(fill="x", padx=10)
             lab = tk.Label(info, textvariable=self.v[key], bg=CARD, fg=INK, anchor="w", justify="left",
@@ -643,6 +696,14 @@ class App:
                             text="Play Ranked: start new runs in Ranked Mode instead (and continue a saved Ranked run)")
         w.grid(row=3, column=0, columnspan=4, sticky="w", pady=("3p", 0))
         self.option_widgets.append(w)
+        self.runs = tk.StringVar(value="1")
+        runs_row = ttk.Frame(opts)
+        runs_row.grid(row=4, column=0, columnspan=4, sticky="w", pady=("3p", 0))
+        ttk.Label(runs_row, text="Runs to play:").pack(side="left")
+        w = ttk.Spinbox(runs_row, from_=0, to=999, width=4, textvariable=self.runs)
+        w.pack(side="left", padx="4p")
+        self.option_widgets.append(w)
+        ttk.Label(runs_row, text="(0 = endless)").pack(side="left")
         w = ttk.Checkbutton(opts, variable=self.limit_days, text="Stop after")
         w.grid(row=1, column=0, sticky="w")
         self.option_widgets.append(w)
@@ -714,6 +775,13 @@ class App:
             out.append("--learned")
         return out
 
+    def parse_runs(self) -> int | None:
+        text = self.runs.get().strip()
+        if not text.isascii() or not text.isdigit():
+            return None
+        n = int(text)
+        return n if n >= 0 else None
+
     # -- the buttons --
     def start(self) -> None:
         if self.session is not None and self.session.running:
@@ -722,12 +790,20 @@ class App:
         if argv is None:
             self.mode_text.set("Not started: the number of battles must be between 0 and 99.")
             return
+        runs = self.parse_runs()
+        if runs is None:
+            self.mode_text.set("Not started: the number of runs must be 0 (endless) or a positive whole number.")
+            return
         self.drain()
         self._hide_banner()
         self.status = Status()
+        runs_label = "endless runs" if runs == 0 else f"{runs} runs" if runs > 1 else ""
+        extra = f" ({runs_label})" if runs_label else ""
         self._say([f"=== {datetime.now():%H:%M:%S}  Start"
-                   f"{' with ' + ' '.join(argv) if argv else ''} ==="], "head")
+                   f"{' with ' + ' '.join(argv) if argv else ''}{extra} ==="], "head")
         self.session = self.new_session(argv)
+        if hasattr(self.session, "runs"):
+            self.session.runs = runs
         self.session.start()
         self._set_mode("starting")
         self._refresh()
@@ -822,7 +898,13 @@ class App:
 
     def _handle(self, kind: str, data: dict) -> None:
         self.status.apply(kind, data)
-        if kind == "start":
+        if kind == "run_start":
+            run_num = data.get("run", 1)
+            if run_num > 1:
+                total = data.get("total")
+                label = f"Run {run_num} / {total}" if total else f"Run {run_num} (endless)"
+                self._say([f"=== {datetime.now():%H:%M:%S}  {label} ==="], "head")
+        elif kind == "start":
             self.files.set(f"Log: logs\\{data['log']}  and  logs\\{data['thinking']}\n"
                            f"Emergency stop: push the mouse into a corner of the screen.")
             if self.mode == "starting":
@@ -894,6 +976,7 @@ class App:
         s = self.status
         dash = lambda v, pre="": "-" if v is None else f"{pre}{v}"
         self.v["run"].set(s.run_line())
+        self.v["runs"].set(s.runs_line())
         self.v["day"].set(dash(s.day))
         self.v["lives"].set(dash(s.lives))
         self.v["badges"].set("-" if s.badges is None else f"{s.badges} / {s.badges_goal or '?'}")

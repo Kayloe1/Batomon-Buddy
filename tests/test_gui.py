@@ -88,6 +88,13 @@ class FakeHands:
         self.card = {"name": "Pebbler", "price": 3, "kind": "monster", "stats": []}
         return hands.Result(True, f"now on '{self.screen}'")
 
+    def start_run(self, mode: str = "casual"):
+        self._did("start_run")
+        self.day, self.money, self.badges = 1, 10, 0
+        self.screen = "shop"
+        self.card = {"name": "Pebbler", "price": 3, "kind": "monster", "stats": []}
+        return hands.Result(True, "now on 'shop'")
+
 
 class FakeBrain:
     """Buys the first shop card while there is one, then battles. Always expects to win 62%.
@@ -336,6 +343,71 @@ class SessionTests(Quiet):
             events = self.events_until(s, "finished")
         self.assertEqual([d["text"] for k, d in events if k == "error"], ["Batomon Showdown window not found"])
 
+    def test_multiple_runs_plays_n_runs_and_reports_progress(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=3)
+        self.sessions.append(s)
+        s.start()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 0)
+        self.assertEqual(events[-1][1]["runs_completed"], 3)
+        self.assertEqual([(d["run"], d["total"]) for k, d in events if k == "run_start"], [(1, 3), (2, 3), (3, 3)])
+        self.assertEqual(game.calls, [
+            "buy", "battle", "confirm",
+            "start_run", "buy", "battle", "confirm",
+            "start_run", "buy", "battle", "confirm",
+        ])
+
+    def test_endless_runs_plays_until_stopped(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=0)
+        self.sessions.append(s)
+        s.start()
+        seen = []
+        end = time.time() + 10
+        while time.time() < end:
+            e = s.events.get(timeout=1)
+            seen.append(e)
+            if e[0] == "run_start" and e[1]["run"] >= 3:
+                s.stop()
+                break
+        else:
+            self.fail("did not reach run 3 in endless mode")
+        seen.extend(self.events_until(s, "finished"))
+        self.assertEqual(seen[-1][1]["code"], 0)
+        run_starts = [d for k, d in seen if k == "run_start"]
+        self.assertTrue(all(d["total"] == 0 for d in run_starts))
+        self.assertGreaterEqual(run_starts[-1]["run"], 3)
+        self.assertEqual(self.log_records()[-1]["why"], gui.STOPPED_HERE)
+
+    def test_stopping_between_runs_while_paused_ends_cleanly(self):
+        game = FakeHands(days=1)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=3)
+        self.sessions.append(s)
+        entered, release = held_inside(game, "confirm")
+        s.start()
+        self.assertTrue(entered.wait(10))
+        s.pause()
+        release.set()
+        self.events_until(s, "paused")
+        s.stop()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 0)
+        self.assertNotIn("start_run", game.calls)
+        self.assertTrue(any(k == "log" and d["record"] == "stop" and d["data"].get("why") == gui.STOPPED_HERE
+                            for k, d in events))
+
+    def test_multiple_runs_stops_when_bot_needs_help(self):
+        game = FakeHands(days=1)
+        game.hooks["start_run"] = lambda: setattr(game, "unreadable", True)
+        s = gui.Session([], hands=game, brain=FakeBrain(game), runs=5)
+        self.sessions.append(s)
+        s.start()
+        events = self.events_until(s, "finished")
+        self.assertEqual(events[-1][1]["code"], 1)
+        self.assertEqual(events[-1][1]["runs_completed"], 2)
+        self.assertTrue(any(k == "needs_you" for k, _ in events))
+
 
 class TerminalStillWorks(Quiet):
     """python play.py and batch.py: no Control is passed, and play.LAST_LOG names the log."""
@@ -421,6 +493,20 @@ class StatusTests(unittest.TestCase):
                                 "battle": "BATTLE! (day 6)", "confirm": "CONFIRM on the result box"})
         self.assertIsNone(gui.action_text("shop", {"state": {}}))             # not an action
 
+    def test_runs_line_formats_finite_and_endless_runs(self):
+        st = gui.Status()
+        self.assertEqual(st.runs_line(), "-")
+        st.apply("run_start", {"run": 3, "total": 10})
+        self.assertEqual(st.runs_line(), "Run 3 / 10")
+        st.apply("run_start", {"run": 3, "total": 0})
+        self.assertEqual(st.runs_line(), "Run 3 (endless)")
+        st2 = gui.Status()
+        st2.apply("run_start", {"run": 1, "total": 3})
+        st2.apply("log", {"record": "run_over", "data": {}})
+        self.assertIsNone(st2.ended)
+        st2.apply("finished", {"code": 0, "runs_completed": 3, "target_runs": 3})
+        self.assertEqual(st2.ended, "All 3 runs finished.")
+
     def test_the_window_is_placed_off_the_game(self):
         screen = (0, 0, 3840, 2088)
         game = (40, 20, 2622, 1516)
@@ -469,11 +555,15 @@ class WindowTests(Quiet):
         self.app = gui.App(self.root, new_session=new_session)
 
     def destroy(self):
+        import gc
         self.end_sessions()
         if getattr(self, "app", None) is not None:
             self.app.destroy()
-        else:
+            self.app = None
+        elif getattr(self, "root", None) is not None:
             self.root.destroy()
+        self.root = None
+        gc.collect()
 
     def pump(self, until, timeout: float = 10, what: str = ""):
         end = time.time() + timeout
@@ -643,6 +733,37 @@ class WindowTests(Quiet):
         self.pump(lambda: app.mode == "idle", what="the day limit")
         self.assertEqual(self.game.calls, ["buy", "battle", "confirm", "buy"])
         self.assertIn("Stopped before pressing BATTLE!", app.banner_title.cget("text"))
+
+    def test_runs_option_n_runs_and_status_display(self):
+        app = self.app
+        self.game.days = 1
+        app.runs.set("2")
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "idle", what="2 runs to finish")
+        self.assertEqual(app.v["runs"].get(), "Run 2 / 2")
+        self.assertEqual((app.banner_kind, app.banner_title.cget("text")), ("info", "All 2 runs finished."))
+        self.assertEqual(self.game.calls, ["buy", "battle", "confirm", "start_run", "buy", "battle", "confirm"])
+
+    def test_runs_option_endless_and_stop_early(self):
+        app = self.app
+        self.game.days = 1
+        app.runs.set("0")
+        app.start_button.invoke()
+        self.pump(lambda: (app.status.run_number or 0) >= 2, what="run 2 in endless mode")
+        self.assertEqual(app.v["runs"].get(), f"Run {app.status.run_number} (endless)")
+        app.stop_button.invoke()
+        self.pump(lambda: app.mode == "idle", what="endless stop")
+        self.assertEqual(app.banner_title.cget("text"), "Stopped, as you asked.")
+
+    def test_runs_invalid_input_does_not_start(self):
+        app = self.app
+        for bad in ("", "-1", "abc", "1.5"):
+            app.runs.set(bad)
+            self.assertIsNone(app.parse_runs(), bad)
+            app.start_button.invoke()
+            self.assertEqual(app.mode, "idle")
+            self.assertEqual(self.sessions, [])
+            self.assertIn("number of runs", app.mode_text.get())
 
 
 if __name__ == "__main__":
