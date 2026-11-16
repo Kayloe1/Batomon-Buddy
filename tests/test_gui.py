@@ -355,6 +355,28 @@ class TerminalStillWorks(Quiet):
 
 
 class StatusTests(unittest.TestCase):
+    def test_team_shop_decision_and_results_are_kept_for_the_dashboard(self):
+        st = gui.Status()
+        self.assertEqual((st.team_names(), st.bench_line(), st.shop_line(), st.tally()),
+                         (["empty"] * 6, "-", "-", "0 battles   0 won   0 lost"))
+        st.apply("state", {"state": {
+            "screen": "shop", "day": 3, "lives": 4, "badges": 1, "badges_goal": 10, "money": 9, "trainer": "Witch",
+            "team": [{"name": "Joltail", "level": 2}, None, {"name": "Pebbler", "level": 1}, None, None, None],
+            "bench": [None, {"name": "Humbolt", "level": 3}], "shop_rank": 4,
+            "shop_odds": {"common": 67, "rare": 30, "epic": 3}}})
+        self.assertEqual(st.team_names()[:3], ["Joltail  Lv 2", "empty", "Pebbler  Lv 1"])
+        self.assertEqual(st.bench_line(), "Humbolt Lv 3")
+        self.assertEqual(st.shop_line(), "Rank 4   (common 67%, rare 30%, epic 3%)")
+        st.apply("state", {"state": {"screen": "shop", "day": 3, "shop_rank": 14}})
+        self.assertTrue(st.shop_line().startswith("Rank Max"))
+        st.apply("think", {"lines": ["--- Day 3 ---", "Decision: buy Pebbler $3. It is a clear improvement (+0.20)."]})
+        self.assertTrue(st.why.startswith("Decision: buy Pebbler"))
+        st.apply("log", {"record": "day_result", "data": {"day": 3, "badges": 1, "lives": 0}})
+        st.apply("log", {"record": "day_result", "data": {"day": 4, "badges": 0, "lives": -1}})
+        self.assertEqual(st.results, [(3, True), (4, False)])
+        self.assertEqual(st.tally(), "2 battles   1 won   1 lost")
+
+
     def test_status_follows_the_events(self):
         st = gui.Status()
         self.assertEqual(st.run_line(), "Day -     Lives -     Badges -     Money -")

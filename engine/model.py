@@ -596,8 +596,20 @@ def from_reader(state: dict, memory: dict | None = None) -> RunState:
     """
     memory = memory or {}
     same_turn = memory.get("turn_day") == state.get("day")        # what happened earlier today
-    team = [unit_from_reader(s) for s in state.get("team") or [None] * 6]
-    bench = [unit_from_reader(s) for s in state.get("bench") or [None] * 4]
+    paid_pool = {k: list(v) for k, v in (memory.get("paid") or {}).items()} if "paid" in memory else None
+
+    def _slot_unit(s: dict | None) -> Unit | None:
+        if s is None or paid_pool is None or not s.get("name") or s["name"] not in paid_pool:
+            return unit_from_reader(s)
+        need = data.COPIES_FOR_LEVEL.get(s.get("level") or 1, 1)
+        prices = paid_pool[s["name"]]
+        if not prices:
+            return unit_from_reader(s, price_hint=0)
+        taken, paid_pool[s["name"]] = prices[:need], prices[need:]
+        return unit_from_reader(s, price_hint=sum(taken))
+
+    team = [_slot_unit(s) for s in state.get("team") or [None] * 6]
+    bench = [_slot_unit(s) for s in state.get("bench") or [None] * 4]
     return RunState(
         day=state.get("day") or 1, lives=state.get("lives") or 1, badges=state.get("badges") or 0,
         money=state.get("money") or 0, rank=state.get("shop_rank") or state.get("day") or 1,

@@ -22,6 +22,7 @@ opponent teams, add them with `add_recorded()` and they join the pool.
 from __future__ import annotations
 
 import json
+import os
 import random
 from pathlib import Path
 
@@ -36,6 +37,7 @@ POOL_MIX = {"casual": 0.15, "steady": 0.35, "strong": 0.30, "expert": 0.20}
 POWER_RAMP = 0.3
 EXTRA_INCOME = {"casual": 0, "steady": 20, "strong": 35, "expert": 50}
 RECORDED = Path(__file__).resolve().parent.parent / "data" / "opponents_recorded.jsonl"
+GHOST_CACHE = Path(__file__).resolve().parent.parent / "data" / "ghost_pools_cache.json"
 
 
 def _ghost_buy_score(s: RunState, card: model.Card, skill: str) -> float:
@@ -149,23 +151,59 @@ def ghost_run(seed: int, days: int, skill: str) -> list[dict]:
     return out
 
 
+def _load_ghost_cache(key: str) -> dict[int, list[dict]] | None:
+    if not GHOST_CACHE.exists():
+        return None
+    try:
+        raw = json.loads(GHOST_CACHE.read_text(encoding="utf-8"))
+        hit = raw.get(key)
+        if isinstance(hit, dict):
+            return {int(d): [dict(s) for s in specs] for d, specs in hit.items()}
+    except Exception:
+        return None
+    return None
+
+
+def _save_ghost_cache(key: str, pools: dict[int, list[dict]]) -> None:
+    try:
+        raw = {}
+        if GHOST_CACHE.exists():
+            try:
+                raw = json.loads(GHOST_CACHE.read_text(encoding="utf-8"))
+            except Exception:
+                raw = {}
+        raw[key] = {str(d): specs for d, specs in pools.items()}
+        GHOST_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = GHOST_CACHE.with_suffix(f".{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(raw), encoding="utf-8")
+        tmp.replace(GHOST_CACHE)
+    except Exception:
+        pass
+
+
 def build_pools(n: int = 48, days: int = 15, seed: int = 1, mix: dict | None = None,
                 recorded: bool = True) -> dict[int, list[dict]]:
     """n opponents for every day. The order is shuffled once, so the first k of a
     pool are a fair sample of the mix (the evaluator often uses only the first k)."""
+    use_default_mix = mix is None or mix == POOL_MIX
     mix = mix or POOL_MIX
-    rng = random.Random(seed)
-    skills = []
-    for skill, share in mix.items():
-        skills += [skill] * round(share * n)
-    while len(skills) < n:
-        skills.append("steady")
-    skills = skills[:n]
-    rng.shuffle(skills)
-    pools: dict[int, list[dict]] = {d: [] for d in range(1, days + 1)}
-    for j, skill in enumerate(skills):
-        for spec in ghost_run(seed * 100_003 + j, days, skill):
-            pools[spec["day"]].append(spec)
+    cache_key = f"{n}:{days}:{seed}:{POWER_RAMP}"
+    pools = _load_ghost_cache(cache_key) if use_default_mix else None
+    if pools is None:
+        rng = random.Random(seed)
+        skills = []
+        for skill, share in mix.items():
+            skills += [skill] * round(share * n)
+        while len(skills) < n:
+            skills.append("steady")
+        skills = skills[:n]
+        rng.shuffle(skills)
+        pools = {d: [] for d in range(1, days + 1)}
+        for j, skill in enumerate(skills):
+            for spec in ghost_run(seed * 100_003 + j, days, skill):
+                pools[spec["day"]].append(spec)
+        if use_default_mix:
+            _save_ghost_cache(cache_key, pools)
     if recorded:
         for d, recs in load_recorded().items():
             if d in pools:
@@ -263,7 +301,7 @@ _CACHE: dict[tuple, dict] = {}
 
 def pools(n: int = 48, seed: int = 1, recorded: bool = True) -> dict[int, list[dict]]:
     """Ghost teams per day, with the recorded real teams mixed in (recorded=False: ghosts only)."""
-    key = (n, seed, recorded)
+    key = (n, seed, recorded, POWER_RAMP)
     if key not in _CACHE:
         _CACHE[key] = build_pools(n=n, seed=seed, recorded=recorded)
     return _CACHE[key]

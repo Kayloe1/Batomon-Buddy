@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import statistics
 import sys
@@ -33,6 +34,7 @@ from .policy import NAMES, SPEC, FastPolicy, Theta, save_theta, theta_from_vec, 
 TRAIN_POOL_SEED = 2          # validation uses seed 9001: never seen in training
 LEAGUE_PER_DAY = 600
 HOF = 3                      # generations of league snapshots kept
+DEFAULT_WORKERS = max(1, (os.cpu_count() or 4) - 2)
 
 
 def _source(league: dict, ghost_n: int, p_ghost: float, p_league: float, p_recorded: float) -> OppSource:
@@ -70,6 +72,9 @@ def learn(gens: int, pop: int, runs: int, seed: int, workers: int, ghost_n: int 
     history = []
     cfg = {"ghost_n": ghost_n, "p_ghost": p_ghost, "p_league": p_league, "p_recorded": p_recorded,
            "collect": True, "use_sim": use_sim}
+    opponents.pools(n=ghost_n, seed=TRAIN_POOL_SEED, recorded=False)
+    if use_sim:
+        opponents.pools(n=24, seed=TRAIN_POOL_SEED, recorded=False)
     ex = ProcessPoolExecutor(workers) if workers > 1 else None
     try:
         for g in range(gens):
@@ -116,7 +121,7 @@ def main() -> int:
     ap.add_argument("--pop", type=int, default=48)
     ap.add_argument("--runs", type=int, default=40)
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
     ap.add_argument("--p-league", type=float, default=0.35)
     ap.add_argument("--p-ghost", type=float, default=0.5)
     ap.add_argument("--sim", action="store_true", help="policy uses simulator gain as a feature (slower)")
