@@ -33,7 +33,8 @@ EPS = 1e-9
 
 # Static trinket bonuses that change a card's badges (applied only when a slot has no "stats").
 STATIC_STAT_TRINKETS = {"Wood Sword", "Small Club", "Giant Club", "Terrarium", "Fire Orb",
-                        "Poison Orb", "Power Crown", "Excalibur", "Master Crown"}
+                        "Poison Orb", "Power Crown", "Excalibur", "Master Crown",
+                        "Scrap Sword", "Fancy Sword"}
 STATIC_STAT_TRAINERS = {"Chef", "Chemist", "Musician"}
 
 
@@ -125,6 +126,7 @@ class Trainer:
     shield_mult: float = 1.0
     link_cable: bool = False
     metronome: int = 0
+    badges: int = 0
 
 
 @dataclass
@@ -199,6 +201,14 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
                 unit.stats["damage"] += 350
             elif t == "Terrarium" and "Bug" in unit.types:
                 unit.stats["damage"] *= 1.2
+        n_scrap = trinkets.count("Scrap Sword")
+        if n_scrap:
+            rarities = data.trinket_rarities()
+            n_common = sum(1 for x in trinkets if rarities.get(x) == "Common")
+            unit.stats["damage"] += 2 * n_common * n_scrap
+        n_fancy = trinkets.count("Fancy Sword")
+        if n_fancy:
+            unit.stats["damage"] *= 1 + 0.03 * len(trinkets) * n_fancy
         if slot == 1:
             n_master = trinkets.count("Master Crown")
             if n_master:
@@ -276,6 +286,7 @@ class Battle:
             tr.shield_mult = 1.25
         tr.link_cable = "Link Cable" in trinkets
         tr.metronome = trinkets.count("Metronome")
+        tr.badges = int(team.get("badges") or 0)
         return tr
 
     def _units(self, side: int, team: dict) -> list[Unit | None]:
@@ -400,6 +411,8 @@ class Battle:
                                                  if not v.is_("Quillustrous") and v.alive)
             elif u.is_("Orcana"):
                 dmg += u.param * k * sum(1 for v in self.allies(u) if v.alive and v.level >= 3)
+            elif u.is_("Tengusto"):
+                dmg += u.param * k * self.trainers[u.side].badges
             return dmg
         finally:
             self._dmg_visiting.discard(id(u))
