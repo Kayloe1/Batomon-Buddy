@@ -20,6 +20,7 @@ into a screen corner still aborts (pyautogui's fail-safe); the window then says 
 """
 from __future__ import annotations
 
+import json
 import os
 import queue
 import re
@@ -27,6 +28,7 @@ import sys
 import threading
 import traceback
 from datetime import datetime
+from pathlib import Path
 
 def _startup_failed() -> None:
     """The heavy modules failed to load (a damaged data table, a missing package...). Started from the
@@ -75,6 +77,7 @@ DOING = {"thinking": "thinking about the shop", "battle": "battle running, waiti
 TEAM_PLACES = ["top left", "top middle", "top right", "bottom left", "bottom middle", "bottom right"]
 STOPPED_HERE = "stopped from the control window"       # play.py's reason when Stop was pressed
 MAX_LINES = 3000                                        # lines kept in the thinking pane
+PREFS_NAME = "gui_prefs.json"
 
 
 # ------------------------------------------------------------ the session ----
@@ -542,6 +545,7 @@ class App:
         self._copy_text = ""
         self._ticks = 0
         self._build()
+        self._load_prefs()
         self._set_mode("idle")
         self._refresh()
         self._check_windows()
@@ -812,6 +816,42 @@ class App:
         n = int(text)
         return n if n >= 0 else None
 
+    def prefs_path(self) -> Path:
+        return hands_mod.LOG_DIR / PREFS_NAME
+
+    def _load_prefs(self) -> None:
+        try:
+            data = json.loads(self.prefs_path().read_text(encoding="utf-8"))
+        except Exception:
+            return
+        if not isinstance(data, dict):
+            return
+        for key, var in (("new_run", self.new_run), ("ranked", self.ranked), ("limit_days", self.limit_days)):
+            if isinstance(data.get(key), bool):
+                var.set(data[key])
+        for key, var, hi in (("days", self.days, 99), ("runs", self.runs, 999)):
+            val = str(data.get(key, "")).strip()
+            if val.isascii() and val.isdigit() and 0 <= int(val) <= hi:
+                var.set(str(int(val)))
+        if data.get("decide") in ("planner", "learned", "simple"):
+            self.decide.set(data["decide"])
+
+    def _save_prefs(self) -> None:
+        try:
+            p = self.prefs_path()
+            p.parent.mkdir(exist_ok=True)
+            data = {
+                "new_run": self.new_run.get(),
+                "ranked": self.ranked.get(),
+                "limit_days": self.limit_days.get(),
+                "days": self.days.get().strip(),
+                "runs": self.runs.get().strip(),
+                "decide": self.decide.get(),
+            }
+            p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        except Exception:
+            pass
+
     # -- the buttons --
     def start(self) -> None:
         if self.session is not None and self.session.running:
@@ -824,6 +864,7 @@ class App:
         if runs is None:
             self.mode_text.set("Not started: the number of runs must be 0 (endless) or a positive whole number.")
             return
+        self._save_prefs()
         self.drain()
         self._hide_banner()
         self.status = Status()
@@ -870,6 +911,7 @@ class App:
         self.destroy()
 
     def destroy(self) -> None:
+        self._save_prefs()
         try:
             self.root.after_cancel(self._after)
             self.root.destroy()

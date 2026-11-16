@@ -81,6 +81,19 @@ def totals(rs: list[dict]) -> dict:
             "help_needed": sum(r["stops"] for r in rs)}
 
 
+def trainer_totals(rs: list[dict]) -> list[dict]:
+    by_trainer: dict[str, list[dict]] = {}
+    for r in rs:
+        by_trainer.setdefault(r.get("trainer") or "?", []).append(r)
+    out = []
+    for trainer, group in by_trainer.items():
+        t = totals(group)
+        winrate = round(100 * t["won"] / t["finished"]) if t["finished"] else None
+        out.append({"trainer": trainer, "runs": t["runs"], "finished": t["finished"],
+                    "won": t["won"], "winrate": winrate, "mean_badges": t["mean_badges"]})
+    return sorted(out, key=lambda x: (-x["finished"], -x["won"], -(x["mean_badges"] or 0), x["trainer"]))
+
+
 CSS = """
 :root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#6b6a65; --line:#e3e1da; --win:#1f7a3a; --loss:#b3261e; --stop:#9a6700; }
 @media (prefers-color-scheme: dark) { :root { --bg:#161614; --fg:#ecebe6; --muted:#a3a29b; --line:#33322e;
@@ -117,6 +130,13 @@ def _section(title: str, rs: list[dict]) -> str:
     if not rs:
         out.append('<p class="muted">No runs yet.</p>')
         return "\n".join(out)
+    out.append('<div class="wrap"><table><tr><th>Trainer</th><th>Runs</th><th>Finished</th>'
+               '<th>Won</th><th>Winrate</th><th>Avg badges</th></tr>')
+    for tr in trainer_totals(rs):
+        wr = f"{tr['winrate']}%" if tr["winrate"] is not None else "-"
+        out.append(f'<tr><td>{_cell(tr["trainer"])}</td><td>{tr["runs"]}</td><td>{tr["finished"]}</td>'
+                   f'<td>{tr["won"]}</td><td>{wr}</td><td>{_cell(tr["mean_badges"])}</td></tr>')
+    out.append("</table></div>")
     out.append('<div class="wrap"><table><tr><th>Started</th><th>Mode</th><th>Trainer</th><th>Result</th>'
                '<th>Badges</th><th>Last day</th><th>Lives lost on day</th><th>Stops</th><th>Last stop</th></tr>')
     for r in sorted(rs, key=lambda x: x["date"] or "", reverse=True):
