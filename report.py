@@ -117,7 +117,7 @@ def shop_offers(records: list[dict]) -> dict[int, dict]:
         if r.get("kind") != "shop" or not st or st.get("shop_rank") is None:
             continue
         cards = [c for c in st.get("shop", []) if c and c.get("kind") == "monster"]
-        key = (st.get("day"), tuple(c["name"] for c in cards))
+        key = (st.get("day"), tuple(c.get("name") for c in cards))
         if key in done:
             continue
         done.add(key)

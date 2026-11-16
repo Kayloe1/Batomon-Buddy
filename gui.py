@@ -263,6 +263,9 @@ class Status:
         self.results: list[tuple[int, bool]] = []   # (day, won) for every day finished in this session
         self.run_number: int | None = None
         self.target_runs: int | None = None         # 0 = endless, N > 0 = target run count
+        self.runs_won: int = 0
+        self.runs_lost: int = 0
+        self.run_badges: list[int] = []
         self.started = datetime.now()
 
     def apply(self, kind: str, data: dict) -> None:
@@ -303,6 +306,16 @@ class Status:
             if name == "day_result":
                 self.results.append((rec.get("day"), (rec.get("badges") or 0) > 0))
             if name == "run_over":
+                b = rec.get("badges")
+                if b is None:
+                    b = self.badges
+                goal = self.badges_goal or 10
+                if b is not None:
+                    self.run_badges.append(b)
+                    if b >= goal:
+                        self.runs_won += 1
+                    else:
+                        self.runs_lost += 1
                 if self.target_runs in (None, 1):
                     self.ended = "The run is over."
             elif name == "stop" and rec.get("why") == "day limit":
@@ -324,6 +337,12 @@ class Status:
         if self.target_runs:
             return f"Run {self.run_number} / {self.target_runs}"
         return f"Run {self.run_number}"
+
+    def runs_summary_line(self) -> str:
+        if self.runs_won + self.runs_lost == 0:
+            return "0 won, 0 lost"
+        return (f"{self.runs_won} won, {self.runs_lost} lost   "
+                f"(last {self.run_badges[-1]}, best {max(self.run_badges)} badges)")
     def run_line(self) -> str:
         def show(v, pre=""):
             return "-" if v is None else f"{pre}{v}"
@@ -614,8 +633,9 @@ class App:
         self.warning_label = tk.Label(body, textvariable=self.warning, fg=AMBER, bg=BG, font=self.f_bold,
                                       anchor="w", justify="left", wraplength=self.wrap)
         self.v = {name: tk.StringVar(value="-") for name in
-                  ("run", "runs", "trainer", "screen", "win", "action", "game", "day", "lives", "badges", "money",
-                   "shop", "bench", "why", "tally", "team0", "team1", "team2", "team3", "team4", "team5")}
+                  ("run", "runs", "runs_summary", "trainer", "screen", "win", "action", "game", "day", "lives",
+                   "badges", "money", "shop", "bench", "why", "tally",
+                   "team0", "team1", "team2", "team3", "team4", "team5")}
         self.value_labels = {}
 
         tiles = tk.Frame(body, bg=BG)
@@ -667,6 +687,11 @@ class App:
                            wraplength=self.wrap * 4 // 10 - 20)
             lab.pack(fill="x", padx=10, pady=(0, 4))
             self.value_labels[key] = lab
+        self.runs_summary_widgets = (
+            tk.Label(info, text="Runs summary", bg=CARD, fg=GREY, font=self.f_tiny, anchor="w"),
+            tk.Label(info, textvariable=self.v["runs_summary"], bg=CARD, fg=INK, anchor="w", justify="left",
+                     wraplength=self.wrap * 4 // 10 - 20),
+        )
         self.days_row = tk.Canvas(info, height=16, bg=CARD, highlightthickness=0)     # one dot per battle
         self.days_row.pack(fill="x", padx=10, pady=(0, 8))
 
@@ -977,6 +1002,15 @@ class App:
         dash = lambda v, pre="": "-" if v is None else f"{pre}{v}"
         self.v["run"].set(s.run_line())
         self.v["runs"].set(s.runs_line())
+        show_summary = (s.target_runs not in (None, 1)) or ((s.run_number or 0) > 1)
+        if show_summary:
+            if not self.runs_summary_widgets[0].winfo_manager():
+                self.runs_summary_widgets[0].pack(fill="x", padx=10, after=self.value_labels["runs"])
+                self.runs_summary_widgets[1].pack(fill="x", padx=10, pady=(0, 4), after=self.runs_summary_widgets[0])
+            self.v["runs_summary"].set(s.runs_summary_line())
+        elif self.runs_summary_widgets[0].winfo_manager():
+            for w in self.runs_summary_widgets:
+                w.pack_forget()
         self.v["day"].set(dash(s.day))
         self.v["lives"].set(dash(s.lives))
         self.v["badges"].set("-" if s.badges is None else f"{s.badges} / {s.badges_goal or '?'}")
