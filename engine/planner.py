@@ -63,6 +63,12 @@ class Params:
     screen: int = 2            # cards tried per greedy step (best by a quick estimate)
     final_rounds: int = 3
     margin_weight: float = 0.3   # how much "closer battles" count next to battles won
+    merge_odds: bool = False     # merge progress from the exact chance of finding the missing copies in the
+                                 # cards the money can still see (singles count too), instead of the flat
+                                 # "32 cards ahead" pair bonus (experiment, 2026-11-16)
+    gift_sim: bool = False       # a merge's trinket gift is worth what the trinkets of that rarity add to THIS
+                                 # team in the simulator (best of 3 offered), not a flat 0.025-0.09
+    gift_sample: int = 6         # trinkets of a rarity simulated for that estimate
     grow_next: bool = False      # score tomorrow with the permanent growth one battle gives (Thorntail,
                                  # Noxalith->Fumungus...). Off: 8 offline runs each, seeds 2000+, gave
                                  # 25% won / 5.88 badges with it and 37.5% / 6.12 without (2026-11-12)
@@ -117,6 +123,8 @@ class Planner:
         self.rng = random.Random(seed)
         self._arranged: dict[tuple, tuple[list, list]] = {}
         self._grown: dict[tuple, list] = {}
+        self._gift_cache: dict[tuple, float] = {}
+        self._gift_now: dict[str, float] = {}
 
     # ------------------------------------------------------------ scoring ----
     def _hp(self, s: RunState, day: int) -> int:
@@ -173,8 +181,90 @@ class Planner:
         p_card = (odds[r] / 100.0) / n
         return 1.0 - (1.0 - p_card) ** self.CARDS_AHEAD
 
+    def cards_ahead(self, s: RunState) -> int:
+        """Monster cards the run will still see before tomorrow's battle: today's and tomorrow's shops, with
+        rerolls paid from a quarter of each day's income (the rest buys the copies that turn up and the team).
+
+        Deliberately not from the money in hand: then every sale raised the chance of every merge, and
+        selling looked like progress (2026-11-16 test: twice the Lv1 sales and fewer merges)."""
+        price = max(1, s.reroll_price or data.REROLL_PRICE)
+        left = max(0, self.p.max_rerolls - s.rerolls)
+        today = min(left, data.income(s.day) // (4 * price))
+        tomorrow = 1 + min(self.p.max_rerolls, data.income(s.day + 1) // (4 * price))
+        return data.SHOP_MONSTERS * (today + tomorrow)
+
+    def copies_chance(self, s: RunState, name: str, need: int, cards: int) -> float:
+        """Chance that at least `need` more copies of `name` show up among `cards` monster cards
+        (binomial on the shop odds: one card is this species with p = rarity share / species of that rarity)."""
+        sp = data.species(name)
+        if sp is None or sp.foreign or need <= 0:
+            return 0.0 if need > 0 else 1.0
+        odds = s.odds or data.rank_odds(s.rank)
+        r = data.RARITIES.index(sp.rarity)
+        p = (odds[r] / 100.0) / max(1, len(data.by_rarity(sp.rarity)))
+        if p <= 0:
+            return 0.0
+        below = sum(math.comb(cards, k) * p ** k * (1 - p) ** (cards - k) for k in range(min(need, cards + 1)))
+        return max(0.0, 1.0 - below)
+
+    def merge_progress(self, s: RunState, team: list[Unit | None] | None) -> float:
+        """Value of the merges the monsters owned are working toward: for each species, the next merge
+        (Lv1 copies to a Lv2, or a Lv2 with Lv1 copies to a Lv3) x the chance that the missing copies
+        show up in the cards still to come. Only merges whose result would play count."""
+        fielded = [u for u in (team or []) if u is not None]
+        weakest = min((power(u) for u in fielded), default=0.0) if len(fielded) >= 6 else 0.0
+        c1: dict[str, int] = {}
+        c2: dict[str, int] = {}
+        for _, _, u in s.owned():
+            if u.name and u.level == 1:
+                c1[u.name] = c1.get(u.name, 0) + 1
+            elif u.name and u.level == 2:
+                c2[u.name] = c2.get(u.name, 0) + 1
+        cards = self.cards_ahead(s)
+        v = 0.0
+        for name in set(c1) | set(c2):
+            sp = data.species(name)
+            if sp is None or sp.foreign or knowledge.is_egg(name):
+                continue
+            a, b = c1.get(name, 0), c2.get(name, 0)
+            if b >= 1 and data.MAX_READABLE_LEVEL >= 3:
+                # a Lv3 needs a second Lv2: three Lv1 copies, minus those already owned
+                need, level = max(0, 3 - a), 3
+            else:
+                need, level = 3 - a, 2
+            if power(model.new_unit(name, 0, level)) <= weakest:
+                continue
+            v += self.merge_value(sp.rarity) * self.copies_chance(s, name, need, cards)
+        return v
+
+    def gift_value(self, s: RunState, team: list[Unit | None], rarity: str) -> float:
+        """Expected gain of a trinket gift of this rarity for this team: a sample of that rarity's trinkets
+        is scored like the gift screen does (engine/choices.trinket_gain), and the gift is worth the
+        expected best of three offered."""
+        key = (rarity, s.day, team_key(team), tuple(s.trinkets), s.trainer, s.rescue_used)
+        hit = self._gift_cache.get(key)
+        if hit is not None:
+            return hit
+        from .choices import trinket_gain
+        names = sorted(n for n, t in data.trinkets().items() if t["rarity"] == rarity)
+        if len(names) > self.p.gift_sample:
+            names = random.Random(f"{rarity}-{s.day}").sample(names, self.p.gift_sample)
+        base = self.team_score(s, team, self.p.k_quick)
+        gains = sorted((max(0.0, trinket_gain(self, s, team, base, n, self.p.k_quick)) for n in names),
+                       reverse=True)
+        n = len(gains)
+        if n >= 3:
+            ev = sum(g * math.comb(n - 1 - i, 2) for i, g in enumerate(gains)) / math.comb(n, 3)
+        else:
+            ev = gains[0] if gains else 0.0
+        hit = max(GIFT_VALUE.get(rarity, 0.03), ev)
+        self._gift_cache[key] = hit
+        return hit
+
     def merge_value(self, rarity: str) -> float:
         """What finishing a merge of this rarity is worth (its gift and the level-up), before chance."""
+        if self.p.gift_sim and rarity in self._gift_now:
+            return self.p.copy_progress + self._gift_now[rarity]
         r = data.RARITIES.index(rarity) if rarity in data.RARITIES else 0
         return self.p.copy_progress * (1 + r)
 
@@ -200,6 +290,8 @@ class Planner:
             if u.level == 2 and u.name:
                 lv2[u.name] = lv2.get(u.name, 0) + 1
         on_team = {u.name for u in fielded if u.name}
+        if self.p.merge_odds:
+            return v + self.merge_progress(s, team)
         use_syn = bool(self.p.synergy_weight and s.day >= 8)
         if use_syn and len(on_team) >= 2:
             v += self.p.synergy_weight * data.team_synergy(on_team)
@@ -212,8 +304,7 @@ class Planner:
             if sp is None:
                 continue
             syn = data.partner_lift(name, on_team) if use_syn else 0.0
-            base = (self.p.copy_progress * (1 + data.RARITIES.index(sp.rarity))
-                    * (1.0 + syn) * self.third_copy_chance(s, name))
+            base = self.merge_value(sp.rarity) * (1.0 + syn) * self.third_copy_chance(s, name)
             c1, c2 = counts.get(name, 0), lv2.get(name, 0)
             if c2 >= 1 and c1 >= 2:
                 v += 2.0 * base
@@ -231,7 +322,7 @@ class Planner:
                 # rarer third copy is less likely)
                 if power(model.new_unit(name, 0, 2)) <= weakest and syn <= 0:
                     continue
-                v += (self.p.copy_progress * (1 + data.RARITIES.index(sp.rarity) if sp else 1)
+                v += ((self.merge_value(sp.rarity) if sp else self.p.copy_progress)
                       * (1.0 + syn) * self.third_copy_chance(s, name))
         return v
 
@@ -482,6 +573,10 @@ class Planner:
         """The next action(s) for this shop state."""
         notes: list[str] = []
         team, bench = self.arrange_full(s)
+        if self.p.gift_sim and any(team):
+            rarities = {u.species.rarity for _, _, u in s.owned() if u.species} | set(s.gifts) | {
+                c.rarity for c in s.shop if c and c.kind == "monster" and c.rarity}
+            self._gift_now = {r: self.gift_value(s, team, r) for r in rarities if r in GIFT_VALUE}
         # 0. monsters that will never play: sell them first, so the bench has room and the money is spent
         for w, k, u in self.dead_weight(s, team):
             win = self.win_today(s, team) if any(team) else 0.0

@@ -127,29 +127,34 @@ def with_trinket_stats(team: list, name: str, owned: list[str]) -> list:
 _HP = re.compile(r"\+(\d+)(%?) HP")
 
 
+def trinket_gain(planner: Planner, s: RunState, team: list, base: float, name: str, k: int) -> float:
+    """How much owning trinket `name` adds to the team's score (simulator, wording prior, income)."""
+    effect = data.trinkets().get(name, {}).get("effect", "")
+    t = s.copy()
+    t.trinkets = s.trinkets + [name]
+    hp = _HP.search(effect)                 # Training Weights, Barbell, the HP Charms
+    if hp and t.hp_today:
+        n = int(hp.group(1))
+        t.hp_today = int(t.hp_today * (1 + n / 100)) if hp.group(2) else t.hp_today + n
+    gain = planner.team_score(t, with_trinket_stats(team, name, s.trinkets), k) - base
+    if not sim_knows(name):
+        gain += text_prior(name)
+    m = _INCOME.search(effect)
+    if m:
+        gain += planner.p.money * int(m.group(1)) * max(1, data.BADGES_TO_WIN - s.badges)
+    return gain
+
+
 def pick_trinket(planner: Planner, s: RunState, offered: list[str | None]) -> tuple[int, str]:
     team, _ = planner.final_layout(s)
     k = planner.p.k_final
     base = planner.team_score(s, team, k)
-    days_left = max(1, data.BADGES_TO_WIN - s.badges)
     results = []
     for j, name in enumerate(offered):
         if not name:
             results.append((-1.0, j, "unreadable"))
             continue
-        effect = data.trinkets().get(name, {}).get("effect", "")
-        t = s.copy()
-        t.trinkets = s.trinkets + [name]
-        hp = _HP.search(effect)                 # Training Weights, Barbell, the HP Charms
-        if hp and t.hp_today:
-            n = int(hp.group(1))
-            t.hp_today = int(t.hp_today * (1 + n / 100)) if hp.group(2) else t.hp_today + n
-        gain = planner.team_score(t, with_trinket_stats(team, name, s.trinkets), k) - base
-        if not sim_knows(name):
-            gain += text_prior(name)
-        m = _INCOME.search(effect)
-        if m:
-            gain += planner.p.money * int(m.group(1)) * days_left
+        gain = trinket_gain(planner, s, team, base, name, k)
         results.append((gain, j, f"{name} {gain:+.3f}"))
     results.sort(reverse=True)
     return results[0][1], "; ".join(r[2] for r in results)
