@@ -242,13 +242,20 @@ class Battle:
         self.trainers = [self._trainer(0, team_a), self._trainer(1, team_b)]
         self.teams: list[list[Unit | None]] = [self._units(0, team_a), self._units(1, team_b)]
         self.coffee = [bool(team_a.get("coffee")), bool(team_b.get("coffee"))]
+        self.at_battle_start = [bool(team_a.get("at_battle_start")), bool(team_b.get("at_battle_start"))]
         self.next_poison = SETTINGS["poison_interval"]
         self.next_burn = SETTINGS["burn_interval"]
+        self.next_sd = SETTINGS["sudden_death_start"]
         self.depth = 0
         self._adj: dict[int, list[Unit]] = {}
         self._speeds: dict[int, float] | None = None   # cached speed_of; None = recompute
         self._living: list[list[Unit] | None] = [None, None]   # cached living(side); reset by knockout()
         self._dmg_visiting: set[int] = set()
+        self._t0_dmg: dict[int, float] = {}
+        self._t0_heal: dict[int, float] = {}
+        self._t0_burn: dict[int, float] = {}
+        self._t0_shock: dict[int, float] = {}
+        self._t0_mc: dict[int, int] = {}
 
     # ---------- setup ----------
     def _trainer(self, side: int, team: dict) -> Trainer:
@@ -360,6 +367,9 @@ class Battle:
         return 1.0 + bonus / 100.0
 
     def damage_of(self, u: Unit) -> float:
+        return max(0.0, self._raw_damage_of(u) - self._t0_dmg.get(id(u), 0.0))
+
+    def _raw_damage_of(self, u: Unit) -> float:
         dmg = u.stats["damage"]
         if not self.ongoing_active(u) or u.param is None or id(u) in self._dmg_visiting:
             return dmg
@@ -385,6 +395,9 @@ class Battle:
             self._dmg_visiting.discard(id(u))
 
     def heal_of(self, u: Unit) -> float:
+        return max(0.0, self._raw_heal_of(u) - self._t0_heal.get(id(u), 0.0))
+
+    def _raw_heal_of(self, u: Unit) -> float:
         heal = u.stats["heal"]
         if not self.ongoing_active(u) or u.param is None:
             return heal
@@ -403,6 +416,9 @@ class Battle:
         return shld
 
     def burn_of(self, u: Unit) -> float:
+        return max(0.0, self._raw_burn_of(u) - self._t0_burn.get(id(u), 0.0))
+
+    def _raw_burn_of(self, u: Unit) -> float:
         burn = u.stats["burn"]
         if not self.ongoing_active(u) or u.param is None:
             return burn
@@ -414,6 +430,9 @@ class Battle:
         return burn
 
     def shock_of(self, u: Unit) -> float:
+        return max(0.0, self._raw_shock_of(u) - self._t0_shock.get(id(u), 0.0))
+
+    def _raw_shock_of(self, u: Unit) -> float:
         shock = u.stats["shock"]
         b = self.in_front(u)   # Pylong boosts the ally behind it, i.e. Pylong is in front of u
         if b and b.is_("Pylong") and self.ongoing_active(b) and b.param:
@@ -421,6 +440,9 @@ class Battle:
         return shock
 
     def multicast_of(self, u: Unit) -> int:
+        return max(1, self._raw_multicast_of(u) - self._t0_mc.get(id(u), 0))
+
+    def _raw_multicast_of(self, u: Unit) -> int:
         mc = u.multicast + u.extra_multicast
         if not u.has_ability:
             for v in self.adjacent(u):
@@ -490,7 +512,10 @@ class Battle:
 
     def charge(self, u: Unit, seconds: float) -> None:
         if u.alive and u.base_name not in ("Dracana", "Ironcore", "Steamscuttle"):
-            u.progress += seconds
+            u.progress = min(u.cooldown, u.progress + seconds)
+            if u.progress >= u.cooldown - 1e-7:
+                u.progress = 0.0
+                self.cast(u, "charge")
 
     # ---------- casting ----------
     def cast(self, u: Unit, reason: str = "cooldown") -> None:
@@ -739,7 +764,8 @@ class Battle:
 
     # ---------- battle start ----------
     def battle_start(self, u: Unit) -> None:
-        if u.shiny:
+        bs_only = self.at_battle_start[u.side]
+        if u.shiny and not bs_only:
             self.shiny_battle_start(u)
         if not u.active_passive():
             return
@@ -747,47 +773,48 @@ class Battle:
         name = u.base_name
         if name in ("Frizzly", "Coalem"):
             self.cast(u, "battle start")
-        elif name == "Aster":
+        elif name == "Aster" and not bs_only:
             for v in self.adjacent(u):
                 if "Water" in v.types:
                     v.stats["heal"] += p
-        elif name == "Aegistruct":
+        elif name == "Aegistruct" and not bs_only:
             gain = sum(v.stats["shield"] for v in self.adjacent(u) if not v.is_("Aegistruct"))
             u.stats["shield"] += p * gain
-        elif name == "Dribblet" and u.evolved():
+        elif name == "Dribblet" and u.evolved() and not bs_only:
             u.stats["damage"] += p
             u.stats["heal"] += p
         elif name == "Scorchimp" and u.evolved():
             fire = sum(1 for v in self.allies(u) if "Fire" in v.types)
             u.speed += p * fire
             self.speeds_changed()
-        elif name == "Miasmaw":
+        elif name == "Miasmaw" and not bs_only:
             u.stats["poison"] += p * sum(v.stats["poison"] for v in self.allies(u) if not v.is_("Miasmaw"))
         elif name == "Ginsage":
             for v in self.adjacent(u):
                 if "Grass" in v.types:
                     v.speed += p
             self.speeds_changed()
-        elif name == "Lumijel":
+        elif name == "Lumijel" and not bs_only:
             for v in self.allies(u):
                 if v.level >= 3:
                     v.stats["damage"] += p
                     v.stats["heal"] += p
-        elif name == "Brimtoad":
+        elif name == "Brimtoad" and not bs_only:
             u.stats["burn"] += p
             u.stats["poison"] += p
         elif name == "Rattleghast":
             for v in list(self.adjacent(u)):
                 was_alive = v.alive
                 self.knockout(v)
-                if was_alive and not v.alive:
+                if was_alive and not v.alive and not bs_only:
                     u.stats["poison"] += p
 
     def trinket_start(self, side: int) -> None:
         tr = self.trainers[side]
         units = self.living(side)
+        bs_only = self.at_battle_start[side]
         for t in tr.trinkets:
-            if t == "Rally Flag":
+            if t == "Rally Flag" and not bs_only:
                 for u in units:
                     if u.col == 0:
                         u.stats["damage"] += 12
@@ -795,24 +822,24 @@ class Battle:
                 for u in units:
                     if u.col == 0:
                         u.speed += 8
-            elif t == "Earth Crest":
+            elif t == "Earth Crest" and not bs_only:
                 for u in units:
                     if u.col == 2:
                         u.stats["shield"] *= 1.10
-            elif t == "Sea Crest":
+            elif t == "Sea Crest" and not bs_only:
                 for u in units:
                     if u.col == 2:
                         u.stats["heal"] *= 1.10
-            elif t == "Warhorn":
+            elif t == "Warhorn" and not bs_only:
                 for u in units:
                     u.stats["damage"] += 10
             elif t == "Tempo Charm" and units:
                 self.rng.choice(units).speed += 4
-            elif t == "Metal Bat" and units:
+            elif t == "Metal Bat" and units and not bs_only:
                 max(units, key=lambda u: u.cooldown).stats["damage"] *= 1.5
-            elif t == "Ancient Plume" and len(units) == 1:
+            elif t == "Ancient Plume" and len(units) == 1 and not bs_only:
                 units[0].multicast += 1
-            elif t == "Alpha Crown":
+            elif t == "Alpha Crown" and not bs_only:
                 top = self.teams[side][1]
                 if top:
                     for u in units:
@@ -838,6 +865,17 @@ class Battle:
                         for v in self.teams[s2]:
                             if v and v.row == u.row and v.ongoing:
                                 v.disabled = True
+        for side in (0, 1):
+            if not self.at_battle_start[side]:
+                continue
+            for u in self.teams[side]:
+                if not u:
+                    continue
+                self._t0_dmg[id(u)] = self._raw_damage_of(u) - u.stats["damage"]
+                self._t0_heal[id(u)] = self._raw_heal_of(u) - u.stats["heal"]
+                self._t0_burn[id(u)] = self._raw_burn_of(u) - u.stats["burn"]
+                self._t0_shock[id(u)] = self._raw_shock_of(u) - u.stats["shock"]
+                self._t0_mc[id(u)] = self._raw_multicast_of(u) - max(u.multicast + u.extra_multicast, 1)
         for side in self.order():
             repeats = 1 + ("Repeater Charm" in self.trainers[side].trinkets) + self.coffee[side]
             for _ in range(repeats):
@@ -861,7 +899,7 @@ class Battle:
             result = self._result()
         while result is None:
             # Next event time.
-            times = [self.next_poison, self.next_burn]
+            times = [self.next_poison, self.next_burn, self.next_sd]
             standing = (self.living(0), self.living(1))
             spd = {}
             for side in (0, 1):
@@ -916,6 +954,13 @@ class Battle:
                 for tr in (self.trainers[i] for i in self.order()):
                     self.status_damage(tr, tr.poison)
                 self.next_poison += SETTINGS["poison_interval"]
+            if abs(self.t - self.next_sd) < 1e-7:
+                sd_dmg = SETTINGS["sudden_death_base"] * (
+                    2.0 ** ((self.t - SETTINGS["sudden_death_start"]) / 3.0)
+                )
+                for tr in (self.trainers[i] for i in self.order()):
+                    self._take(tr, sd_dmg)
+                self.next_sd += SETTINGS["sudden_death_interval"]
             if not self.immortal and any(self.dead()):
                 result = self._result()
         return result

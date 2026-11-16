@@ -446,3 +446,53 @@ class MechanicsAndMythicals(unittest.TestCase):
         r = simulate(team([mon("Panbud"), mon("Panbud")], trinkets=["Master Crown"]), EMPTY, until=0.1)
         self.assertEqual(r.units[0][0]["stats"]["damage"], 25)
         self.assertEqual(r.units[0][1]["stats"]["damage"], 45)
+
+    def test_sudden_death_starts_at_30s(self):
+        # At 30.5 s, both sides have taken 8 + 8 * 2^(0.5/3) Sudden Death damage.
+        r = simulate(team([], hp=1000), team([], hp=1000), until=30.5)
+        expected = 1000 - (8.0 + 8.0 * (2.0 ** (0.5 / 3.0)))
+        self.assertAlmostEqual(r.hp[0], expected, places=5)
+        self.assertAlmostEqual(r.hp[1], expected, places=5)
+        # Mirror stall finishes via Sudden Death well before the 300 s fallback.
+        r = simulate(team([mon("Dribblet")]), team([mon("Dribblet")]))
+        self.assertEqual(r.winner, "draw")
+        self.assertLess(r.time, 60.0)
+
+    def test_charge_discards_excess_and_casts_at_once(self):
+        # Ironcore L2 (2.0 s cd) charges adjacent Bumblebolt (2.5 s cd) by 2.0 s at 2.0 s:
+        # Bumblebolt's 2.0 + 2.0 = 4.0 s casts once at 2.0 s and discards the 1.5 s excess,
+        # so by 4.0 s (before the 2nd Ironcore cast? no, at 3.9 s) Bumblebolt has only 1 cast.
+        r = simulate(team([mon("Bumblebolt"), mon("Ironcore", 2)]), EMPTY, until=3.9)
+        self.assertEqual(r.units[0][0]["triggered"], 1)
+        # Clawnetic (3.0 s cd) charged 1.0 s per Shock hit: a 3-hit Bumblebolt cast at 2.5 s
+        # fills Clawnetic on hit 1 (2.5 + 1.0 -> casts at once, resets to 0), then hits 2 & 3
+        # charge it to 2.0 s, so by 3.6 s Clawnetic has 2 casts (2.5 s and 3.5 s).
+        r = simulate(team([mon("Clawnetic"), {**mon("Bumblebolt"), "multicast": 3}]), EMPTY, until=3.6)
+        self.assertEqual(r.units[0][0]["triggered"], 2)
+
+    def test_heal_at_60_poison_counts_but_70_is_blocked(self):
+        # 15 x Venopuff (4 Poison) inflicts 60 Poison at 3.5 s; Dribblet heals 20 at 6.0 s.
+        # At 60 Poison the heal still counts; at 72 Poison (18 x Venopuff) it is blocked.
+        r60 = simulate(team([mon("Dribblet")], hp=1000),
+                       team([mon("Venopuff", 1, poison=60)]), until=6.1)
+        r72 = simulate(team([mon("Dribblet")], hp=1000),
+                       team([mon("Venopuff", 1, poison=72)]), until=6.1)
+        # Between 3.5 s and 6.0 s Poison ticks at 4, 5, 6 s (3 ticks).
+        self.assertAlmostEqual(r60.hp[0], 1000 - 3 * 60 + 20)
+        self.assertAlmostEqual(r72.hp[0], 1000 - 3 * 72)
+
+    def test_at_battle_start_avoids_double_counting_badges(self):
+        # Battle-screen capture already includes Rally Flag (+12), Aegistruct (+140),
+        # Stellagon (+2 Multicast), and Lignite (24 * 3 = +72).
+        t = team([
+            mon("Runerock", 1, shield=140),
+            mon("Aegistruct", 1, shield=290),
+            mon("Lignite", 1, damage=72, burn=3),
+            mon("Stellagon", 1, damage=100),
+            {**mon("Panbud", 1, damage=25), "multicast": 3},
+        ], trinkets=["Rally Flag"])
+        t["at_battle_start"] = True
+        r = simulate(t, EMPTY, until=6.1)
+        self.assertEqual(r.units[0][1]["shielded"], 290)
+        self.assertEqual(r.units[0][2]["dealt"], 72)
+        self.assertEqual(r.units[0][4]["dealt"], 75)   # 3 hits x 25, not 5 hits x 25
