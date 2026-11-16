@@ -511,7 +511,16 @@ class StatusTests(unittest.TestCase):
         st2.apply("run_start", {"run": 2, "total": 3})
         st2.apply("log", {"record": "run_over", "data": {"badges": 10}})
         self.assertEqual(st2.runs_summary_line(), "1 won, 1 lost   (last 10, best 10 badges)")
+        # starting run 3 resets per-run fields while keeping session-wide summary and battle tally
+        st2.apply("state", {"state": {"screen": "shop", "day": 9, "lives": 2, "badges": 8, "badges_goal": 10,
+                                      "money": 11, "trainer": "Witch", "team": [{"name": "Joltail", "level": 2}]}})
+        st2.apply("log", {"record": "day_result", "data": {"day": 9, "badges": 1, "lives": 0}})
         st2.apply("run_start", {"run": 3, "total": 3})
+        self.assertIsNone(st2.day)
+        self.assertIsNone(st2.trainer)
+        self.assertEqual(st2.team, [])
+        self.assertEqual(len(st2.results), 1)
+        self.assertEqual((st2.runs_won, st2.runs_lost), (1, 1))
         st2.apply("log", {"record": "run_over", "data": {"badges": 4}})
         self.assertEqual(st2.runs_summary_line(), "1 won, 2 lost   (last 4, best 10 badges)")
         st2.apply("finished", {"code": 0, "runs_completed": 3, "target_runs": 3})
@@ -783,6 +792,15 @@ class WindowTests(Quiet):
             self.assertEqual(app.mode, "idle")
             self.assertEqual(self.sessions, [])
             self.assertIn("number of runs", app.mode_text.get())
+
+    def test_scorecard_button_opens_scorecard_and_handles_errors(self):
+        app = self.app
+        with mock.patch("scorecard.main", return_value=0) as m:
+            app.scorecard_button.invoke()
+            m.assert_called_once_with([])
+        with mock.patch("scorecard.main", side_effect=OSError("disk full")):
+            app.scorecard_button.invoke()
+            self.assertIn("Could not open scorecard", app.mode_text.get())
 
 
 if __name__ == "__main__":

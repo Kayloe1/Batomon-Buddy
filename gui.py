@@ -273,7 +273,10 @@ class Status:
             self.run_number = data.get("run")
             self.target_runs = data.get("total")
             if self.run_number and self.run_number > 1:
-                self.win_now = None
+                self.day = self.lives = self.badges = self.badges_goal = self.money = None
+                self.trainer = self.trainer_hp = self.shop_rank = self.shop_odds = None
+                self.screen = self.doing = self.win_now = self.why = None
+                self.team, self.bench = [], []
         elif kind == "state":
             s = data["state"]
             self.screen, self.doing = s.get("screen"), None
@@ -624,6 +627,8 @@ class App:
         self.stop_button = ttk.Button(bar, text="Stop", style="Go.TButton", command=self.stop)
         for b in (self.start_button, self.pause_button, self.stop_button):
             b.pack(side="left", padx=(0, "6p"))
+        self.scorecard_button = ttk.Button(bar, text="Scorecard", command=self.open_scorecard)
+        self.scorecard_button.pack(side="right")
 
         # the dashboard
         body = tk.Frame(root, bg=BG)
@@ -877,6 +882,14 @@ class App:
             os.startfile(path if path.exists() else hands_mod.CAPTURE_DIR)
         except OSError as e:
             self.mode_text.set(f"Could not open {path}: {e}")
+
+    def open_scorecard(self) -> None:
+        """Build logs\\scorecard.html from all run logs and open it in the browser."""
+        try:
+            import scorecard
+            scorecard.main([])
+        except Exception as e:
+            self.mode_text.set(f"Could not open scorecard: {e}")
 
     def teach(self) -> None:
         """Teach the reader what the capture of this stop shows, by typing it: no coding session."""
