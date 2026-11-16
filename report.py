@@ -50,6 +50,12 @@ def summarize_run(records: list[dict]) -> dict | None:
             days.append({"day": r["day"], "badges": r["badges"], "lives": r["lives"]})
     ended = any(r.get("kind") == "run_over" for r in records)
     stopped = [r.get("why") for r in records if r.get("kind") == "stop"]
+    mode = None
+    for r in records:
+        if r.get("kind") == "new_run" and r.get("ok"):
+            mode = r.get("mode") or "casual"
+        elif r.get("kind") == "session" and r.get("ranked") and mode is None:
+            mode = "ranked"
     last = shops[-1] if shops else {}
     badges, lives = last.get("badges"), last.get("lives")
     final = None
@@ -70,7 +76,7 @@ def summarize_run(records: list[dict]) -> dict | None:
         elif won and badges is not None:
             badges += 1
     return {
-        "trainer": trainer, "battles": len(battles), "badges": badges, "lives_left": lives,
+        "trainer": trainer, "mode": mode, "battles": len(battles), "badges": badges, "lives_left": lives,
         "last_day": last.get("day"), "ended": ended, "final_battle": final,
         "stopped": stopped[-1] if stopped else None, "days": days,
         "lost_lives_on": [(d["day"], -d["lives"]) for d in days if d["lives"] < 0],
@@ -180,6 +186,38 @@ def events_seen(records: list[dict]) -> dict:
             "scored_by_guess": dict(guessed)}
 
 
+def stop_reasons(records: list[dict]) -> dict[str, int]:
+    """Counts of non-user stop reasons across logs (capture filenames stripped so identical causes group)."""
+    import re
+    counts: Counter[str] = Counter()
+    for r in records:
+        if r.get("kind") != "stop":
+            continue
+        why = (r.get("why") or "").strip()
+        if not why or why == "stopped from the control window":
+            continue
+        why = re.sub(r"\s*\(capture:\s*[^)]+\)", "", why)
+        counts[why] += 1
+    return dict(counts.most_common())
+
+
+def mode_breakdown(runs: list[dict]) -> dict[str, dict]:
+    """Per-mode (ranked/casual/unknown) run counts, wins, and mean badges."""
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for r in runs:
+        groups[r.get("mode") or "unknown"].append(r)
+    out = {}
+    for mode, rs in groups.items():
+        done = [r["badges"] for r in rs if r.get("ended") and r.get("badges") is not None]
+        out[mode] = {
+            "runs": len(rs),
+            "finished": len(done),
+            "won": sum(b >= 10 for b in done),
+            "mean_badges": round(sum(done) / len(done), 1) if done else None,
+        }
+    return out
+
+
 def report(paths: list[Path]) -> dict:
     runs, allrecs = [], []
     for p in paths:
@@ -197,7 +235,8 @@ def report(paths: list[Path]) -> dict:
     except Exception:
         everyone = []
     anywhere = set().union(*(set(c) for c in seen.values()))
-    return {"runs": runs, "never_seen": [n for n in everyone if n not in anywhere],
+    return {"runs": runs, "by_mode": mode_breakdown(runs), "stop_reasons": stop_reasons(allrecs),
+            "never_seen": [n for n in everyone if n not in anywhere],
             "seen_counts": {k: dict(v) for k, v in seen.items()},
             "unnamed_opponent_monsters": unnamed_opponents(allrecs),
             "shop_offers": {k: {"odds": v["odds"], "cards": dict(v["cards"])} for k, v in shop_offers(allrecs).items()},
@@ -216,6 +255,15 @@ def show(rep: dict) -> None:
     if badges:
         print(f"\nFinished runs: mean {sum(badges) / len(badges):.1f} badges "
               f"({sum(b >= 10 for b in badges)} of {len(badges)} won)")
+    if rep.get("by_mode"):
+        print("\nBy mode:")
+        for mode, m in sorted(rep["by_mode"].items()):
+            mean = f", mean {m['mean_badges']:.1f} badges" if m["mean_badges"] is not None else ""
+            print(f"  {mode}: {m['runs']} run(s), {m['finished']} finished, {m['won']} won{mean}")
+    if rep.get("stop_reasons"):
+        print("\nStop reasons:")
+        for why, n in list(rep["stop_reasons"].items())[:10]:
+            print(f"  {n}x: {why}")
     print(f"\nBatomon never seen yet ({len(rep['never_seen'])}): {', '.join(rep['never_seen']) or '-'}")
     if rep["unnamed_opponent_monsters"]:
         print(f"Opponent monsters on the battle screen that could not be named: {rep['unnamed_opponent_monsters']}")

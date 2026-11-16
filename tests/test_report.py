@@ -34,6 +34,32 @@ class Report(unittest.TestCase):
         self.assertTrue(rep["shop_offers"])
         self.assertTrue(rep["income"])
 
+    def test_mode_breakdown_and_stop_reasons(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            p1 = d / "run_1.jsonl"
+            p1.write_text("\n".join(json.dumps(r) for r in [
+                {"kind": "new_run", "mode": "ranked", "ok": True},
+                {"kind": "shop", "state": {"day": 1, "badges": 0, "lives": 5, "trainer": "Chef"}},
+                {"kind": "battle"},
+                {"kind": "stop", "why": "shop 1: cannot read '?' (capture: unread_1.png)"},
+                {"kind": "run_over", "badges": 10},
+            ]) + "\n", encoding="utf-8")
+            p2 = d / "run_2.jsonl"
+            p2.write_text("\n".join(json.dumps(r) for r in [
+                {"kind": "new_run", "mode": "casual", "ok": True},
+                {"kind": "shop", "state": {"day": 1, "badges": 0, "lives": 5, "trainer": "Witch"}},
+                {"kind": "battle"},
+                {"kind": "stop", "why": "shop 1: cannot read '?' (capture: unread_2.png)"},
+                {"kind": "stop", "why": "stopped from the control window"},
+            ]) + "\n", encoding="utf-8")
+            rep = report.report([p1, p2])
+        self.assertEqual(rep["by_mode"]["ranked"], {"runs": 1, "finished": 1, "won": 1, "mean_badges": 10.0})
+        self.assertEqual(rep["by_mode"]["casual"], {"runs": 1, "finished": 0, "won": 0, "mean_badges": None})
+        self.assertEqual(rep["stop_reasons"], {"shop 1: cannot read '?'": 2})
+
 
 class Events(unittest.TestCase):
     def test_events_and_unknowns_are_listed(self):
