@@ -500,6 +500,8 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(st.runs_line(), "Run 3 / 10")
         st.apply("run_start", {"run": 3, "total": 0})
         self.assertEqual(st.runs_line(), "Run 3 (endless)")
+        st.apply("log", {"record": "run_over", "data": {}})
+        self.assertIsNone(st.ended)
         st2 = gui.Status()
         st2.apply("run_start", {"run": 1, "total": 3})
         st2.apply("log", {"record": "run_over", "data": {}})

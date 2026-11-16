@@ -303,7 +303,7 @@ class Status:
             if name == "day_result":
                 self.results.append((rec.get("day"), (rec.get("badges") or 0) > 0))
             if name == "run_over":
-                if not self.target_runs or self.target_runs == 1:
+                if self.target_runs in (None, 1):
                     self.ended = "The run is over."
             elif name == "stop" and rec.get("why") == "day limit":
                 self.ended = "The number of battles you set is played. Stopped before pressing BATTLE!."
