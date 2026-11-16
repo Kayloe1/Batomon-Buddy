@@ -52,6 +52,19 @@ class Checks(unittest.TestCase):
         self.assertIsNone(hands.check_move(BEFORE, s, ("team", 4), ("team", 0)))
         self.assertIsNotNone(hands.check_move(BEFORE, BEFORE, ("team", 4), ("team", 0)))
 
+    def test_move_allows_aura_stat_change_in_target_slot(self):
+        s = copy.deepcopy(BEFORE)
+        moved = copy.deepcopy(s["team"][4])
+        moved["stats"] = [{"value": 999, "raw": "999", "stat": "damage", "color": "#ef426b"}]
+        s["team"][0], s["team"][4] = moved, None
+        self.assertIsNone(hands.check_move(BEFORE, s, ("team", 4), ("team", 0)))
+
+        wrong = copy.deepcopy(BEFORE)
+        other = copy.deepcopy(wrong["team"][4])
+        other["name"] = "Othermon"
+        wrong["team"][0], wrong["team"][4] = other, None
+        self.assertIn("different name or level", hands.check_move(BEFORE, wrong, ("team", 4), ("team", 0)))
+
     def test_swap_two_monsters(self):
         s = copy.deepcopy(BEFORE)
         s["team"][4], s["team"][5] = s["team"][5], s["team"][4]
