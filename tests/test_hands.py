@@ -206,6 +206,34 @@ class LookRereadsUnnamed(unittest.TestCase):
         self.assertIsNone(state["team"][0]["name"])
         self.assertEqual(n, 3)
 
+    def test_unreadable_non_shop_screen_retries_and_keeps_clean_read(self):
+        bad_event = {"screen": "event", "problems": ["event 0: cannot read line"]}
+        clean_event = {"screen": "event", "problems": [], "choices": ["Heal all"]}
+        state, n = self._look([bad_event, bad_event, clean_event])
+        self.assertEqual(state["screen"], "event")
+        self.assertEqual(state["problems"], [])
+        self.assertEqual(n, 3)
+
+    def test_unknown_screen_retries_and_recovers_recognized_screen(self):
+        unknown = {"screen": "unknown", "problems": ["unrecognized screen"]}
+        clean_trinket = {"screen": "trinket_pick", "problems": [], "trinkets": ["Coupon"]}
+        state, n = self._look([unknown, clean_trinket])
+        self.assertEqual(state["screen"], "trinket_pick")
+        self.assertEqual(state["problems"], [])
+        self.assertEqual(n, 2)
+
+    def test_clean_non_shop_screen_is_not_repeated(self):
+        clean_event = {"screen": "event", "problems": [], "choices": ["Heal all"]}
+        state, n = self._look([clean_event])
+        self.assertEqual(n, 1)
+
+    def test_persistently_unreadable_non_shop_stops_after_four_reads(self):
+        bad_two = {"screen": "event", "problems": ["p1", "p2"]}
+        bad_one = {"screen": "event", "problems": ["p1"]}
+        state, n = self._look([bad_two, bad_one, bad_two, bad_two])
+        self.assertEqual(state["problems"], ["p1"])
+        self.assertEqual(n, 4)
+
 
 
 class FastForwardIsLeftAlone(unittest.TestCase):
