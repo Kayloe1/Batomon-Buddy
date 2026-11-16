@@ -32,7 +32,7 @@ from .arrange import heuristic_layout, power
 from .evaluate import slot_spec
 from .model import RunState
 
-POOL_MIX = {"casual": 0.15, "steady": 0.35, "strong": 0.30, "expert": 0.20}
+POOL_MIX = {"casual": 0.0, "steady": 0.20, "strong": 0.45, "expert": 0.35}
 # Extra money per day for ghosts, standing in for what they get from items, events,
 # trainer abilities and economy trinkets (none of which the ghosts model).
 POWER_RAMP = 0.3
