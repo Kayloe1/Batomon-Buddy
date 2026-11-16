@@ -194,6 +194,27 @@ class Planner:
                 counts[u.name] = counts.get(u.name, 0) + 1
         fielded = [u for u in (team or []) if u is not None]
         weakest = min((power(u) for u in fielded), default=0.0) if len(fielded) >= 6 else 0.0
+        lv2: dict[str, int] = {}
+        for _, _, u in s.owned():
+            if u.level == 2 and u.name:
+                lv2[u.name] = lv2.get(u.name, 0) + 1
+        on_team = {u.name for u in fielded}
+        on_bench = {u.name: 0 for u in bench if u is not None and u.name}
+        for u in bench:
+            if u is not None and u.name:
+                on_bench[u.name] += 1
+        for name in set(counts) | set(lv2):
+            sp = data.species(name)
+            if sp is None:
+                continue
+            base = self.p.copy_progress * (1 + data.RARITIES.index(sp.rarity)) * self.third_copy_chance(s, name)
+            c1, c2 = counts.get(name, 0), lv2.get(name, 0)
+            if c2 >= 1 and c1 >= 2:
+                v += 2.0 * base                    # one copy from a Lv2 that pairs with the Lv2: a Lv3 is near
+            elif c2 >= 1 and c1 == 1:
+                v += 1.0 * base                    # Lv2 + Lv1: progress toward Lv3
+            if c1 < 2 and name in on_team and on_bench.get(name, 0) >= 1:
+                v += 0.5 * base                    # a spare copy on the bench of a fielded monster
         for name, c in counts.items():
             if c >= 2:
                 sp = data.species(name)
@@ -407,6 +428,8 @@ class Planner:
         fielded = [u for u in team if u is not None]
         if len(fielded) < 4 and s.day < 6:
             return []                            # early on the bench is a waiting room, not a cost
+        if s.free_slots() >= 2:
+            return []                            # open bench slots: holding a monster costs nothing
         weakest = min((power(u) for u in fielded), default=0.0)
         on_sale = {c.name for c in s.shop if c and c.kind == "monster" and c.name}
         owned = [u for _, _, u in s.owned()]
@@ -416,6 +439,9 @@ class Planner:
                 continue
             if u.name in on_sale or any(o is u for o in team):
                 continue                         # a third copy is for sale, or the arrangement fields it
+            if u.level < data.MAX_READABLE_LEVEL and any(
+                    o is not u and o.name == u.name and o.level in (1, 2) for o in owned):
+                continue                         # another copy of it is owned: the pair is progress to a merge
             copies = sum(1 for o in owned if o.name == u.name and o.level == u.level)
             need = 3 if u.level == 1 else 2
             if u.level < 3 and copies >= need - 1:

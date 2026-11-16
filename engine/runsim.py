@@ -35,7 +35,14 @@ from .planner import Params, Planner
 from .model import RunState
 
 MAX_DAYS = 20
-DEFAULT_WORKERS = max(1, (os.cpu_count() or 4) - 2)
+
+
+def default_workers() -> int:
+    """All cores but two (the PC stays usable); at least one."""
+    return max(1, (os.cpu_count() or 4) - 2)
+
+
+DEFAULT_WORKERS = default_workers()
 
 
 def simple_policy_turn(s: RunState, rng: random.Random) -> RunState:
@@ -179,7 +186,7 @@ def main() -> int:
     ap.add_argument("--policy", choices=["engine", "simple"], default="engine")
     ap.add_argument("--runs", type=int, default=8)
     ap.add_argument("--first-seed", type=int, default=1000)
-    ap.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
+    ap.add_argument("--workers", type=int, default=default_workers())
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--field", choices=["ghosts", "gold"], default="ghosts",
                     help="who the runs fight: the ghosts (default) or the Gold-rank practice field")

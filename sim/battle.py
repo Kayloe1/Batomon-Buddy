@@ -238,6 +238,7 @@ class Battle:
         self.depth = 0
         self._adj: dict[int, list[Unit]] = {}
         self._speeds: dict[int, float] | None = None   # cached speed_of; None = recompute
+        self._living: list[list[Unit] | None] = [None, None]   # cached living(side); reset by knockout()
 
     # ---------- setup ----------
     def _trainer(self, side: int, team: dict) -> Trainer:
@@ -318,7 +319,11 @@ class Battle:
         return [v for v in self.teams[u.side] if v and v is not u]
 
     def living(self, side: int) -> list[Unit]:
-        return [u for u in self.teams[side] if u and u.alive]
+        """The units still standing (a cached list: do not change it; knockout() starts a new one)."""
+        c = self._living[side]
+        if c is None:
+            c = self._living[side] = [u for u in self.teams[side] if u and u.alive]
+        return c
 
     # ---------- ongoing effects ----------
     def ongoing_mult(self, u: Unit) -> int:
@@ -423,6 +428,7 @@ class Battle:
             self.say(f"{u.name} (side {u.side}) Protect blocks a Knockout")
             return
         u.alive = False
+        self._living = [None, None]
         self.speeds_changed()
         self.say(f"{u.name} (side {u.side}) is knocked out")
 
@@ -703,9 +709,12 @@ class Battle:
         while result is None:
             # Next event time.
             times = [self.next_poison, self.next_burn]
+            standing = (self.living(0), self.living(1))
+            spd = {}
             for side in (0, 1):
-                for u in self.living(side):
-                    times.append(self.t + max(0.0, u.cooldown - u.progress) / self.speed(u))
+                for u in standing[side]:
+                    v = spd[id(u)] = self.speed(u)
+                    times.append(self.t + max(0.0, u.cooldown - u.progress) / v)
                     if u.is_("Shelldra") and u.active_passive():
                         times.append(u.shelldra_next)
             t_next = min(times)
@@ -714,8 +723,8 @@ class Battle:
                 return self._result(force_draw=self.until is None)
             dt = t_next - self.t
             for side in (0, 1):
-                for u in self.living(side):
-                    u.progress += dt * self.speed(u)
+                for u in standing[side]:
+                    u.progress += dt * spd[id(u)]
             self.t = t_next
             # Casts: keep going while someone is ready (charges can make more units ready).
             for _ in range(50):
