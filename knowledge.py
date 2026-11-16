@@ -97,7 +97,7 @@ AVOID_TRAINERS = {
     "Gentleman": "stops Common and Uncommon monsters appearing after the first days (kills Common copy sets)",
 }
 
-TRAINER_PREFERENCE = ["Monster Ranger", "Swim Coach", "Bug Catcher", "Youngster", "Egg Breeder"]
+TRAINER_PREFERENCE = ["Swim Coach", "Monster Ranger", "Chemist", "Egg Breeder", "Youngster", "Bug Catcher", "Redhead", "Shopkeeper"]
 """Trainers that won or helped in September, best first (judgment from few runs). Monster Ranger
 and Swim Coach each won twice, Bug Catcher once (its free Bug each day also covers Cicadence,
 Formiqueen and Guardiant). Youngster's free rerolls feed a Bug fodder loop. Burglar is strong late but

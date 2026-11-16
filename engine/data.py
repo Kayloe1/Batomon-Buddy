@@ -8,10 +8,12 @@ batomon-showdown-notes.md, MECHANICS 1), checked in runs 1 to 18.
 from __future__ import annotations
 
 import csv
+import json
 import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
+from typing import Iterable
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
@@ -212,3 +214,89 @@ def items() -> dict[str, dict]:
 def trinkets() -> dict[str, dict]:
     with open(DATA / "trinkets.csv", encoding="utf-8") as f:
         return {r["name"]: {"rarity": r["rarity"], "effect": r["effect"]} for r in csv.DictReader(f)}
+
+
+@lru_cache(maxsize=1)
+def meta_comps() -> dict:
+    path = DATA / "meta_comps.json"
+    if not path.exists():
+        return {"comps": [], "pairs": [], "trainers": [], "monsters": {}, "trinkets": {}}
+    with open(path, encoding="utf-8-sig") as f:      # tolerate a BOM (PowerShell writes one)
+        return json.load(f)
+
+
+@lru_cache(maxsize=1)
+def synergy_pairs() -> dict[str, dict[str, float]]:
+    """Monster -> {partner: ranked win rate} from batomon.com /meta/pairs and /comps."""
+    out: dict[str, dict[str, float]] = {}
+    meta = meta_comps()
+    for p in meta.get("pairs", []):
+        names = p.get("pair") or []
+        wr = float(p.get("win_rate") or 0.0)
+        if len(names) == 2 and wr > 0:
+            a, b = names[0], names[1]
+            out.setdefault(a, {})[b] = max(out.get(a, {}).get(b, 0.0), wr)
+            out.setdefault(b, {})[a] = max(out.get(b, {}).get(a, 0.0), wr)
+    for comp in meta.get("comps", []):
+        core = comp.get("core_monsters") or []
+        wr = float(comp.get("ten_win_rate") or 0.0)
+        for i, a in enumerate(core):
+            for b in core[i + 1:]:
+                out.setdefault(a, {}).setdefault(b, wr)
+                out.setdefault(b, {}).setdefault(a, wr)
+    return out
+
+
+PAIR_BASELINE = 0.20
+
+
+def partner_lift(name: str | None, allies: Iterable[str]) -> float:
+    """Sum of win-rate lifts above PAIR_BASELINE that `name` has with distinct `allies`."""
+    if not name:
+        return 0.0
+    partners = synergy_pairs().get(name)
+    if not partners:
+        return 0.0
+    return sum(max(0.0, partners.get(a, 0.0) - PAIR_BASELINE) for a in set(allies) if a and a != name)
+
+
+def team_synergy(names: Iterable[str]) -> float:
+    """Total pairwise meta synergy lift across the distinct monsters in `names`."""
+    unique = sorted({n for n in names if n})
+    pairs = synergy_pairs()
+    total = 0.0
+    for i, a in enumerate(unique):
+        pa = pairs.get(a)
+        if not pa:
+            continue
+        for b in unique[i + 1:]:
+            w = pa.get(b, 0.0)
+            if w > PAIR_BASELINE:
+                total += w - PAIR_BASELINE
+    return total
+
+
+def monster_win_rate(name: str | None, default: float = 0.18) -> float:
+    if not name:
+        return default
+    m = meta_comps().get("monsters", {}).get(name)
+    return float(m["win_rate"]) if m and "win_rate" in m else default
+
+
+def trainer_win_rate(name: str | None) -> float | None:
+    """Balance 27 Ranked win rate from batomon.com /meta/trainers, or None if missing."""
+    if not name:
+        return None
+    for entry in meta_comps().get("trainers", []):
+        if entry.get("name") == name and "win_rate" in entry:
+            return float(entry["win_rate"])
+    return None
+
+
+def trinket_win_rate(name: str | None) -> float | None:
+    """Balance 27 Ranked win rate from batomon.com /meta/trinkets, or None if missing."""
+    if not name:
+        return None
+    t = meta_comps().get("trinkets", {}).get(name)
+    return float(t["win_rate"]) if t and "win_rate" in t else None
+

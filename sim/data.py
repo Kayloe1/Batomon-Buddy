@@ -68,9 +68,39 @@ PASSIVE_PATTERNS: dict[str, list[str]] = {
     "Dribblet": [r"\+(\d+) Damage"],
     "Panbud": [r"\+(\d+) Damage"],
     "Scorchimp": [r"\+(\d+)%"],
+    # Jinto monsters (data/jinto_monsters.csv and data/foreign_monsters.csv)
+    "Miasmaw": [r"(\d+(?:\.\d+)?)x"],
+    "Drumire": [r"\+(\d+)%"],
+    "Cinnabark": [r"(\d+)%"],
+    "Ouroblaze": [r"(\d+)%"],
+    "Quillustrous": [r"(\d+)%"],
+    "Bonshell": [r"\+(\d+) Damage"],
+    "Shellter": [r"-(\d+) Shield"],
+    "Cairnage": [r"([\d.]+)x"],
+    "Steamscuttle": [r"by ([\d.]+) second"],
+    "Oniclaw": [r"\+(\d+)%"],
+    "Shikitsune": [r"\+(\d+)%"],
+    "Danuki": [r"(\d+)%"],
+    "Rattleghast": [r"\+(\d+) Poison"],
+    "Petrirex": [r"\+(\d+) Shield"],
+    "Ginsage": [r"\+(\d+)%"],
+    "Lumijel": [r"\+(\d+) Damage"],
+    "Brimtoad": [r"\+(\d+) Burn"],
+    "Shrinell": [r"\+([\d.]+)%"],
+    "Furnadon": [r"\+(\d+) Burn"],
+    "Orcana": [r"\+(\d+) Damage"],
 }
 # Used when no number is written ("equal to the Shield of adjacent allies" means 1x).
-PASSIVE_DEFAULTS = {"Aegistruct": 1.0, "Blixie": 1.0, "Clawnetic": 1.0, "Cobrex": 1.0}
+PASSIVE_DEFAULTS = {
+    "Aegistruct": 1.0, "Blixie": 1.0, "Clawnetic": 1.0, "Cobrex": 1.0,
+    "Miasmaw": 1.0, "Cairnage": 0.8, "Steamscuttle": 1.0, "Danuki": 85.0,
+}
+# Species whose passive is Ongoing even when data/*.csv omits the "Ongoing" prefix.
+ONGOING_SPECIES = {
+    "Bunchop", "Cinnabark", "Formiqueen", "Fumungus", "Furnadon", "Gaiadrasil",
+    "Lignite", "Orcana", "Ouroblaze", "Pylong", "Quillustrous", "Shrinell",
+    "Stellagon", "Tengusto", "Faebloom",
+}
 # Passives that only exist once the monster has evolved (level 3 and up).
 EVOLVES = {"Dribblet": "Dribblet", "Panbud": "Bambudo", "Scorchimp": "Sunsage"}
 EVOLVED_NAMES = {"Bambudo": "Panbud", "Sunsage": "Scorchimp"}
@@ -96,7 +126,7 @@ class Species:
 
     @property
     def is_ongoing(self) -> bool:
-        return self.passive.startswith("Ongoing")
+        return self.passive.startswith("Ongoing") or self.name in ONGOING_SPECIES
 
     def has_ability(self) -> bool:
         return bool(self.passive.strip())

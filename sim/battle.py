@@ -33,7 +33,7 @@ EPS = 1e-9
 
 # Static trinket bonuses that change a card's badges (applied only when a slot has no "stats").
 STATIC_STAT_TRINKETS = {"Wood Sword", "Small Club", "Giant Club", "Terrarium", "Fire Orb",
-                        "Poison Orb", "Power Crown"}
+                        "Poison Orb", "Power Crown", "Excalibur", "Master Crown"}
 STATIC_STAT_TRAINERS = {"Chef", "Chemist", "Musician"}
 
 
@@ -59,6 +59,7 @@ class Unit:
     protect: int = 0
     shiny: bool = False           # Shiny copy: the self-knockout drawback is gone (Stingarde, seen 2026-11-12)
     extra_multicast: int = 0
+    base_damage: float = 0.0      # starting battle Damage (for % gains like Oniclaw)
     shelldra_next: float = 4.0
     casts: int = 0
     triggers: int = 0
@@ -188,8 +189,15 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
                 unit.stats["poison"] += 3
             elif t == "Power Crown" and slot == 1:
                 unit.stats["damage"] += 20
+            elif t == "Excalibur":
+                unit.stats["damage"] += 350
             elif t == "Terrarium" and "Bug" in unit.types:
                 unit.stats["damage"] *= 1.2
+        if slot == 1:
+            n_master = trinkets.count("Master Crown")
+            if n_master:
+                for s in data.STATS:
+                    unit.stats[s] *= 1 + 0.8 * n_master
         # Clubs stack additively: two Giant Clubs gave x2.4, not x1.7^2 (Cobrex Lv2 Shiny: 600 x 1.2 x 2.4
         # = 1728 on its card, 2026-11-12). Small Club is assumed to stack the same way.
         if unit.cooldown >= 5:
@@ -218,6 +226,7 @@ def build_unit(side: int, slot: int, spec: dict, trainer: str | None, trinkets: 
                 unit.speed += 10
             elif t == "Haste Crown" and slot == 1:
                 unit.speed += 20
+    unit.base_damage = unit.stats["damage"]
     return unit
 
 
@@ -239,6 +248,7 @@ class Battle:
         self._adj: dict[int, list[Unit]] = {}
         self._speeds: dict[int, float] | None = None   # cached speed_of; None = recompute
         self._living: list[list[Unit] | None] = [None, None]   # cached living(side); reset by knockout()
+        self._dmg_visiting: set[int] = set()
 
     # ---------- setup ----------
     def _trainer(self, side: int, team: dict) -> Trainer:
@@ -342,23 +352,66 @@ class Battle:
         for v in self.adjacent(u):
             if v.is_("Formiqueen") and self.ongoing_active(v) and u.rarity == "Common" and v.param:
                 bonus += v.param * self.ongoing_mult(v)
+            if v.is_("Shrinell") and v.shiny and self.ongoing_active(v) and v.param:
+                bonus += v.param * len(self.trainers[u.side].trinkets) * self.ongoing_mult(v)
+        front = self.in_front(u)
+        if front and front.is_("Shrinell") and not front.shiny and self.ongoing_active(front) and front.param:
+            bonus += front.param * len(self.trainers[u.side].trinkets) * self.ongoing_mult(front)
         return 1.0 + bonus / 100.0
 
     def damage_of(self, u: Unit) -> float:
         dmg = u.stats["damage"]
-        if not self.ongoing_active(u) or u.param is None:
+        if not self.ongoing_active(u) or u.param is None or id(u) in self._dmg_visiting:
             return dmg
+        self._dmg_visiting.add(id(u))
+        try:
+            k = self.ongoing_mult(u)
+            if u.is_("Lignite"):
+                dmg += u.param * k * u.stats["burn"]
+            elif u.is_("Fumungus"):
+                dmg += u.param / 100.0 * k * self.trainers[1 - u.side].poison
+            elif u.is_("Gaiadrasil"):
+                # allies' full Damage, Ongoing extras included (Fumungus's Poison-based Damage counted
+                # in the game: one cast hit 3375 where the allies' badges summed to ~2450, 2026-11-12)
+                dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.adjacent(u)
+                                                 if not v.is_("Gaiadrasil") and v.alive)
+            elif u.is_("Quillustrous"):
+                dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.allies(u)
+                                                 if not v.is_("Quillustrous") and v.alive)
+            elif u.is_("Orcana"):
+                dmg += u.param * k * sum(1 for v in self.allies(u) if v.alive and v.level >= 3)
+            return dmg
+        finally:
+            self._dmg_visiting.discard(id(u))
+
+    def heal_of(self, u: Unit) -> float:
+        heal = u.stats["heal"]
+        if not self.ongoing_active(u) or u.param is None:
+            return heal
         k = self.ongoing_mult(u)
-        if u.is_("Lignite"):
-            dmg += u.param * k * u.stats["burn"]
-        elif u.is_("Fumungus"):
-            dmg += u.param / 100.0 * k * self.trainers[1 - u.side].poison
-        elif u.is_("Gaiadrasil"):
-            # allies' full Damage, Ongoing extras included (Fumungus's Poison-based Damage counted
-            # in the game: one cast hit 3375 where the allies' badges summed to ~2450, 2026-11-12)
-            dmg += u.param / 100.0 * k * sum(self.damage_of(v) for v in self.adjacent(u)
-                                            if not v.is_("Gaiadrasil") and v.alive)
-        return dmg
+        if u.is_("Orcana"):
+            heal += u.param * k * sum(1 for v in self.allies(u) if v.alive and v.level >= 3)
+        return heal
+
+    def shield_of(self, u: Unit) -> float:
+        shld = u.stats["shield"]
+        if not self.ongoing_active(u) or u.param is None:
+            return shld
+        k = self.ongoing_mult(u)
+        if u.is_("Cinnabark"):
+            shld += u.param / 100.0 * k * self.trainers[1 - u.side].poison
+        return shld
+
+    def burn_of(self, u: Unit) -> float:
+        burn = u.stats["burn"]
+        if not self.ongoing_active(u) or u.param is None:
+            return burn
+        k = self.ongoing_mult(u)
+        if u.is_("Ouroblaze"):
+            burn += u.param / 100.0 * k * self.trainers[1 - u.side].burn
+        elif u.is_("Furnadon"):
+            burn += u.param * k * len(set(self.trainers[u.side].trinkets))
+        return burn
 
     def shock_of(self, u: Unit) -> float:
         shock = u.stats["shock"]
@@ -430,10 +483,13 @@ class Battle:
         u.alive = False
         self._living = [None, None]
         self.speeds_changed()
+        for v in self.allies(u):
+            if v.is_("Danuki") and not u.is_("Danuki") and v.active_passive():
+                v.stats["damage"] += ((v.param or 85.0) / 100.0) * u.stats["damage"]
         self.say(f"{u.name} (side {u.side}) is knocked out")
 
     def charge(self, u: Unit, seconds: float) -> None:
-        if u.alive:
+        if u.alive and u.base_name not in ("Dracana", "Ironcore", "Steamscuttle"):
             u.progress += seconds
 
     # ---------- casting ----------
@@ -453,23 +509,29 @@ class Battle:
         mc = self.multicast_of(u)
         u.casts += 1
         u.triggers += 1          # the Stats screen counts casts, not Multicast hits (Velocect x2: 4 casts = "4 times")
+        applied_shield = False
         for _ in range(mc):
             dmg = self.damage_of(u)
             if dmg > 0:
                 u.dealt += self.hit(foe, dmg, u)   # "Dealt" on the Stats screen includes the Shock bonus
-            if u.stats["heal"] > 0:
-                self.heal(me, u.stats["heal"])
-                u.healed += u.stats["heal"]
-            if u.stats["shield"] > 0:
-                self.gain_shield(me, u.stats["shield"])
-                u.shielded += u.stats["shield"]
+            hl = self.heal_of(u)
+            if hl > 0:
+                self.heal(me, hl)
+                u.healed += hl
+            sh = self.shield_of(u)
+            if sh > 0:
+                self.gain_shield(me, sh)
+                u.shielded += sh
+                applied_shield = True
             if u.stats["poison"] > 0:
                 foe.poison += u.stats["poison"]
                 u.inflicted["poison"] += u.stats["poison"]
                 self.on_ally_inflicts(u, "poison")
-            if u.stats["burn"] > 0:
-                foe.burn += u.stats["burn"]
-                u.inflicted["burn"] += u.stats["burn"]
+            brn = self.burn_of(u)
+            if brn > 0:
+                foe.burn += brn
+                u.inflicted["burn"] += brn
+                self.on_ally_inflicts(u, "burn")
             shock = self.shock_of(u)
             if shock > 0:
                 if SETTINGS.get("shock_next_instant", True):
@@ -490,8 +552,31 @@ class Battle:
             for v in self.adjacent(u):
                 if v.is_("Puffloon") and v.active_passive():
                     self.cast(v, f"{u.name} triggered")
+        # Drumire: give casting Toxic ally Cooldown Speed for this battle.
+        if "Toxic" in u.types and u.alive:
+            gained_spd = False
+            for v in self.allies(u):
+                if v.is_("Drumire") and v.active_passive() and v.param:
+                    u.speed += v.param
+                    gained_spd = True
+            if gained_spd:
+                self.speeds_changed()
+        # Snapscald: trigger when an ally of level 3 or above casts.
+        if u.level >= 3 and not u.is_("Snapscald"):
+            for v in self.allies(u):
+                if v.is_("Snapscald") and v.active_passive():
+                    self.cast(v, f"{u.name} triggered")
+        # Rhizuka: trigger when an ally applies Shield.
+        if applied_shield and not u.is_("Rhizuka"):
+            for v in self.allies(u):
+                if v.is_("Rhizuka") and v.active_passive():
+                    self.cast(v, f"{u.name} triggered")
 
     def on_ally_inflicts(self, u: Unit, kind: str) -> None:
+        if kind == "burn":
+            for v in self.living(u.side):
+                if v.is_("Oniclaw") and v.active_passive() and v.param:
+                    v.stats["damage"] += v.base_damage * (v.param / 100.0)
         for v in self.allies(u):
             if not v.active_passive():
                 continue
@@ -573,7 +658,7 @@ class Battle:
         elif name == "Sirenade":
             for s in ("poison", "burn", "shock"):
                 cur = getattr(me, s)
-                setattr(me, s, cur - math.floor(cur * p / 100.0))
+                setattr(me, s, max(0.0, cur - math.ceil(cur * p / 100.0)))
         elif name == "Zephyrex":
             f = self.in_front(u)
             if f and "Flying" in f.types and not f.is_("Zephyrex"):
@@ -605,6 +690,52 @@ class Battle:
                     self.cast(v, "Torrantler")
         elif name == "Panbud" and u.evolved():
             u.stats["damage"] += p
+        elif name == "Bonshell":
+            u.stats["damage"] += p
+            u.stats["shield"] += p
+        elif name == "Shellter":
+            u.stats["shield"] = max(0.0, u.stats["shield"] - p)
+        elif name == "Cairnage":
+            for v in self.allies(u):
+                if v.alive:
+                    v.stats["damage"] += p * self.shield_of(v)
+        elif name == "Opalion":
+            rocks = [v for v in self.allies(u) if v.alive and "Rock" in v.types and not v.is_("Opalion")]
+            if rocks:
+                self.cast(self.rng.choice(rocks), "Opalion")
+        elif name == "Steamscuttle":
+            for v in self.adjacent(u):
+                if "Fire" in v.types or "Water" in v.types:
+                    self.charge(v, p)
+        elif name == "Shikitsune":
+            revived = False
+            for v in self.allies(u):
+                if not v.alive:
+                    v.alive = True
+                    v.speed += p
+                    revived = True
+            if revived:
+                self._living = [None, None]
+                self.speeds_changed()
+        elif name == "Petrirex":
+            for v in list(self.adjacent(u)):
+                was_alive = v.alive
+                self.knockout(v)
+                if was_alive and not v.alive:
+                    u.stats["shield"] += p
+        elif name == "Vengrieve":
+            enemies = [v for v in self.teams[1 - u.side] if v and v.alive]
+            target = None
+            if u.level >= 4 and enemies:
+                target = self.rng.choice(enemies)
+            else:
+                v = self.teams[1 - u.side][u.slot]
+                if v and v.alive:
+                    target = v
+            if target is not None:
+                for sk in data.STATS:
+                    u.stats[sk] += target.stats[sk]
+                self.knockout(target)
 
     # ---------- battle start ----------
     def battle_start(self, u: Unit) -> None:
@@ -630,6 +761,27 @@ class Battle:
             fire = sum(1 for v in self.allies(u) if "Fire" in v.types)
             u.speed += p * fire
             self.speeds_changed()
+        elif name == "Miasmaw":
+            u.stats["poison"] += p * sum(v.stats["poison"] for v in self.allies(u) if not v.is_("Miasmaw"))
+        elif name == "Ginsage":
+            for v in self.adjacent(u):
+                if "Grass" in v.types:
+                    v.speed += p
+            self.speeds_changed()
+        elif name == "Lumijel":
+            for v in self.allies(u):
+                if v.level >= 3:
+                    v.stats["damage"] += p
+                    v.stats["heal"] += p
+        elif name == "Brimtoad":
+            u.stats["burn"] += p
+            u.stats["poison"] += p
+        elif name == "Rattleghast":
+            for v in list(self.adjacent(u)):
+                was_alive = v.alive
+                self.knockout(v)
+                if was_alive and not v.alive:
+                    u.stats["poison"] += p
 
     def trinket_start(self, side: int) -> None:
         tr = self.trainers[side]
@@ -681,7 +833,8 @@ class Battle:
         for side in (0, 1):
             for u in self.teams[side]:
                 if u and u.is_("Celestia") and u.active_passive():
-                    for s2 in (0, 1):
+                    sides = (1 - side,) if u.shiny else (0, 1)
+                    for s2 in sides:
                         for v in self.teams[s2]:
                             if v and v.row == u.row and v.ongoing:
                                 v.disabled = True

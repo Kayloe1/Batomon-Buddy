@@ -49,6 +49,7 @@ class Params:
     money_cap: int = 40        # ... up to this much; more saved money buys nothing extra
     bench_money: float = 0.8   # share of the monsters' sell value counted as money
     copy_progress: float = 0.04
+    synergy_weight: float = 0.0  # optional bonus for meta pair win-rate lift on day 8+ (off by default: 0.04 regressed Gold runs)
     power_weight: float = 0.05   # tie-breaker: a stronger fielded team is better even when the simulator's
                                  # score is flat (late days, where every purchase looks equally hopeless)
     swap_gain: float = 0.004     # a layout change must beat the current layout by this much (no shuffling)
@@ -198,7 +199,10 @@ class Planner:
         for _, _, u in s.owned():
             if u.level == 2 and u.name:
                 lv2[u.name] = lv2.get(u.name, 0) + 1
-        on_team = {u.name for u in fielded}
+        on_team = {u.name for u in fielded if u.name}
+        use_syn = bool(self.p.synergy_weight and s.day >= 8)
+        if use_syn and len(on_team) >= 2:
+            v += self.p.synergy_weight * data.team_synergy(on_team)
         on_bench = {u.name: 0 for u in bench if u is not None and u.name}
         for u in bench:
             if u is not None and u.name:
@@ -207,10 +211,12 @@ class Planner:
             sp = data.species(name)
             if sp is None:
                 continue
-            base = self.p.copy_progress * (1 + data.RARITIES.index(sp.rarity)) * self.third_copy_chance(s, name)
+            syn = data.partner_lift(name, on_team) if use_syn else 0.0
+            base = (self.p.copy_progress * (1 + data.RARITIES.index(sp.rarity))
+                    * (1.0 + syn) * self.third_copy_chance(s, name))
             c1, c2 = counts.get(name, 0), lv2.get(name, 0)
             if c2 >= 1 and c1 >= 2:
-                v += 2.0 * base                    # one copy from a Lv2 that pairs with the Lv2: a Lv3 is near
+                v += 2.0 * base
             elif c2 >= 1 and c1 == 1:
                 v += 1.0 * base                    # Lv2 + Lv1: progress toward Lv3
             if c1 < 2 and name in on_team and on_bench.get(name, 0) >= 1:
@@ -218,14 +224,15 @@ class Planner:
         for name, c in counts.items():
             if c >= 2:
                 sp = data.species(name)
+                syn = data.partner_lift(name, on_team) if use_syn else 0.0
                 # a pair is worth its level-up only if the third copy is likely to show up and the
                 # level-2 monster would play (2026-11-13: a second Dracana bought for $40 for this
                 # bonus alone, and the pair sat on the bench; the bonus grew with rarity although a
                 # rarer third copy is less likely)
-                if power(model.new_unit(name, 0, 2)) <= weakest:
+                if power(model.new_unit(name, 0, 2)) <= weakest and syn <= 0:
                     continue
                 v += (self.p.copy_progress * (1 + data.RARITIES.index(sp.rarity) if sp else 1)
-                      * self.third_copy_chance(s, name))
+                      * (1.0 + syn) * self.third_copy_chance(s, name))
         return v
 
     def quick(self, s: RunState, team, bench) -> float:
@@ -335,10 +342,11 @@ class Planner:
     # ------------------------------------------------------ greedy finish ----
     def _card_order(self, s: RunState) -> list[int]:
         cands = []
+        owned_names = [o.name for _, _, o in s.owned() if o.name]
         for i, c in enumerate(s.shop):
             if c and c.kind == "monster" and model.can_buy(s, i):
                 u = model.new_unit(c.name, c.price, 1, dict(c.stats) or None)
-                same = sum(1 for _, _, o in s.owned() if o.name == c.name)
+                same = sum(1 for n in owned_names if n == c.name)
                 cands.append((power(u) + 200 * same, i))
         return [i for _, i in sorted(cands, reverse=True)][: self.p.screen]
 
@@ -431,6 +439,7 @@ class Planner:
         if s.free_slots() >= 2:
             return []                            # open bench slots: holding a monster costs nothing
         weakest = min((power(u) for u in fielded), default=0.0)
+        on_team = {u.name for u in fielded if u.name}
         on_sale = {c.name for c in s.shop if c and c.kind == "monster" and c.name}
         owned = [u for _, _, u in s.owned()]
         out = []
@@ -439,6 +448,7 @@ class Planner:
                 continue
             if u.name in on_sale or any(o is u for o in team):
                 continue                         # a third copy is for sale, or the arrangement fields it
+            syn = data.partner_lift(u.name, on_team) if (self.p.synergy_weight and s.day >= 8) else 0.0
             if u.level < data.MAX_READABLE_LEVEL and any(
                     o is not u and o.name == u.name and o.level in (1, 2) for o in owned):
                 continue                         # another copy of it is owned: the pair is progress to a merge
@@ -446,10 +456,10 @@ class Planner:
             need = 3 if u.level == 1 else 2
             if u.level < 3 and copies >= need - 1:
                 nxt = model.new_unit(u.name, 0, u.level + 1)
-                if power(nxt) > 1.1 * weakest:
+                if power(nxt) > 1.1 * weakest or syn > 0:
                     continue                     # a merge here would improve the team: worth holding
-            if power(u) > weakest:
-                # stronger than the weakest fielded monster: the arrangement will use it, not a dead weight
+            if power(u) > weakest or syn >= 0.08:
+                # stronger than the weakest fielded monster, or a top meta partner for the team
                 continue
             out.append((BENCH, k, u))
         return out

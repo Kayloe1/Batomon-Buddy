@@ -1,0 +1,1743 @@
+{
+    "source":  "batomon.com Balance 27 / Patch 1.5.1 (4,983 ranked runs, 42,012 ranked rounds)",
+    "updated":  "2026-11-15",
+    "comps":  [
+                  {
+                      "name":  "Miasmaw + Drumire",
+                      "slug":  "miasmaw-drumire",
+                      "tier":  "S+",
+                      "ten_win_rate":  0.376,
+                      "avg_wins":  8.2,
+                      "play_rate":  0.039,
+                      "sample_runs":  196,
+                      "recommended_trainer":  "Chemist",
+                      "core_monsters":  [
+                                            "Cinnabark",
+                                            "Drumire",
+                                            "Miasmaw"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Cinnabark",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Drumire",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Miasmaw",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Onsetra",
+                                        "level":  2,
+                                        "presence":  0.378
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Opalion",
+                                        "level":  2,
+                                        "presence":  0.337
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Vipair",
+                                        "level":  2,
+                                        "presence":  0.219
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Bonshell + Opalion",
+                      "slug":  "bonshell-opalion",
+                      "tier":  "S",
+                      "ten_win_rate":  0.338,
+                      "avg_wins":  7.3,
+                      "play_rate":  0.013,
+                      "sample_runs":  65,
+                      "recommended_trainer":  "Rich Lady",
+                      "core_monsters":  [
+                                            "Bonshell",
+                                            "Dracana",
+                                            "Opalion"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Bonshell",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Dracana",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Opalion",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Saberhorn",
+                                        "level":  2,
+                                        "presence":  0.338
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Cairnage",
+                                        "level":  1,
+                                        "presence":  0.323
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Ginsage",
+                                        "level":  2,
+                                        "presence":  0.185
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Ratacomb + Lumijel",
+                      "slug":  "ratacomb-lumijel",
+                      "tier":  "S",
+                      "ten_win_rate":  0.308,
+                      "avg_wins":  7.7,
+                      "play_rate":  0.01,
+                      "sample_runs":  52,
+                      "recommended_trainer":  "Witch",
+                      "core_monsters":  [
+                                            "Lumijel",
+                                            "Ratacomb",
+                                            "Snapscald"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Lumijel",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Ratacomb",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Snapscald",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Shikitsune",
+                                        "level":  2,
+                                        "presence":  0.365
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Petrirex",
+                                        "level":  2,
+                                        "presence":  0.269
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Draconarch",
+                                        "level":  1,
+                                        "presence":  0.212
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Ouroblaze + Furnadon",
+                      "slug":  "ouroblaze-furnadon",
+                      "tier":  "B",
+                      "ten_win_rate":  0.24,
+                      "avg_wins":  7.1,
+                      "play_rate":  0.021,
+                      "sample_runs":  103,
+                      "recommended_trainer":  "Redhead",
+                      "core_monsters":  [
+                                            "Furnadon",
+                                            "Ouroblaze",
+                                            "Steamscuttle"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Furnadon",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Ouroblaze",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Steamscuttle",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Onsetra",
+                                        "level":  2,
+                                        "presence":  0.505
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Pyrokami",
+                                        "level":  3,
+                                        "presence":  0.388
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Lamplet",
+                                        "level":  3,
+                                        "presence":  0.35
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Fumungus + Aristobat",
+                      "slug":  "fumungus-aristobat",
+                      "tier":  "B",
+                      "ten_win_rate":  0.189,
+                      "avg_wins":  6.7,
+                      "play_rate":  0.031,
+                      "sample_runs":  153,
+                      "recommended_trainer":  "Chemist",
+                      "core_monsters":  [
+                                            "Aristobat",
+                                            "Fumungus",
+                                            "Puffloon",
+                                            "Cobrex"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Aristobat",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Fumungus",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Puffloon",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Cobrex",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Noxnimbus",
+                                        "level":  2,
+                                        "presence":  0.51
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Spinarai",
+                                        "level":  2,
+                                        "presence":  0.4
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Cawnushi + Petrirex",
+                      "slug":  "cawnushi-petrirex",
+                      "tier":  "B",
+                      "ten_win_rate":  0.24,
+                      "avg_wins":  6.3,
+                      "play_rate":  0.021,
+                      "sample_runs":  104,
+                      "recommended_trainer":  "Gentleman",
+                      "core_monsters":  [
+                                            "Cawnushi",
+                                            "Petrirex",
+                                            "Shikitsune",
+                                            "Ratacomb"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Cawnushi",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Petrirex",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Shikitsune",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Ratacomb",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Dracana",
+                                        "level":  2,
+                                        "presence":  0.279
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Danuki",
+                                        "level":  2,
+                                        "presence":  0.25
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Sproach + Ginsage",
+                      "slug":  "sproach-ginsage",
+                      "tier":  "C",
+                      "ten_win_rate":  0.241,
+                      "avg_wins":  6.5,
+                      "play_rate":  0.012,
+                      "sample_runs":  58,
+                      "recommended_trainer":  "Egg Breeder",
+                      "core_monsters":  [
+                                            "Gemwing",
+                                            "Ginsage",
+                                            "Sproach",
+                                            "Ninflora"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Gemwing",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Ginsage",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Sproach",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Ninflora",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Dracana",
+                                        "level":  2,
+                                        "presence":  0.431
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Beetbud",
+                                        "level":  2,
+                                        "presence":  0.3
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Berroon + Craghorn",
+                      "slug":  "berroon-craghorn",
+                      "tier":  "C",
+                      "ten_win_rate":  0.213,
+                      "avg_wins":  5.2,
+                      "play_rate":  0.012,
+                      "sample_runs":  62,
+                      "recommended_trainer":  "Monster Ranger",
+                      "core_monsters":  [
+                                            "Craghorn",
+                                            "Berroon",
+                                            "Stalagrove",
+                                            "Aegistruct"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Craghorn",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Berroon",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Stalagrove",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Aegistruct",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Draconarch",
+                                        "level":  1,
+                                        "presence":  0.435
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Coalem",
+                                        "level":  1,
+                                        "presence":  0.35
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Cordycant + Gemwing",
+                      "slug":  "cordycant-gemwing",
+                      "tier":  "C",
+                      "ten_win_rate":  0.195,
+                      "avg_wins":  5.9,
+                      "play_rate":  0.016,
+                      "sample_runs":  82,
+                      "recommended_trainer":  "Chemist",
+                      "core_monsters":  [
+                                            "Cinnabark",
+                                            "Cordycant",
+                                            "Gemwing",
+                                            "Drumire",
+                                            "Miasmaw"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Cinnabark",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Cordycant",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Gemwing",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Drumire",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Miasmaw",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Onsetra",
+                                        "level":  2,
+                                        "presence":  0.244
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Stalagrove + Aegistruct",
+                      "slug":  "stalagrove-aegistruct",
+                      "tier":  "C",
+                      "ten_win_rate":  0.184,
+                      "avg_wins":  6.7,
+                      "play_rate":  0.021,
+                      "sample_runs":  106,
+                      "recommended_trainer":  "Monster Ranger",
+                      "core_monsters":  [
+                                            "Aegistruct",
+                                            "Coalem",
+                                            "Stalagrove",
+                                            "Draconarch"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Aegistruct",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Coalem",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Stalagrove",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Draconarch",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Geminiss",
+                                        "level":  1,
+                                        "presence":  0.321
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Dryadell",
+                                        "level":  2,
+                                        "presence":  0.28
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Swoonet + Snapscald",
+                      "slug":  "swoonet-snapscald",
+                      "tier":  "C",
+                      "ten_win_rate":  0.15,
+                      "avg_wins":  6.9,
+                      "play_rate":  0.035,
+                      "sample_runs":  176,
+                      "recommended_trainer":  "Swim Coach",
+                      "core_monsters":  [
+                                            "Snapscald",
+                                            "Steamscuttle",
+                                            "Swoonet",
+                                            "Lumijel"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Snapscald",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Steamscuttle",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Swoonet",
+                                        "level":  4,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Lumijel",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Lamplet",
+                                        "level":  3,
+                                        "presence":  0.392
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Frillet",
+                                        "level":  2,
+                                        "presence":  0.25
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Electranade + Cherubble",
+                      "slug":  "electranade-cherubble",
+                      "tier":  "C",
+                      "ten_win_rate":  0.194,
+                      "avg_wins":  6.3,
+                      "play_rate":  0.019,
+                      "sample_runs":  94,
+                      "recommended_trainer":  "Musician",
+                      "core_monsters":  [
+                                            "Cherubble",
+                                            "Electranade",
+                                            "Velocect",
+                                            "Cicadence"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Cherubble",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Electranade",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Velocect",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Cicadence",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Pylong",
+                                        "level":  2,
+                                        "presence":  0.436
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Formiqueen",
+                                        "level":  2,
+                                        "presence":  0.35
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Cicadence + Formiqueen",
+                      "slug":  "cicadence-formiqueen",
+                      "tier":  "C",
+                      "ten_win_rate":  0.224,
+                      "avg_wins":  6.0,
+                      "play_rate":  0.014,
+                      "sample_runs":  68,
+                      "recommended_trainer":  "Bug Catcher",
+                      "core_monsters":  [
+                                            "Cicadence",
+                                            "Formiqueen",
+                                            "Velocect",
+                                            "Guardiant"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Cicadence",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Formiqueen",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Velocect",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Guardiant",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Bumblebolt",
+                                        "level":  2,
+                                        "presence":  0.235
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Onsetra",
+                                        "level":  2,
+                                        "presence":  0.2
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Spinarai + Noxnimbus",
+                      "slug":  "spinarai-noxnimbus",
+                      "tier":  "C",
+                      "ten_win_rate":  0.183,
+                      "avg_wins":  5.3,
+                      "play_rate":  0.013,
+                      "sample_runs":  65,
+                      "recommended_trainer":  "Chemist",
+                      "core_monsters":  [
+                                            "Noxnimbus",
+                                            "Puffloon",
+                                            "Spinarai",
+                                            "Cobrex"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Noxnimbus",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Puffloon",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Spinarai",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Cobrex",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Fumungus",
+                                        "level":  1,
+                                        "presence":  0.4
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Thorntail",
+                                        "level":  2,
+                                        "presence":  0.28
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Aster + Plunderbird",
+                      "slug":  "aster-plunderbird",
+                      "tier":  "D",
+                      "ten_win_rate":  0.182,
+                      "avg_wins":  5.5,
+                      "play_rate":  0.013,
+                      "sample_runs":  67,
+                      "recommended_trainer":  "Swim Coach",
+                      "core_monsters":  [
+                                            "Aster",
+                                            "Plunderbird",
+                                            "Shelldra",
+                                            "Sirenade"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Aster",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Plunderbird",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Shelldra",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Sirenade",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Torrantler",
+                                        "level":  3,
+                                        "presence":  0.418
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Dribblet",
+                                        "level":  2,
+                                        "presence":  0.25
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Nekoffin + Petrirex",
+                      "slug":  "nekoffin-petrirex",
+                      "tier":  "D",
+                      "ten_win_rate":  0.16,
+                      "avg_wins":  4.8,
+                      "play_rate":  0.037,
+                      "sample_runs":  183,
+                      "recommended_trainer":  "Gentleman",
+                      "core_monsters":  [
+                                            "Nekoffin",
+                                            "Petrirex",
+                                            "Shikitsune",
+                                            "Dollhime"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Nekoffin",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Petrirex",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Shikitsune",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Dollhime",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Dracana",
+                                        "level":  2,
+                                        "presence":  0.366
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Cawnushi",
+                                        "level":  2,
+                                        "presence":  0.25
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Magmalith + Scorchimp",
+                      "slug":  "magmalith-scorchimp",
+                      "tier":  "D",
+                      "ten_win_rate":  0.129,
+                      "avg_wins":  5.2,
+                      "play_rate":  0.014,
+                      "sample_runs":  71,
+                      "recommended_trainer":  "Redhead",
+                      "core_monsters":  [
+                                            "Coalem",
+                                            "Magmalith",
+                                            "Scorchimp",
+                                            "Magmite"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Coalem",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Magmalith",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Scorchimp",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Magmite",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Lignite",
+                                        "level":  2,
+                                        "presence":  0.282
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Blazewing",
+                                        "level":  2,
+                                        "presence":  0.22
+                                    }
+                                ]
+                  },
+                  {
+                      "name":  "Dollhime + Rubbin",
+                      "slug":  "dollhime-rubbin",
+                      "tier":  "D",
+                      "ten_win_rate":  0.109,
+                      "avg_wins":  4.3,
+                      "play_rate":  0.011,
+                      "sample_runs":  55,
+                      "recommended_trainer":  "Burglar",
+                      "core_monsters":  [
+                                            "Dollhime",
+                                            "Furnadon",
+                                            "Rubbin",
+                                            "Draconarch"
+                                        ],
+                      "board":  [
+                                    {
+                                        "slot":  0,
+                                        "monster":  "Dollhime",
+                                        "level":  2,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  1,
+                                        "monster":  "Furnadon",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  2,
+                                        "monster":  "Rubbin",
+                                        "level":  3,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  3,
+                                        "monster":  "Draconarch",
+                                        "level":  1,
+                                        "presence":  1.0
+                                    },
+                                    {
+                                        "slot":  4,
+                                        "monster":  "Shrinell",
+                                        "level":  2,
+                                        "presence":  0.364
+                                    },
+                                    {
+                                        "slot":  5,
+                                        "monster":  "Mallogre",
+                                        "level":  2,
+                                        "presence":  0.24
+                                    }
+                                ]
+                  }
+              ],
+    "pairs":  [
+                  {
+                      "pair":  [
+                                   "Dracana",
+                                   "Onsetra"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.353,
+                      "presence":  0.019
+                  },
+                  {
+                      "pair":  [
+                                   "Drumire",
+                                   "Miasmaw"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.337,
+                      "presence":  0.041
+                  },
+                  {
+                      "pair":  [
+                                   "Cinnabark",
+                                   "Miasmaw"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.336,
+                      "presence":  0.047
+                  },
+                  {
+                      "pair":  [
+                                   "Draconarch",
+                                   "Stalagrove"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.325,
+                      "presence":  0.019
+                  },
+                  {
+                      "pair":  [
+                                   "Aegistruct",
+                                   "Draconarch"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.325,
+                      "presence":  0.022
+                  },
+                  {
+                      "pair":  [
+                                   "Formiqueen",
+                                   "Onsetra"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.322,
+                      "presence":  0.020
+                  },
+                  {
+                      "pair":  [
+                                   "Cairnage",
+                                   "Opalion"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.288,
+                      "presence":  0.024
+                  },
+                  {
+                      "pair":  [
+                                   "Coalem",
+                                   "Draconarch"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.276,
+                      "presence":  0.026
+                  },
+                  {
+                      "pair":  [
+                                   "Onsetra",
+                                   "Ouroblaze"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.274,
+                      "presence":  0.021
+                  },
+                  {
+                      "pair":  [
+                                   "Drumire",
+                                   "Onsetra"
+                               ],
+                      "tier":  "S",
+                      "win_rate":  0.269,
+                      "presence":  0.028
+                  },
+                  {
+                      "pair":  [
+                                   "Cobrex",
+                                   "Puffloon"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.264,
+                      "presence":  0.040
+                  },
+                  {
+                      "pair":  [
+                                   "Aristobat",
+                                   "Cobrex"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.259,
+                      "presence":  0.025
+                  },
+                  {
+                      "pair":  [
+                                   "Cobrex",
+                                   "Fumungus"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.257,
+                      "presence":  0.031
+                  },
+                  {
+                      "pair":  [
+                                   "Cinnabark",
+                                   "Onsetra"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.257,
+                      "presence":  0.036
+                  },
+                  {
+                      "pair":  [
+                                   "Aegistruct",
+                                   "Stalagrove"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.250,
+                      "presence":  0.032
+                  },
+                  {
+                      "pair":  [
+                                   "Cobrex",
+                                   "Noxnimbus"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.250,
+                      "presence":  0.021
+                  },
+                  {
+                      "pair":  [
+                                   "Cinnabark",
+                                   "Snapscald"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.249,
+                      "presence":  0.020
+                  },
+                  {
+                      "pair":  [
+                                   "Oniclaw",
+                                   "Snapscald"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.246,
+                      "presence":  0.021
+                  },
+                  {
+                      "pair":  [
+                                   "Onsetra",
+                                   "Steamscuttle"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.239,
+                      "presence":  0.027
+                  },
+                  {
+                      "pair":  [
+                                   "Craghorn",
+                                   "Stalagrove"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.239,
+                      "presence":  0.020
+                  },
+                  {
+                      "pair":  [
+                                   "Ouroblaze",
+                                   "Steamscuttle"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.238,
+                      "presence":  0.049
+                  },
+                  {
+                      "pair":  [
+                                   "Drumire",
+                                   "Vipair"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.237,
+                      "presence":  0.022
+                  },
+                  {
+                      "pair":  [
+                                   "Furnadon",
+                                   "Ouroblaze"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.233,
+                      "presence":  0.028
+                  },
+                  {
+                      "pair":  [
+                                   "Ouroblaze",
+                                   "Snapscald"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.231,
+                      "presence":  0.024
+                  },
+                  {
+                      "pair":  [
+                                   "Drumire",
+                                   "Snapscald"
+                               ],
+                      "tier":  "A",
+                      "win_rate":  0.230,
+                      "presence":  0.023
+                  }
+              ],
+    "trainers":  [
+                     {
+                         "name":  "Swim Coach",
+                         "tier":  "S",
+                         "win_rate":  0.290,
+                         "runs":  2656
+                     },
+                     {
+                         "name":  "Monster Ranger",
+                         "tier":  "S",
+                         "win_rate":  0.281,
+                         "runs":  3607
+                     },
+                     {
+                         "name":  "Gentleman",
+                         "tier":  "A",
+                         "win_rate":  0.245,
+                         "runs":  1855
+                     },
+                     {
+                         "name":  "Chemist",
+                         "tier":  "A",
+                         "win_rate":  0.243,
+                         "runs":  2552
+                     },
+                     {
+                         "name":  "Mad Scientist",
+                         "tier":  "A",
+                         "win_rate":  0.234,
+                         "runs":  933
+                     },
+                     {
+                         "name":  "Masked Man",
+                         "tier":  "A",
+                         "win_rate":  0.228,
+                         "runs":  1053
+                     },
+                     {
+                         "name":  "Twins",
+                         "tier":  "A",
+                         "win_rate":  0.221,
+                         "runs":  2871
+                     },
+                     {
+                         "name":  "Gamer",
+                         "tier":  "B",
+                         "win_rate":  0.202,
+                         "runs":  1531
+                     },
+                     {
+                         "name":  "Burglar",
+                         "tier":  "B",
+                         "win_rate":  0.201,
+                         "runs":  1678
+                     },
+                     {
+                         "name":  "Treasure Hunter",
+                         "tier":  "B",
+                         "win_rate":  0.194,
+                         "runs":  1850
+                     },
+                     {
+                         "name":  "Redhead",
+                         "tier":  "B",
+                         "win_rate":  0.193,
+                         "runs":  1737
+                     },
+                     {
+                         "name":  "Rich Lady",
+                         "tier":  "B",
+                         "win_rate":  0.190,
+                         "runs":  1614
+                     },
+                     {
+                         "name":  "Egg Breeder",
+                         "tier":  "B",
+                         "win_rate":  0.187,
+                         "runs":  2007
+                     },
+                     {
+                         "name":  "Musician",
+                         "tier":  "B",
+                         "win_rate":  0.170,
+                         "runs":  658
+                     },
+                     {
+                         "name":  "Painter",
+                         "tier":  "B",
+                         "win_rate":  0.168,
+                         "runs":  2574
+                     },
+                     {
+                         "name":  "Scavenger",
+                         "tier":  "B",
+                         "win_rate":  0.167,
+                         "runs":  1049
+                     },
+                     {
+                         "name":  "Youngster",
+                         "tier":  "B",
+                         "win_rate":  0.164,
+                         "runs":  1122
+                     },
+                     {
+                         "name":  "Witch",
+                         "tier":  "C",
+                         "win_rate":  0.157,
+                         "runs":  3016
+                     },
+                     {
+                         "name":  "Bug Catcher",
+                         "tier":  "C",
+                         "win_rate":  0.154,
+                         "runs":  879
+                     },
+                     {
+                         "name":  "Lucky Girl",
+                         "tier":  "C",
+                         "win_rate":  0.153,
+                         "runs":  2139
+                     },
+                     {
+                         "name":  "Smuggler",
+                         "tier":  "C",
+                         "win_rate":  0.146,
+                         "runs":  1457
+                     },
+                     {
+                         "name":  "Chef",
+                         "tier":  "C",
+                         "win_rate":  0.145,
+                         "runs":  1202
+                     },
+                     {
+                         "name":  "Shopkeeper",
+                         "tier":  "D",
+                         "win_rate":  0.144,
+                         "runs":  1359
+                     },
+                     {
+                         "name":  "Black Belt",
+                         "tier":  "D",
+                         "win_rate":  0.135,
+                         "runs":  613
+                     }
+                 ],
+    "monsters":  {
+                     "Quillustrous":  {
+                                          "tier":  "S",
+                                          "win_rate":  0.551,
+                                          "presence":  0.013
+                                      },
+                     "Omnichrome":  {
+                                        "tier":  "S",
+                                        "win_rate":  0.439,
+                                        "presence":  0.016
+                                    },
+                     "Gaiadrasil":  {
+                                        "tier":  "S",
+                                        "win_rate":  0.402,
+                                        "presence":  0.019
+                                    },
+                     "Goldora":  {
+                                     "tier":  "S",
+                                     "win_rate":  0.386,
+                                     "presence":  0.008
+                                 },
+                     "Sarudo":  {
+                                    "tier":  "S",
+                                    "win_rate":  0.358,
+                                    "presence":  0.005
+                                },
+                     "Cosmivore":  {
+                                       "tier":  "S",
+                                       "win_rate":  0.355,
+                                       "presence":  0.011
+                                   },
+                     "Torrantler":  {
+                                        "tier":  "S",
+                                        "win_rate":  0.347,
+                                        "presence":  0.024
+                                    },
+                     "Shrinell":  {
+                                      "tier":  "S",
+                                      "win_rate":  0.346,
+                                      "presence":  0.039
+                                  },
+                     "Vengrieve":  {
+                                       "tier":  "S",
+                                       "win_rate":  0.337,
+                                       "presence":  0.023
+                                   },
+                     "Aerophim":  {
+                                      "tier":  "S",
+                                      "win_rate":  0.327,
+                                      "presence":  0.011
+                                  },
+                     "Miasmaw":  {
+                                     "tier":  "S",
+                                     "win_rate":  0.327,
+                                     "presence":  0.055
+                                 },
+                     "Reapra":  {
+                                    "tier":  "S",
+                                    "win_rate":  0.313,
+                                    "presence":  0.017
+                                },
+                     "Pompummel":  {
+                                       "tier":  "S",
+                                       "win_rate":  0.309,
+                                       "presence":  0.028
+                                   },
+                     "Celestia":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.308,
+                                      "presence":  null
+                                  },
+                     "Basilord":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.307,
+                                      "presence":  null
+                                  },
+                     "Gachapod":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.303,
+                                      "presence":  null
+                                  },
+                     "Onsetra":  {
+                                     "tier":  "A",
+                                     "win_rate":  0.293,
+                                     "presence":  0.140
+                                 },
+                     "Draconarch":  {
+                                        "tier":  "A",
+                                        "win_rate":  0.288,
+                                        "presence":  0.108
+                                    },
+                     "Faebloom":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.284,
+                                      "presence":  null
+                                  },
+                     "Prismagon":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.279,
+                                       "presence":  null
+                                   },
+                     "Cairnage":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.279,
+                                      "presence":  null
+                                  },
+                     "Dryadell":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.271,
+                                      "presence":  null
+                                  },
+                     "Tsunamere":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.269,
+                                       "presence":  null
+                                   },
+                     "Cobrex":  {
+                                    "tier":  "A",
+                                    "win_rate":  0.264,
+                                    "presence":  null
+                                },
+                     "Geminiss":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.262,
+                                      "presence":  null
+                                  },
+                     "Stellagon":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.259,
+                                       "presence":  null
+                                   },
+                     "Sirenade":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.256,
+                                      "presence":  null
+                                  },
+                     "Blixie":  {
+                                    "tier":  "A",
+                                    "win_rate":  0.249,
+                                    "presence":  null
+                                },
+                     "Tengusto":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.248,
+                                      "presence":  null
+                                  },
+                     "Dollhime":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.240,
+                                      "presence":  null
+                                  },
+                     "Mallogre":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.239,
+                                      "presence":  null
+                                  },
+                     "Galvanine":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.236,
+                                       "presence":  null
+                                   },
+                     "Aegistruct":  {
+                                        "tier":  "A",
+                                        "win_rate":  0.231,
+                                        "presence":  null
+                                    },
+                     "Ouroblaze":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.230,
+                                       "presence":  null
+                                   },
+                     "Ninflora":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.230,
+                                      "presence":  null
+                                  },
+                     "Lignite":  {
+                                     "tier":  "A",
+                                     "win_rate":  0.224,
+                                     "presence":  null
+                                 },
+                     "Craghorn":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.223,
+                                      "presence":  null
+                                  },
+                     "Oniclaw":  {
+                                     "tier":  "A",
+                                     "win_rate":  0.219,
+                                     "presence":  null
+                                 },
+                     "Aviarab":  {
+                                     "tier":  "B",
+                                     "win_rate":  0.217,
+                                     "presence":  null
+                                 },
+                     "Formiqueen":  {
+                                        "tier":  "B",
+                                        "win_rate":  0.215,
+                                        "presence":  null
+                                    },
+                     "Stalagrove":  {
+                                        "tier":  "B",
+                                        "win_rate":  0.215,
+                                        "presence":  null
+                                    },
+                     "Snapscald":  {
+                                       "tier":  "B",
+                                       "win_rate":  0.215,
+                                       "presence":  0.151
+                                   },
+                     "Saberhorn":  {
+                                       "tier":  "B",
+                                       "win_rate":  0.214,
+                                       "presence":  null
+                                   },
+                     "Drumire":  {
+                                     "tier":  "B",
+                                     "win_rate":  0.213,
+                                     "presence":  0.131
+                                 },
+                     "Cicadence":  {
+                                       "tier":  "B",
+                                       "win_rate":  0.211,
+                                       "presence":  null
+                                   },
+                     "Opalion":  {
+                                     "tier":  "B",
+                                     "win_rate":  0.202,
+                                     "presence":  0.109
+                                 },
+                     "Dracana":  {
+                                     "tier":  "B",
+                                     "win_rate":  0.201,
+                                     "presence":  0.162
+                                 },
+                     "Cinnabark":  {
+                                       "tier":  "B",
+                                       "win_rate":  0.194,
+                                       "presence":  0.156
+                                   },
+                     "Steamscuttle":  {
+                                          "tier":  "B",
+                                          "win_rate":  0.190,
+                                          "presence":  0.178
+                                      },
+                     "Lamplet":  {
+                                     "tier":  "B",
+                                     "win_rate":  0.188,
+                                     "presence":  0.126
+                                 },
+                     "Puffloon":  {
+                                      "tier":  "B",
+                                      "win_rate":  0.185,
+                                      "presence":  0.084
+                                  }
+                 },
+    "trinkets":  {
+                     "Locked Box":  {
+                                        "tier":  "S",
+                                        "win_rate":  0.505,
+                                        "presence":  0.007
+                                    },
+                     "Alpha Crown":  {
+                                         "tier":  "S",
+                                         "win_rate":  0.429,
+                                         "presence":  0.003
+                                     },
+                     "Holy Grail":  {
+                                        "tier":  "S",
+                                        "win_rate":  0.377,
+                                        "presence":  0.003
+                                    },
+                     "Master Crown":  {
+                                          "tier":  "S",
+                                          "win_rate":  0.361,
+                                          "presence":  0.003
+                                      },
+                     "Excalibur":  {
+                                       "tier":  "S",
+                                       "win_rate":  0.355,
+                                       "presence":  0.003
+                                   },
+                     "Mysterious Chest":  {
+                                              "tier":  "S",
+                                              "win_rate":  0.340,
+                                              "presence":  0.010
+                                          },
+                     "Winged Crown":  {
+                                          "tier":  "S",
+                                          "win_rate":  0.336,
+                                          "presence":  0.032
+                                      },
+                     "Fancy Sword":  {
+                                         "tier":  "S",
+                                         "win_rate":  0.323,
+                                         "presence":  0.030
+                                     },
+                     "Gold Incense":  {
+                                          "tier":  "S",
+                                          "win_rate":  0.312,
+                                          "presence":  0.003
+                                      },
+                     "Zenith Stone":  {
+                                          "tier":  "A",
+                                          "win_rate":  0.304,
+                                          "presence":  null
+                                      },
+                     "Giant Club":  {
+                                        "tier":  "A",
+                                        "win_rate":  0.300,
+                                        "presence":  null
+                                    },
+                     "Metronome":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.296,
+                                       "presence":  null
+                                   },
+                     "Barbell":  {
+                                     "tier":  "A",
+                                     "win_rate":  0.284,
+                                     "presence":  null
+                                 },
+                     "Mighty Bell":  {
+                                         "tier":  "A",
+                                         "win_rate":  0.267,
+                                         "presence":  null
+                                     },
+                     "Candy Jar":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.250,
+                                       "presence":  null
+                                   },
+                     "Grow Lamp":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.250,
+                                       "presence":  null
+                                   },
+                     "Repeater Charm":  {
+                                            "tier":  "A",
+                                            "win_rate":  0.237,
+                                            "presence":  null
+                                        },
+                     "VIP Pass":  {
+                                      "tier":  "A",
+                                      "win_rate":  0.231,
+                                      "presence":  null
+                                  },
+                     "Rocket Boots":  {
+                                          "tier":  "A",
+                                          "win_rate":  0.222,
+                                          "presence":  null
+                                      },
+                     "Echo Bell":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.222,
+                                       "presence":  null
+                                   },
+                     "Gold-o-matic":  {
+                                          "tier":  "A",
+                                          "win_rate":  0.202,
+                                          "presence":  null
+                                      },
+                     "Link Cable":  {
+                                        "tier":  "A",
+                                        "win_rate":  0.201,
+                                        "presence":  null
+                                    },
+                     "Haste Orb":  {
+                                       "tier":  "A",
+                                       "win_rate":  0.200,
+                                       "presence":  null
+                                   },
+                     "Blitz Bell":  {
+                                        "tier":  "A",
+                                        "win_rate":  0.200,
+                                        "presence":  null
+                                    },
+                     "Mysterious Gem":  {
+                                            "tier":  "A",
+                                            "win_rate":  0.199,
+                                            "presence":  null
+                                        },
+                     "Rigged Dice":  {
+                                         "tier":  "A",
+                                         "win_rate":  0.196,
+                                         "presence":  null
+                                     },
+                     "Speed Crest":  {
+                                         "tier":  "A",
+                                         "win_rate":  0.195,
+                                         "presence":  null
+                                     }
+                 },
+    "note":  "Only values shown on batomon.com; null = not shown. Pair win rates are round win rates, comp rates are 10-win run rates."
+}
