@@ -279,9 +279,12 @@ def _play(argv, control: Control, hands, brain) -> int:
                     help="if no run is open, start a Pantra run (Casual unless --ranked) and pick a trainer")
     ap.add_argument("--ranked", action="store_true",
                     help="with --new-run, start RANKED runs instead of Casual; also continue a saved Ranked run")
+    ap.add_argument("--background", action="store_true",
+                    help="send the clicks straight to the game window without moving the real mouse, "
+                         "so other windows can be used meanwhile (experimental; keep the game un-minimized)")
     args = ap.parse_args(argv)
 
-    h = _CURRENT_HANDS = hands or hands_mod.Hands(dry_run=False)
+    h = _CURRENT_HANDS = hands or hands_mod.Hands(dry_run=False, background=args.background)
     if brain is None and not args.simple:
         if Brain is None:
             print("decision engine unavailable:", _ENGINE_ERROR)
