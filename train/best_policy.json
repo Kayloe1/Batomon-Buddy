@@ -1,65 +1,66 @@
 {
  "theta": {
-  "w_power": 0.6356225338790221,
-  "w_rarity": 0.07448364676368675,
-  "w_pair": 1.278249272059127,
-  "w_triple": 2.0886555685941213,
-  "w_lv2pair": 0.9309366385194717,
-  "w_bug": 0.5854223354197692,
-  "w_amp": 0.13686981023923517,
-  "w_selfko": -0.8398066664341557,
-  "w_cost": 0.0528888622705751,
-  "w_upgrade": 0.5655814199276616,
-  "buy_base": 3.745393560710797,
-  "buy_day": 0.03441964005016016,
-  "swap_margin": 1.0357831314281238,
-  "reroll_reserve": 6.691922203839935,
-  "reroll_reserve_day": 1.3030151989362446,
-  "max_rerolls": 3.3925054895671893,
-  "max_rerolls_day": 1.5651385325475118,
-  "w_sim": 14.658638227153084,
-  "keep_money": 0.7304737282880681
+  "w_power": 0.5622757867786785,
+  "w_rarity": -0.12615151242079792,
+  "w_pair": 1.14943936008277,
+  "w_triple": 2.7170344041199144,
+  "w_lv2pair": 1.0071763082259853,
+  "w_bug": 0.839748221072371,
+  "w_amp": -0.08091919083959671,
+  "w_selfko": -0.607195638435177,
+  "w_cost": 0.20970874151357893,
+  "w_upgrade": 0.44255592447746755,
+  "buy_base": 3.265610893166986,
+  "buy_day": 0.1356898342491925,
+  "swap_margin": 1.0755693231275791,
+  "reroll_reserve": 12.849623567684059,
+  "reroll_reserve_day": 0.9995222599037619,
+  "max_rerolls": 3.95738727972834,
+  "max_rerolls_day": 1.8417535600735448,
+  "w_sim": 16.71958955737751,
+  "keep_money": 1.8170324409866347
  },
  "meta": {
-  "gens": 18,
-  "pop": 24,
+  "gens": 12,
+  "pop": 16,
   "runs": 16,
-  "seed": 1,
+  "seed": 7,
+  "field": "gold",
   "history": [
    {
-    "gen": 13,
-    "best_fit": 5.25,
-    "best_badges": 5.125,
-    "mean_badges": 3.6822916666666665,
-    "mean_wins": 0.005208333333333333
+    "gen": 7,
+    "best_fit": 4.0625,
+    "best_badges": 3.9375,
+    "mean_badges": 3.19921875,
+    "mean_wins": 0.01171875
    },
    {
-    "gen": 14,
-    "best_fit": 5.75,
-    "best_badges": 5.5,
-    "mean_badges": 4.479166666666667,
-    "mean_wins": 0.03125
+    "gen": 8,
+    "best_fit": 5.1875,
+    "best_badges": 5.0625,
+    "mean_badges": 3.80859375,
+    "mean_wins": 0.02734375
    },
    {
-    "gen": 15,
-    "best_fit": 5.25,
-    "best_badges": 5.0,
-    "mean_badges": 3.6536458333333335,
-    "mean_wins": 0.049479166666666664
+    "gen": 9,
+    "best_fit": 4.125,
+    "best_badges": 4.0,
+    "mean_badges": 2.8046875,
+    "mean_wins": 0.00390625
    },
    {
-    "gen": 16,
-    "best_fit": 6.125,
-    "best_badges": 5.625,
-    "mean_badges": 4.263020833333333,
-    "mean_wins": 0.0546875
+    "gen": 10,
+    "best_fit": 4.625,
+    "best_badges": 4.5,
+    "mean_badges": 3.0703125,
+    "mean_wins": 0.02734375
    },
    {
-    "gen": 17,
-    "best_fit": 6.3125,
-    "best_badges": 6.0625,
-    "mean_badges": 4.463541666666667,
-    "mean_wins": 0.059895833333333336
+    "gen": 11,
+    "best_fit": 4.5625,
+    "best_badges": 4.4375,
+    "mean_badges": 3.48828125,
+    "mean_wins": 0.01953125
    }
   ]
  }
