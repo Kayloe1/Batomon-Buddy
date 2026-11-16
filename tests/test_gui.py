@@ -504,8 +504,16 @@ class StatusTests(unittest.TestCase):
         self.assertIsNone(st.ended)
         st2 = gui.Status()
         st2.apply("run_start", {"run": 1, "total": 3})
-        st2.apply("log", {"record": "run_over", "data": {}})
+        self.assertEqual(st2.runs_summary_line(), "0 won, 0 lost")
+        st2.apply("log", {"record": "run_over", "data": {"badges": 7}})
         self.assertIsNone(st2.ended)
+        self.assertEqual(st2.runs_summary_line(), "0 won, 1 lost   (last 7, best 7 badges)")
+        st2.apply("run_start", {"run": 2, "total": 3})
+        st2.apply("log", {"record": "run_over", "data": {"badges": 10}})
+        self.assertEqual(st2.runs_summary_line(), "1 won, 1 lost   (last 10, best 10 badges)")
+        st2.apply("run_start", {"run": 3, "total": 3})
+        st2.apply("log", {"record": "run_over", "data": {"badges": 4}})
+        self.assertEqual(st2.runs_summary_line(), "1 won, 2 lost   (last 4, best 10 badges)")
         st2.apply("finished", {"code": 0, "runs_completed": 3, "target_runs": 3})
         self.assertEqual(st2.ended, "All 3 runs finished.")
 
@@ -743,8 +751,17 @@ class WindowTests(Quiet):
         app.start_button.invoke()
         self.pump(lambda: app.mode == "idle", what="2 runs to finish")
         self.assertEqual(app.v["runs"].get(), "Run 2 / 2")
+        self.assertEqual(app.runs_summary_widgets[0].winfo_manager(), "pack")
+        self.assertEqual(app.v["runs_summary"].get(), "0 won, 2 lost   (last 0, best 0 badges)")
         self.assertEqual((app.banner_kind, app.banner_title.cget("text")), ("info", "All 2 runs finished."))
         self.assertEqual(self.game.calls, ["buy", "battle", "confirm", "start_run", "buy", "battle", "confirm"])
+        # starting a single-run session resets summary stats and hides the multi-run summary row
+        app.runs.set("1")
+        self.game.start_run()
+        app.start_button.invoke()
+        self.pump(lambda: app.mode == "idle", what="single run reset")
+        self.assertEqual(app.runs_summary_widgets[0].winfo_manager(), "")
+        self.assertEqual(app.status.runs_won + app.status.runs_lost, 1)
 
     def test_runs_option_endless_and_stop_early(self):
         app = self.app
