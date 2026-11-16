@@ -78,6 +78,15 @@ class Learner(unittest.TestCase):
         self.assertEqual(len(hist), 3)
         self.assertIsInstance(theta, Theta)
 
+    def test_learn_and_validate_gold_field(self):
+        from train.validate import evaluate
+        theta, hist = learn(gens=2, pop=4, runs=2, seed=1, workers=1, field="gold", log=lambda *_: None)
+        self.assertEqual(len(hist), 2)
+        self.assertIsInstance(theta, Theta)
+        res = evaluate("learned", runs=2, workers=1, field="gold")
+        self.assertEqual(res["runs"], 2)
+        self.assertIn("mean_badges", res)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,7 +20,7 @@ import statistics
 import sys
 from concurrent.futures import ProcessPoolExecutor
 
-from engine import data, model, opponents
+from engine import data, model, opponents, practice
 from engine.evaluate import Evaluator
 from engine.runsim import default_workers
 from engine.runsim import simple_policy_turn
@@ -58,11 +58,12 @@ def make_policy(name: str):
 
 
 def _job(args):
-    name, seeds, overrides, pool_seed = args
+    name, seeds, overrides, pool_seed, field = args
     saved = {k: rules.SETTINGS[k] for k in overrides}
     rules.SETTINGS.update(overrides)
     try:
-        src = OppSource(ghosts=opponents.pools(n=48, seed=pool_seed, recorded=False), p_ghost=1, p_league=0, p_recorded=0)
+        pool = practice.gold_pools() if field == "gold" else opponents.pools(n=48, seed=pool_seed, recorded=False)
+        src = OppSource(ghosts=pool, p_ghost=1, p_league=0, p_recorded=0)
         pol = make_policy(name)
         return [play_run(pol, s, src) for s in seeds]
     finally:
@@ -70,11 +71,11 @@ def _job(args):
 
 
 def evaluate(name: str, runs: int, overrides: dict | None = None, pool_seed: int = HOLDOUT_SEED,
-             first_seed: int = 500_000, workers: int = 4) -> dict:
+             first_seed: int = 500_000, workers: int = 4, field: str = "ghosts") -> dict:
     seeds = list(range(first_seed, first_seed + runs))
     chunks = [seeds[i::workers] for i in range(workers)]
     with ProcessPoolExecutor(workers) as ex:
-        res = [r for part in ex.map(_job, [(name, c, overrides or {}, pool_seed) for c in chunks]) for r in part]
+        res = [r for part in ex.map(_job, [(name, c, overrides or {}, pool_seed, field) for c in chunks]) for r in part]
     n = len(res)
     battles = sum(len(r["arc"]) for r in res)
     return {"policy": name, "runs": n, "runs_won": round(sum(r["won"] for r in res) / n, 3),
@@ -100,13 +101,14 @@ def main() -> int:
     ap.add_argument("--policy", default="learned", help="learned, simple, or a path to a policy json")
     ap.add_argument("--runs", type=int, default=200)
     ap.add_argument("--workers", type=int, default=default_workers())
+    ap.add_argument("--field", choices=("ghosts", "gold"), default="ghosts")
     ap.add_argument("--no-variants", action="store_true")
     args = ap.parse_args()
     rec = opponents.load_recorded()
     print(f"real recorded opponent teams available: {sum(len(v) for v in rec.values())}")
-    print("\n== held-out opponents (ghost pool seed never used in training) ==")
+    print(f"\n== held-out opponents ({args.field}) ==")
     for name in ("simple", args.policy):
-        print(evaluate(name, args.runs, workers=args.workers))
+        print(evaluate(name, args.runs, workers=args.workers, field=args.field))
     if not args.no_variants:
         print("\n== unverified battle rules changed ==")
         for label, ov in VARIANTS.items():

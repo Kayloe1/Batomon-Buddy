@@ -25,7 +25,7 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-from engine import opponents
+from engine import opponents, practice
 from engine.evaluate import Evaluator
 from engine.runsim import default_workers
 
@@ -38,17 +38,25 @@ HOF = 3                      # generations of league snapshots kept
 DEFAULT_WORKERS = max(1, (os.cpu_count() or 4) - 2)
 
 
-def _source(league: dict, ghost_n: int, p_ghost: float, p_league: float, p_recorded: float) -> OppSource:
-    return OppSource(ghosts=opponents.pools(n=ghost_n, seed=TRAIN_POOL_SEED, recorded=False), league=league,
-                     recorded=opponents.load_recorded(), p_ghost=p_ghost, p_league=p_league,
-                     p_recorded=p_recorded)
+def _pool(field: str, ghost_n: int) -> dict:
+    if field == "gold":
+        return practice.gold_pools()
+    return opponents.pools(n=ghost_n, seed=TRAIN_POOL_SEED, recorded=False)
+
+
+def _source(league: dict, ghost_n: int, p_ghost: float, p_league: float, p_recorded: float,
+            field: str = "ghosts") -> OppSource:
+    rec = {} if field == "gold" else opponents.load_recorded()
+    return OppSource(ghosts=_pool(field, ghost_n), league=league, recorded=rec,
+                     p_ghost=p_ghost, p_league=p_league, p_recorded=p_recorded)
 
 
 def evaluate_theta(args) -> dict:
     vec, seeds, league, cfg = args
-    ev = Evaluator(opponents.pools(n=24, seed=TRAIN_POOL_SEED)) if cfg.get("use_sim") else None
+    field = cfg.get("field", "ghosts")
+    ev = Evaluator(_pool(field, 24)) if cfg.get("use_sim") else None
     pol = FastPolicy(theta_from_vec(vec), evaluator=ev)
-    src = _source(league, cfg["ghost_n"], cfg["p_ghost"], cfg["p_league"], cfg["p_recorded"])
+    src = _source(league, cfg["ghost_n"], cfg["p_ghost"], cfg["p_league"], cfg["p_recorded"], field=field)
     badges = wins = 0
     snaps: dict[int, list[dict]] = {}
     for sd in seeds:
@@ -63,7 +71,8 @@ def evaluate_theta(args) -> dict:
 
 def learn(gens: int, pop: int, runs: int, seed: int, workers: int, ghost_n: int = 48,
           p_ghost: float = 0.5, p_league: float = 0.35, p_recorded: float = 0.30,
-          init: Theta | None = None, use_sim: bool = False, log=print) -> tuple[Theta, list[dict]]:
+          init: Theta | None = None, use_sim: bool = False, field: str = "ghosts",
+          log=print) -> tuple[Theta, list[dict]]:
     rng = random.Random(seed)
     mean = vec_from_theta(init or Theta())
     lo = [SPEC[n][0] for n in NAMES]
@@ -72,10 +81,10 @@ def learn(gens: int, pop: int, runs: int, seed: int, workers: int, ghost_n: int 
     league_gens: list[dict[int, list[dict]]] = []
     history = []
     cfg = {"ghost_n": ghost_n, "p_ghost": p_ghost, "p_league": p_league, "p_recorded": p_recorded,
-           "collect": True, "use_sim": use_sim}
-    opponents.pools(n=ghost_n, seed=TRAIN_POOL_SEED, recorded=False)
+           "collect": True, "use_sim": use_sim, "field": field}
+    _pool(field, ghost_n)
     if use_sim:
-        opponents.pools(n=24, seed=TRAIN_POOL_SEED, recorded=False)
+        _pool(field, 24)
     ex = ProcessPoolExecutor(workers) if workers > 1 else None
     try:
         for g in range(gens):
@@ -126,14 +135,19 @@ def main() -> int:
     ap.add_argument("--p-league", type=float, default=0.35)
     ap.add_argument("--p-ghost", type=float, default=0.5)
     ap.add_argument("--sim", action="store_true", help="policy uses simulator gain as a feature (slower)")
+    ap.add_argument("--field", choices=("ghosts", "gold"), default="ghosts",
+                    help="opponent pool: synthetic ghosts or Gold practice field")
+    ap.add_argument("--init", help="optional path to an initial policy json to warm-start from")
     ap.add_argument("--out", default="train/best_policy.json")
     args = ap.parse_args()
+    from pathlib import Path
+    from .policy import load_theta
+    init = load_theta(Path(args.init)) if args.init else (Theta(w_sim=10.0, buy_base=1.0) if args.sim else None)
     theta, hist = learn(args.gens, args.pop, args.runs, args.seed, args.workers,
                         p_ghost=args.p_ghost, p_league=args.p_league, use_sim=args.sim,
-                        init=Theta(w_sim=10.0, buy_base=1.0) if args.sim else None)
-    from pathlib import Path
+                        field=args.field, init=init)
     save_theta(theta, Path(args.out), {"gens": args.gens, "pop": args.pop, "runs": args.runs,
-                                       "seed": args.seed, "history": hist[-5:]})
+                                       "seed": args.seed, "field": args.field, "history": hist[-5:]})
     print(json.dumps(theta.__dict__, indent=1))
     return 0
 
