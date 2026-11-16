@@ -549,3 +549,16 @@ class MechanicsAndMythicals(unittest.TestCase):
         t["badges"] = 3
         r = simulate(t, EMPTY, until=4.6)
         self.assertEqual(r.units[0][0]["dealt"], 460)
+
+    def test_zenith_stone_and_faebloom(self):
+        # Zenith Stone: +80% more on flat stat gains (Mosslug +20 -> +36; Metronome +10 -> +18).
+        r = simulate(team([mon("Mosslug", 1, damage=5)], trinkets=["Zenith Stone"]), EMPTY, until=6.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 41)
+        r = simulate(team([mon("Panbud", 1, damage=25)], trinkets=["Zenith Stone", "Metronome"]),
+                     EMPTY, until=5.1)
+        self.assertEqual(r.units[0][0]["stats"]["damage"], 43)
+        # Faebloom: adjacent allies get +10% Damage per Mythical Item used (2 items -> +20%).
+        t = team([mon("Panbud", 1, damage=100), mon("Faebloom", 1)])
+        t["mythical_items"] = 2
+        r = simulate(t, EMPTY, until=5.1)
+        self.assertEqual(r.units[0][0]["dealt"], 120)
