@@ -802,6 +802,42 @@ class WindowTests(Quiet):
             app.scorecard_button.invoke()
             self.assertIn("Could not open scorecard", app.mode_text.get())
 
+    def test_prefs_are_saved_and_restored(self):
+        import tkinter as tk
+        app = self.app
+        app.new_run.set(True)
+        app.ranked.set(True)
+        app.limit_days.set(True)
+        app.days.set("5")
+        app.runs.set("0")
+        app.decide.set("learned")
+        app._save_prefs()
+        self.assertTrue((self.logs / gui.PREFS_NAME).exists())
+
+        root2 = tk.Tk()
+        root2.withdraw()
+        app2 = gui.App(root2, new_session=app.new_session)
+        try:
+            self.assertTrue(app2.new_run.get())
+            self.assertTrue(app2.ranked.get())
+            self.assertTrue(app2.limit_days.get())
+            self.assertEqual(app2.days.get(), "5")
+            self.assertEqual(app2.runs.get(), "0")
+            self.assertEqual(app2.decide.get(), "learned")
+        finally:
+            app2.destroy()
+
+        # corrupt prefs file is ignored cleanly
+        (self.logs / gui.PREFS_NAME).write_text("{not valid json", encoding="utf-8")
+        root3 = tk.Tk()
+        root3.withdraw()
+        app3 = gui.App(root3, new_session=app.new_session)
+        try:
+            self.assertEqual(app3.runs.get(), "1")
+            self.assertFalse(app3.ranked.get())
+        finally:
+            app3.destroy()
+
 
 if __name__ == "__main__":
     unittest.main()
