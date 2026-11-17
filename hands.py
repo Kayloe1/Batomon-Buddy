@@ -645,23 +645,21 @@ class Hands:
         out: dict = {"problems": [], "stuck": False}
         if self.dry_run:
             return out
-        before = self.look()
-        if before.get("screen") != "result":
-            out["problems"].append(f"stats: not on the result screen ({before.get('screen')})")
-            return out
-        folder = CAPTURE_DIR / "battles"
-        folder.mkdir(parents=True, exist_ok=True)
-        stamp = f"{datetime.now():%Y%m%d_%H%M%S}"
-        pic = np.asarray(window.canonical_picture(self.last_image))
-        try:
-            out["end_hp_fraction"] = reader.read_result_hp(pic)
-        except Exception as e:
-            out["problems"].append(f"end HP not read: {type(e).__name__}: {e}")
+        pic = np.asarray(window.canonical_picture(self.last_image)) if self.last_image is not None else None
+        if pic is None or reader.detect_screen(pic) != "result":
+            before = self.look()
+            if before.get("screen") != "result":
+                out["problems"].append(f"stats: not on the result screen ({before.get('screen')})")
+                return out
+            pic = np.asarray(window.canonical_picture(self.last_image))
         self._click(reader.RESULT_STATS)
         state = self.wait_for({"stats"}, 10)
         if state.get("screen") != "stats":
             out["problems"].append(f"stats: window did not open ({state.get('screen')})")
             return out
+        folder = CAPTURE_DIR / "battles"
+        folder.mkdir(parents=True, exist_ok=True)
+        stamp = f"{datetime.now():%Y%m%d_%H%M%S}"
         top = self.last_image
         top.save(folder / f"{stamp}_stats_top.png")
         scrolled = None
@@ -677,6 +675,16 @@ class Hands:
                 out["problems"].append("stats: the scrolled picture is not the Stats window")
         except Exception as e:
             out["problems"].append(f"stats: scrolling failed: {type(e).__name__}: {e}")
+        # Close Stats before running the slower OCR/sprite read so the UI is unblocked immediately.
+        self._click(reader.STATS_CLOSE)
+        after = self.wait_for({"result"}, 10)
+        if after.get("screen") != "result":
+            out["stuck"] = True
+            out["problems"].append(f"stats: window did not close ({after.get('screen')})")
+        try:
+            out["end_hp_fraction"] = reader.read_result_hp(pic)
+        except Exception as e:
+            out["problems"].append(f"end HP not read: {type(e).__name__}: {e}")
         try:
             canon = lambda im: np.asarray(window.canonical_picture(im))
             out.update(reader.read_stats(canon(top), canon(scrolled) if scrolled is not None else None))
@@ -684,11 +692,6 @@ class Hands:
             out["problems"].append(f"stats not read: {type(e).__name__}: {e}")
         out["captures"] = [f"captures/battles/{stamp}_stats_top.png"] + (
             [f"captures/battles/{stamp}_stats_bottom.png"] if scrolled is not None else [])
-        self._click(reader.STATS_CLOSE)
-        after = self.wait_for({"result"}, 10)
-        if after.get("screen") != "result":
-            out["stuck"] = True
-            out["problems"].append(f"stats: window did not close ({after.get('screen')})")
         return out
 
     def close_stats(self) -> Result:

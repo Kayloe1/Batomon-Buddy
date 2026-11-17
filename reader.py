@@ -1145,7 +1145,7 @@ BATTLE_SPRITE_MAX = 66.0       # RMS colour difference over the sprite's own pix
 BATTLE_SPRITE_MAX_SURE = 50.0  # below this a smaller lead over the runner-up is enough
 BATTLE_SEARCH = 24         # sprites bob and sit a little differently; search this far around
 
-_battle_tpls: list[tuple[str, np.ndarray, np.ndarray]] | None = None
+_battle_tpls: list[tuple] | None = None
 
 
 def card_sprite(pic: np.ndarray, i: int) -> tuple[np.ndarray, np.ndarray] | None:
@@ -1287,8 +1287,27 @@ def _same_sprite(rgb: np.ndarray, mask: np.ndarray, path: Path) -> bool:
     return bool(np.abs(old[..., :3].astype(int) - rgb.astype(int))[mask].mean() < 3)
 
 
-def _battle_templates() -> list[tuple[str, np.ndarray, np.ndarray]]:
-    """(name, rgb, mask) from the team-slot sprites (white background) and the card sprites."""
+def _pack_battle_template(name: str, rgb: np.ndarray, mask: np.ndarray) -> tuple | None:
+    """Pre-compute float32 templates, 3-channel masks, mirrored variants, and 3x-downsampled coarse maps."""
+    t = np.ascontiguousarray(rgb, dtype=np.float32)
+    m3 = np.ascontiguousarray(np.repeat(mask[..., None], 3, axis=2), dtype=np.float32)
+    msum = float(m3.sum())
+    if msum < 1:
+        return None
+    tf = np.ascontiguousarray(t[:, ::-1], dtype=np.float32)
+    mf = np.ascontiguousarray(m3[:, ::-1], dtype=np.float32)
+    tc = np.ascontiguousarray(t[::3, ::3], dtype=np.float32)
+    mc = np.ascontiguousarray(m3[::3, ::3], dtype=np.float32)
+    mcsum = float(mc.sum())
+    if mcsum < 9:
+        return None
+    tfc = np.ascontiguousarray(tf[::3, ::3], dtype=np.float32)
+    mfc = np.ascontiguousarray(mf[::3, ::3], dtype=np.float32)
+    return (name, t, m3, msum, tf, mf, tc, mc, mcsum, tfc, mfc)
+
+
+def _battle_templates() -> list[tuple]:
+    """Precomputed battle/stats templates from team-slot sprites (white bg) and card sprites."""
     global _battle_tpls
     if _battle_tpls is None:
         _battle_tpls = []
@@ -1297,12 +1316,57 @@ def _battle_templates() -> list[tuple[str, np.ndarray, np.ndarray]]:
                 continue              # battle logs use species names; eggs look alike on the field
             mask = np.abs(tpl.astype(int) - 255).sum(axis=2) > 60
             if mask.sum() >= 50:
-                _battle_tpls.append((name, tpl, mask))
+                packed = _pack_battle_template(name, tpl, mask)
+                if packed is not None:
+                    _battle_tpls.append(packed)
         if CARD_SPRITE_DIR.exists():
             for p in sorted(CARD_SPRITE_DIR.glob("*.png")):
                 a = np.asarray(Image.open(p).convert("RGBA"))
-                _battle_tpls.append((p.stem.split("__")[0], a[..., :3].copy(), a[..., 3] > 127))
+                packed = _pack_battle_template(p.stem.split("__")[0], a[..., :3].copy(), a[..., 3] > 127)
+                if packed is not None:
+                    _battle_tpls.append(packed)
     return _battle_tpls
+
+
+def _match_battle_templates(region_u8: np.ndarray, mirrored: bool, top_k: int = 24) -> tuple[str | None, float]:
+    """Coarse-to-fine masked template match over all battle/stats templates."""
+    tpls = _battle_templates()
+    if not tpls:
+        return None, 1e9
+    region = region_u8.astype(np.float32)
+    rc = np.ascontiguousarray(region[::3, ::3], dtype=np.float32)
+    coarse: list[tuple[float, int]] = []
+    for idx, item in enumerate(tpls):
+        _, _, _, _, _, _, tc, mc, mcsum, tfc, mfc = item
+        tt, mm = (tfc, mfc) if mirrored else (tc, mc)
+        if tt.shape[0] > rc.shape[0] or tt.shape[1] > rc.shape[1]:
+            continue
+        res = cv2.matchTemplate(rc, tt, cv2.TM_SQDIFF, mask=mm)
+        coarse.append((float(np.sqrt(max(res.min(), 0.0) / mcsum)), idx))
+    if not coarse:
+        return None, 1e9
+    coarse.sort(key=lambda x: x[0])
+    by_name: dict[str, float] = {}
+    seen_species: set[str] = set()
+    for _, idx in coarse:
+        name, t, m3, msum, tf, mf, *_ = tpls[idx]
+        if len(seen_species) >= top_k and name not in seen_species:
+            continue
+        seen_species.add(name)
+        tt, mm = (tf, mf) if mirrored else (t, m3)
+        if tt.shape[0] > region.shape[0] or tt.shape[1] > region.shape[1]:
+            continue
+        res = cv2.matchTemplate(region, tt, cv2.TM_SQDIFF, mask=mm)
+        d = float(np.sqrt(max(res.min(), 0.0) / msum))
+        by_name[name] = min(d, by_name.get(name, 1e9))
+    if not by_name:
+        return None, 1e9
+    ranked = sorted(by_name.items(), key=lambda kv: kv[1])
+    best, best_d = ranked[0]
+    second = ranked[1][1] if len(ranked) > 1 else 1e9
+    if not _battle_match_ok(best_d, second):
+        return None, best_d
+    return best, best_d
 
 
 def match_battle_sprite(pic: np.ndarray, box: Box, mirrored: bool) -> tuple[str | None, float]:
@@ -1314,24 +1378,8 @@ def match_battle_sprite(pic: np.ndarray, box: Box, mirrored: bool) -> tuple[str 
     """
     x0, y0, x1, y1 = box
     m = BATTLE_SEARCH
-    region = pic[max(y0 - m, 0):y0 + 150, max(x0 - m, 0):x1 + m].astype(np.float32)
-    by_name: dict[str, float] = {}
-    for name, rgb, mask in _battle_templates():
-        t, k = (rgb[:, ::-1], mask[:, ::-1]) if mirrored else (rgb, mask)
-        if t.shape[0] > region.shape[0] or t.shape[1] > region.shape[1]:
-            continue
-        m3 = np.repeat(k[..., None], 3, axis=2).astype(np.float32)
-        res = cv2.matchTemplate(region, np.ascontiguousarray(t, dtype=np.float32), cv2.TM_SQDIFF, mask=m3)
-        d = float(np.sqrt(max(res.min(), 0.0) / m3.sum()))
-        by_name[name] = min(d, by_name.get(name, 1e9))
-    if not by_name:
-        return None, 1e9
-    ranked = sorted(by_name.items(), key=lambda kv: kv[1])
-    best, best_d = ranked[0]
-    second = ranked[1][1] if len(ranked) > 1 else 1e9
-    if not _battle_match_ok(best_d, second):
-        return None, best_d
-    return best, best_d
+    region = pic[max(y0 - m, 0):y0 + 150, max(x0 - m, 0):x1 + m]
+    return _match_battle_templates(region, mirrored=mirrored)
 
 
 def _battle_match_ok(best: float, second: float) -> bool:
@@ -1513,23 +1561,7 @@ def match_stats_sprite(rgb: np.ndarray) -> tuple[str | None, float]:
     """Name the monster on a Stats window card. The picture there is the shop card's picture,
     pixel for pixel, still and facing the same way (seen 2026-11-13: known monsters score 0,
     the runner-up 70 or more), so this is far surer than reading the battle field."""
-    region = rgb.astype(np.float32)
-    by_name: dict[str, float] = {}
-    for name, t, k in _battle_templates():
-        if t.shape[0] > region.shape[0] or t.shape[1] > region.shape[1]:
-            continue
-        m3 = np.repeat(k[..., None], 3, axis=2).astype(np.float32)
-        res = cv2.matchTemplate(region, np.ascontiguousarray(t, dtype=np.float32), cv2.TM_SQDIFF, mask=m3)
-        d = float(np.sqrt(max(res.min(), 0.0) / m3.sum()))
-        by_name[name] = min(d, by_name.get(name, 1e9))
-    if not by_name:
-        return None, 1e9
-    ranked = sorted(by_name.items(), key=lambda kv: kv[1])
-    best, best_d = ranked[0]
-    second = ranked[1][1] if len(ranked) > 1 else 1e9
-    if not _battle_match_ok(best_d, second):
-        return None, best_d
-    return best, best_d
+    return _match_battle_templates(rgb, mirrored=False)
 
 
 def read_stats_window(pic: np.ndarray) -> dict:

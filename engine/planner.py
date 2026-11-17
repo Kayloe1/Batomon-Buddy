@@ -59,6 +59,7 @@ class Params:
     reroll_samples: int = 3
     lock_gain: float = 0.06
     min_gain: float = 0.0     # an action must beat ending the turn by this much
+    sell_buy_margin: float = 0.02  # sell-to-buy must clearly beat holding the board (avoids selling just to reroll)
     greedy_steps: int = 3      # buys looked ahead after each candidate
     screen: int = 2            # cards tried per greedy step (best by a quick estimate)
     final_rounds: int = 3
@@ -303,7 +304,7 @@ class Planner:
         if self.p.gift_sim and rarity in self._gift_now:
             return self.p.copy_progress + self._gift_now[rarity]
         r = data.RARITIES.index(rarity) if rarity in data.RARITIES else 0
-        return self.p.copy_progress * (1 + r)
+        return self.p.copy_progress * (1.5 + r)
 
     def extras(self, s: RunState, bench: list[Unit | None], team: list[Unit | None] | None = None) -> float:
         # money and what the monsters would sell for, counted up to a cap: beyond it,
@@ -480,6 +481,11 @@ class Planner:
 
     def evaluate_after(self, s: RunState, t: RunState, team, bench) -> tuple[float, list, list]:
         team2, bench2 = self.place(t, team, bench)
+        # A merge collapses two copies into one and can move a positional unit (e.g. Noxnimbus)
+        # into a suboptimal slot; run one quick swap round so the merged unit is scored in place.
+        if len(t.gifts) > len(s.gifts):
+            f = lambda tm: self.team_score(t, tm, self.p.k_quick)
+            team2, bench2, _ = improve(team2, bench2, f, max_rounds=1, min_gain=self.p.swap_gain)
         return self.quick(t, team2, bench2), team2, bench2
 
     # ------------------------------------------------------ greedy finish ----
@@ -657,8 +663,10 @@ class Planner:
             considered.append((label, v - base))
             if len(states) == 1 and len(states[0].gifts) > len(s.gifts) and (best_merge is None or v > best_merge[2]):
                 best_merge = (label, actions, v)
-            if v > best_v + self.p.min_gain or (
-                abs(v - best_v) <= 1e-6 and best_actions and v_imm_avg > best_imm + 1e-6
+            req_floor = base + self.p.sell_buy_margin if " to buy " in label else base
+            if v > max(best_v, req_floor) + self.p.min_gain or (
+                v >= req_floor + self.p.min_gain and abs(v - best_v) <= 1e-6 and best_actions
+                and v_imm_avg > best_imm + 1e-6
             ):
                 best_label, best_actions, best_v, best_imm = label, actions, v, v_imm_avg
                 best_after = first_after if len(states) == 1 else None
