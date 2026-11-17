@@ -625,6 +625,36 @@ class MergePlacement(unittest.TestCase):
         self.assertNotIn(None, team2)
         self.assertIn(("Noxnimbus", 2), [(u.name, u.level) for u in team2])
 
+    def test_evaluate_after_rearranges_merged_positional_unit(self):
+        # 2026-11-16 day 4: Noxnimbus Lv2 merged into corner slot 0 (touching only one Venopuff);
+        # evaluate_after must rearrange team slots so the merged unit is scored in its best slot.
+        p = small_planner()
+        s = RunState(day=4, rank=4, money=49, shop=[None, card("Noxnimbus"), None, None, None])
+        team = [new_unit("Noxnimbus", 25), new_unit("Venopuff", 15), new_unit("Stingarde", 10),
+                new_unit("Noxnimbus", 25), new_unit("Venopuff", 15), new_unit("Runerock", 20)]
+        bench = [new_unit("Stingarde", 10), None, None, None]
+        s.team, s.bench = list(team), list(bench)
+        t = model.buy(s, 1)
+        v_place = p.quick(t, *p.place(t, team, bench))
+        v_eval, team2, _ = p.evaluate_after(s, t, team, bench)
+        self.assertGreaterEqual(v_eval, v_place)
+        nox_idx = next(i for i, u in enumerate(team2) if u and u.name == "Noxnimbus" and u.level == 2)
+        self.assertNotEqual(nox_idx, 0)
+
+    def test_sell_to_buy_requires_clear_margin(self):
+        # 2026-11-16 day 8: a tiny-gain sell-to-buy must not sell a unit off a full board
+        # just to open a slot and reroll on the next step.
+        p = small_planner()
+        p.p.reroll_samples = 0
+        p.p.sell_buy_margin = 10.0
+        s = RunState(day=8, rank=8, money=69, shop=[card("Aristobat"), None, None, None, None])
+        s.team = [new_unit("Noxnimbus", 25), new_unit("Thorntail", 35), new_unit("Coalem", 45),
+                  new_unit("Noxnimbus", 25, level=2), new_unit("Venopuff", 15, level=2), new_unit("Runerock", 20)]
+        s.bench = [new_unit("Thorntail", 35), new_unit("Noxnimbus", 25),
+                   new_unit("Venopuff", 15), new_unit("Runerock", 20)]
+        plan = p.decide(s)
+        self.assertFalse(any(a.kind == "sell" and " to buy " in (a.why or "") for a in plan.actions))
+
 
 class PairBonus(unittest.TestCase):
     def test_a_rarer_third_copy_is_less_likely(self):
