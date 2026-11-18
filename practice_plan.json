@@ -1,6 +1,14 @@
 {
-  "about": "The practice test practice.bat plays. base (today's settings) is always included.",
-  "arms": {},
-  "seeds": [12100, 96],
-  "out": "logs/ab/practice.jsonl"
+  "about": "The practice test practice.bat plays. base (today's settings) is always included. 2026-11-18 night: 7 strategy tweaks, 192 paired runs each.",
+  "arms": {
+    "stronger_team": {"power_weight": 0.15},
+    "wider_lookahead": {"screen": 3},
+    "tomorrow_more": {"w_next": 0.8},
+    "margin_less": {"margin_weight": 0.15},
+    "margin_more": {"margin_weight": 0.5},
+    "more_rerolls": {"max_rerolls": 40},
+    "deeper_lookahead": {"greedy_steps": 4}
+  },
+  "seeds": [12100, 192],
+  "out": "logs/ab/night_1118.jsonl"
 }
