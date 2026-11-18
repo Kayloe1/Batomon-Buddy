@@ -190,6 +190,43 @@ def canonical_picture(img: Image.Image) -> Image.Image:
     return pic
 
 
+def picture_is_canonical(hwnd: int) -> bool:
+    """True when the game picture inside the window is exactly CANON_W x CANON_H."""
+    p = picture_rect(client_rect(hwnd))
+    return (p.width, p.height) == (CANON_W, CANON_H)
+
+
+def fit_to_canonical(hwnd: int) -> str | None:
+    """Make the game picture CANON_W x CANON_H again if Windows shrank the window.
+
+    When a monitor turns off or is unplugged, Windows moves the game to another screen
+    and shrinks it; the reader's templates then no longer fit and every read fails.
+    This finds a monitor that can show the full picture, takes the window's title bar
+    and frame away (a framed window cannot be as tall as the screen) and places it there
+    at exactly that size. Only the window's position, size and frame change, nothing
+    inside the game. Returns a sentence saying what was done, or None when nothing was
+    needed or no monitor is big enough (the reader then reports the size problem).
+    """
+    if picture_is_canonical(hwnd) or is_minimized(hwnd):
+        return None
+    import win32api
+    import win32con
+    for mon in win32api.EnumDisplayMonitors():
+        left, top, right, bottom = win32api.GetMonitorInfo(mon[0])["Monitor"]
+        if right - left >= CANON_W and bottom - top >= CANON_H:
+            break
+    else:
+        return None
+    before = client_rect(hwnd)
+    style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
+    win32gui.SetWindowLong(hwnd, win32con.GWL_STYLE, style & ~(win32con.WS_CAPTION | win32con.WS_THICKFRAME))
+    win32gui.SetWindowPos(hwnd, 0, left, top, CANON_W, CANON_H,
+                          win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE | win32con.SWP_FRAMECHANGED)
+    after = client_rect(hwnd)
+    return (f"game window was {before.width}x{before.height}; set it to {after.width}x{after.height} "
+            f"without a frame on the monitor at ({left}, {top})")
+
+
 def frac_to_client(rect: Rect, fx: float, fy: float) -> tuple[int, int]:
     """Fraction of the game picture -> pixel within the client area / captured image.
 
