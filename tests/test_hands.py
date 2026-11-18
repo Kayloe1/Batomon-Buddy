@@ -1,5 +1,7 @@
 r"""Tests for the checks in hands.py. No input is sent and the game is not needed."""
 import copy
+import tempfile
+from unittest import mock
 import json
 import sys
 import unittest
@@ -442,3 +444,46 @@ class EndBadges(unittest.TestCase):
 def types_ns(**kw):
     import types
     return types.SimpleNamespace(**kw)
+
+
+class RetryIgnoredAction(unittest.TestCase):
+    """A drag the game ignored (the shop reads exactly as before) is tried once more (2026-11-17)."""
+
+    def _hands(self, looks):
+        h = hands.Hands.__new__(hands.Hands)
+        h.dry_run = False
+        h.log_path = Path(tempfile.mkdtemp()) / "actions.jsonl"
+        seq = list(looks)
+        h.look = lambda save_if_unreadable=True: copy.deepcopy(seq.pop(0))
+        h.drags = 0
+
+        def do():
+            h.drags += 1
+            return [["drag"]]
+        return h, do
+
+    def test_ignored_sell_is_retried_and_succeeds(self):
+        sold = copy.deepcopy(BEFORE)
+        sold["team"][5] = None
+        sold["money"] = BEFORE["money"] + 1
+        h, do = self._hands([BEFORE, BEFORE, BEFORE, sold])
+        with mock.patch.object(hands.time, "sleep"):
+            r = h._act("sell", lambda s: None, do, lambda b, a: hands.check_sell(b, a, ("team", 5)))
+        self.assertTrue(r.ok, r.message)
+        self.assertEqual(h.drags, 2)
+
+    def test_retried_only_once(self):
+        h, do = self._hands([BEFORE] * 4)
+        with mock.patch.object(hands.time, "sleep"):
+            r = h._act("sell", lambda s: None, do, lambda b, a: hands.check_sell(b, a, ("team", 5)))
+        self.assertFalse(r.ok)
+        self.assertEqual(h.drags, 2)
+
+    def test_partial_change_is_not_retried(self):
+        moved = copy.deepcopy(BEFORE)                   # dropped on the bench instead: something changed
+        moved["bench"][0], moved["team"][5] = moved["team"][5], None
+        h, do = self._hands([BEFORE, moved])
+        with mock.patch.object(hands.time, "sleep"):
+            r = h._act("sell", lambda s: None, do, lambda b, a: hands.check_sell(b, a, ("team", 5)))
+        self.assertFalse(r.ok)
+        self.assertEqual(h.drags, 1)

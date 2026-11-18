@@ -198,6 +198,16 @@ class _WindowMouse:
         self._post(self.WM_MOUSEWHEEL, (delta & 0xFFFF) << 16, self._lparam(x, y))
 
 
+def _board_key(state: dict) -> tuple:
+    """What an action can change on the shop: money, the team, bench and shop cards (names and
+    levels), lock and reroll price. Equal keys before and after mean the action did nothing."""
+    def names(slots):
+        return tuple(None if s is None else (s.get("name"), s.get("level")) for s in slots or [])
+    return (state.get("money"), names(state.get("team")), names(state.get("bench")),
+            tuple(None if c is None else (c.get("name"), c.get("price")) for c in state.get("shop") or []),
+            state.get("locked"), state.get("reroll_price"))
+
+
 def _emergency_check() -> None:
     """The corner emergency stop, for background mode where pyautogui itself never runs."""
     import pyautogui
@@ -428,7 +438,7 @@ class Hands:
         return [["scroll", x, y, clicks]]
 
     # -- the common shape of every action --
-    def _act(self, name: str, precheck, do, check) -> Result:
+    def _act(self, name: str, precheck, do, check, _retry_allowed: bool = True) -> Result:
         before = self.look()
         if before.get("screen") != "shop":
             return self._log(name, Result(False, f"not on the shop screen ({before.get('screen')})", before))
@@ -454,6 +464,14 @@ class Hands:
             why = "state after the action not read cleanly: " + "; ".join(after["problems"])
         else:
             why = check(before, after)
+        if why and _retry_allowed and after.get("screen") == "shop" and not after.get("problems") \
+                and _board_key(after) == _board_key(before):
+            # The game ignored the action: the shop reads exactly as before (a drag that was
+            # dropped too early happened a few times a night). Nothing changed, so trying
+            # once more cannot do anything twice.
+            self._log(name, Result(False, why + "; nothing changed, trying once more", before, after, clicks))
+            time.sleep(0.6)
+            return self._act(name, precheck, do, check, _retry_allowed=False)
         return self._log(name, Result(why is None, why or "ok", before, after, clicks))
 
     @staticmethod
