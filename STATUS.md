@@ -73,6 +73,24 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
     (including `$0` for free monsters from potions or events and discounted prices from Coupon / Bug Catcher),
     so the planner no longer overestimates what selling a free or discounted monster will refund.
 
+### Overnight 2026-11-17/18 (Ranked, unattended)
+- Rank: Gold 3 -> Gold 2 -> Gold 1 -> **Platinum 8** (first 3 finished runs: 10, 10, 9 badges), Platinum 7 after
+  run 4, then back to Platinum 8. Logs: `logs\overnight_1118.txt` and `logs\run_20261117_*`, `run_20261118_*`.
+- **Monitor turned off = no reading.** Windows moved the game to the 1920x1080 screen and shrank it; the reader
+  needs exactly 2560x1440 (scaled pictures read 0 of 42 labelled captures, even at 1% smaller).
+  `window.fit_to_canonical()` (PR #52) puts the window back, borderless, at 2560x1440 on a big enough monitor
+  before every look. With the big monitor off it cannot help and the bot stops.
+- **Background mode cannot drag.** With `--background`, clicks work but sells and moves fail ("slot is still
+  occupied"), even with a slow drag, and hovering to learn a monster needs the real mouse. The game seems to
+  follow the real pointer while dragging. Overnight runs use the normal mode (`batch.py --runs 0 --ranked`).
+- A shop action the game ignored (the shop reads exactly as before) is now sent once more (PR #53).
+- Taught: a blue "6" in the shop odds bar (Rank 6 shop).
+- **Practice tests** (`--field gold`, 96 paired runs, seeds 3100/4100/5100/6100 x24; new baseline on current
+  main: 14 won / 5.67 badges): `k_quick` 16 (more opponents per decision) **14 -> 23 won, 6.38 badges
+  (+0.71 +/- 0.47) - now the default**; `reroll_samples` 6: +0.38 here and +0.30 on seeds 7100-10100 (not
+  significant alone); `reserve` 10: no change at all (the typical-price rule sets the reserve); `money` 0:
+  -0.16; `w_next2` 0.5: +0.00. Helper scripts: `logs\gold_diag\run96.sh`, `cmp96.py` (git-ignored).
+
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
 stop with a capture, press **Teach it**. The window shows the part of the picture the bot could not read
