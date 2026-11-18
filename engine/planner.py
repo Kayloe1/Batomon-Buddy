@@ -41,7 +41,9 @@ TICKETS = {"Gray Ticket", "Green Ticket", "Blue Ticket", "Purple Ticket", "Golde
 @dataclass
 class Params:
     k_final: int = 16          # opponents when reporting a board's score
-    k_quick: int = 10          # opponents inside the search (same ones for every candidate)
+    k_quick: int = 16          # opponents inside the search (same ones for every candidate). 10 -> 16 on
+                               # 2026-11-18: 96 paired Gold practice runs 14 -> 23 won, 5.67 -> 6.38 badges
+                               # (+0.71 +/- 0.47); about twice the thinking time per decision
     w_today: float = 1.0
     w_next: float = 0.6
     w_next2: float = 0.3       # the day after tomorrow: keeps the board growing when today looks safe
