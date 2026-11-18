@@ -206,6 +206,7 @@ def _emergency_check() -> None:
 
 class Hands:
     background = False                # see the module notes; set by __init__
+    dry_run = True                    # set by __init__
     mouse = None
 
     def __init__(self, dry_run: bool = True, background: bool = False):
@@ -228,6 +229,12 @@ class Hands:
         # cleanest read is kept.
         attempts = 1 if getattr(self, "_single_read", False) else 4
         best = None
+        # A monitor that turned off makes Windows shrink the game window; put it back first.
+        fixed = None if self.dry_run else window.fit_to_canonical(self.hwnd)
+        if fixed:
+            print("Window size fixed: " + fixed)
+            self._log("fit window", Result(True, fixed, None))
+            time.sleep(1.5)
         for attempt in range(attempts):
             # background: only the window's own drawing; screen pixels would show whatever covers it
             img = (window.capture_client(self.hwnd, "printwindow") if self.background
