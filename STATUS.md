@@ -107,6 +107,13 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   priority with all cores but 4, so it can run next to the live bot overnight. It uses PyPy when it is
   unpacked into a `pypy\` folder in the repo (git-ignored), otherwise `.venv`.
 - On the 4-core cloud machine a practice run takes about 6 minutes with normal Python.
+- **Simulator speed-up (same day):** the battle loop, neighbour lookups and a few ability checks were rewritten
+  so they do the same arithmetic in the same order with less bookkeeping (positions are looked up once per
+  battle; abilities of monsters not on a side are skipped). Same 25,473 battles: normal Python 23.9 s -> 17.6 s
+  (1.35x, which also shortens live thinking), PyPy 6.8 s -> about 3.9 s (1.7x). Whole practice games under
+  PyPy: 4 days of seed 3100 in 24 s instead of 44 s. Checked identical: all 25,473 battles (winner, time, HP,
+  statuses, every unit's numbers), `python -m sim --check` output byte for byte, and whole practice runs on
+  4 settings. Against the original code in normal Python, a practice game is now about 5x faster.
 
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a

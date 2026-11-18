@@ -30,6 +30,7 @@ from . import data
 from .rules import SETTINGS
 
 EPS = 1e-9
+_UNSET = object()          # "not looked up yet" for Unit._front
 
 ALL_TYPES = ("Bug", "Dragon", "Electric", "Fighting", "Fire", "Flying",
              "Ghost", "Grass", "Rock", "Steel", "Toxic", "Water")
@@ -79,9 +80,13 @@ class Unit:
     t0_shock: float = 0.0
     t0_mc: int = 0
     _speed_cached: float = -1.0
+    # per-battle lookups filled in by Battle (positions never change during a battle)
+    _adj: list | None = field(default=None, init=False, repr=False, compare=False)
+    _front: object = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         self.base_name = data.canonical_name(self.name)
+        self._front = _UNSET
 
     @property
     def row(self) -> int:
@@ -280,7 +285,6 @@ class Battle:
         self.next_burn = SETTINGS["burn_interval"]
         self.next_sd = SETTINGS["sudden_death_start"]
         self.depth = 0
-        self._adj: dict[int, list[Unit]] = {}
         self._living: list[list[Unit] | None] = [None, None]   # cached living(side); reset by knockout()
         self._dmg_visiting: set[int] = set()
         self._side_names: list[set[str]] = [
@@ -365,14 +369,18 @@ class Battle:
         return self.unit_at(u.side, u.row, u.col - 1)
 
     def in_front(self, u: Unit) -> Unit | None:
-        return self.unit_at(u.side, u.row, u.col + 1)
+        # Positions never change during a battle (units are built per battle), so this is looked up once.
+        f = u._front
+        if f is _UNSET:
+            f = u._front = self.unit_at(u.side, u.row, u.col + 1)
+        return f
 
     def above(self, u: Unit) -> Unit | None:
         return self.unit_at(u.side, u.row - 1, u.col) if u.row == 1 else None
 
     def adjacent(self, u: Unit) -> list[Unit]:
         # Positions never change during a battle, so the neighbour list is computed once.
-        cached = self._adj.get(id(u))
+        cached = u._adj
         if cached is not None:
             return cached
         if self.trainers[u.side].link_cable:
@@ -380,7 +388,7 @@ class Battle:
         else:
             cells = [(u.row, u.col - 1), (u.row, u.col + 1), (u.row - 1, u.col), (u.row + 1, u.col)]
             out = [v for v in (self.unit_at(u.side, r, c) for r, c in cells) if v]
-        self._adj[id(u)] = out
+        u._adj = out
         return out
 
     def speeds_changed(self) -> None:
@@ -412,6 +420,8 @@ class Battle:
     # ---------- ongoing effects ----------
     def ongoing_mult(self, u: Unit) -> int:
         """How many times u's Ongoing ability applies (Onsetra in front of it adds more)."""
+        if "Onsetra" not in self._side_names[u.side]:
+            return 1
         n = 1
         front = self.in_front(u)
         if front and front.is_("Onsetra") and front.active_passive() and front.param:
@@ -423,6 +433,9 @@ class Battle:
 
     def speed_of(self, u: Unit) -> float:
         bonus = u.speed
+        names = self._side_names[u.side]
+        if "Formiqueen" not in names and "Shrinell" not in names:
+            return 1.0 + bonus / 100.0
         for v in self.adjacent(u):
             if v.is_("Formiqueen") and self.ongoing_active(v) and u.rarity == "Common" and v.param:
                 bonus += v.param * self.ongoing_mult(v)
@@ -440,7 +453,7 @@ class Battle:
 
     def _raw_damage_of(self, u: Unit) -> float:
         dmg = u.stats["damage"]
-        if self.ongoing_active(u) and u.param is not None and id(u) not in self._dmg_visiting:
+        if u.ongoing and u.alive and not u.disabled and u.param is not None and id(u) not in self._dmg_visiting:
             self._dmg_visiting.add(id(u))
             try:
                 k = self.ongoing_mult(u)
@@ -479,7 +492,7 @@ class Battle:
 
     def _raw_heal_of(self, u: Unit) -> float:
         heal = u.stats["heal"]
-        if not self.ongoing_active(u) or u.param is None:
+        if not (u.ongoing and u.alive and not u.disabled) or u.param is None:
             return heal
         k = self.ongoing_mult(u)
         if u.is_("Orcana"):
@@ -488,7 +501,7 @@ class Battle:
 
     def shield_of(self, u: Unit) -> float:
         shld = u.stats["shield"]
-        if not self.ongoing_active(u) or u.param is None:
+        if not (u.ongoing and u.alive and not u.disabled) or u.param is None:
             return shld
         k = self.ongoing_mult(u)
         if u.is_("Cinnabark"):
@@ -502,7 +515,7 @@ class Battle:
 
     def _raw_burn_of(self, u: Unit) -> float:
         burn = u.stats["burn"]
-        if not self.ongoing_active(u) or u.param is None:
+        if not (u.ongoing and u.alive and not u.disabled) or u.param is None:
             return burn
         k = self.ongoing_mult(u)
         if u.is_("Ouroblaze"):
@@ -518,6 +531,8 @@ class Battle:
 
     def _raw_shock_of(self, u: Unit) -> float:
         shock = u.stats["shock"]
+        if "Pylong" not in self._side_names[u.side]:
+            return shock
         b = self.in_front(u)   # Pylong boosts the ally behind it, i.e. Pylong is in front of u
         if b and b.is_("Pylong") and self.ongoing_active(b) and b.param:
             shock *= 1 + b.param / 100.0 * self.ongoing_mult(b)
@@ -530,7 +545,7 @@ class Battle:
 
     def _raw_multicast_of(self, u: Unit) -> int:
         mc = u.multicast + u.extra_multicast
-        if not u.has_ability:
+        if not u.has_ability and "Stellagon" in self._side_names[u.side]:
             for v in self.adjacent(u):
                 if v.is_("Stellagon") and self.ongoing_active(v) and v.param:
                     mc += int(v.param) * self.ongoing_mult(v)
@@ -1048,36 +1063,49 @@ class Battle:
         self.speeds_changed()
         limit = SETTINGS["time_limit"] if self.until is None else self.until
         result = None
-        if not self.immortal and any(self.dead()):
+        tr_a, tr_b = self.trainers
+        immortal = self.immortal
+        if not immortal and (tr_a.hp <= EPS or tr_b.hp <= EPS):
             result = self._result()
+        order = self.order()
+        ordered_trainers = (self.trainers[order[0]], self.trainers[order[1]])
+        teams = self.teams
+        has_shelldra = self._has_shelldra
+        deaths_mid_instant = not immortal and not SETTINGS.get("deaths_after_instant", True)
+        living = self.living
+        speed = self.speed
         while result is None:
-            # Next event time.
-            times = [self.next_poison, self.next_burn, self.next_sd]
-            standing = (self.living(0), self.living(1))
-            spd = {}
+            # Next event time: the earliest status tick, cast or Shelldra charge.
+            t_now = self.t
+            t_next = min(self.next_poison, self.next_burn, self.next_sd)
+            active = []
             for side in (0, 1):
-                for u in standing[side]:
+                for u in living(side):
                     if u.rigalord_only:
                         continue
-                    v = spd[id(u)] = self.speed(u)
-                    times.append(self.t + max(0.0, u.cooldown - u.progress) / v)
-                    if self._has_shelldra and u.is_("Shelldra") and u.active_passive():
-                        times.append(u.shelldra_next)
-            t_next = min(times)
+                    v = u._speed_cached
+                    if v < 0.0:
+                        v = speed(u)
+                    active.append((u, v))
+                    left = u.cooldown - u.progress
+                    x = t_now + (left if left > 0.0 else 0.0) / v
+                    if x < t_next:
+                        t_next = x
+                    if has_shelldra and u.base_name == "Shelldra" and u.active_passive() \
+                            and u.shelldra_next < t_next:
+                        t_next = u.shelldra_next
             if t_next > limit + EPS:
                 self.t = limit
                 return self._result(force_draw=self.until is None)
-            dt = t_next - self.t
-            for side in (0, 1):
-                for u in standing[side]:
-                    if not u.rigalord_only:
-                        u.progress += dt * spd[id(u)]
+            dt = t_next - t_now
+            for u, v in active:
+                u.progress += dt * v
             self.t = t_next
             # Casts: keep going while someone is ready (charges can make more units ready).
             for _ in range(50):
                 ready = False
-                for side in self.order():
-                    for u in self.teams[side]:
+                for side in order:
+                    for u in teams[side]:
                         if u and u.alive and not u.rigalord_only and u.progress >= u.cooldown - 1e-7:
                             u.progress -= u.cooldown
                             if u.progress < 1e-7:
@@ -1085,15 +1113,14 @@ class Battle:
                             u.progress = min(u.progress, u.cooldown)
                             self.cast(u)
                             ready = True
-                            if (not self.immortal and not SETTINGS.get("deaths_after_instant", True)
-                                    and any(self.dead())):
+                            if deaths_mid_instant and (tr_a.hp <= EPS or tr_b.hp <= EPS):
                                 return self._result()
                 if not ready:
                     break
-            for tr in self.trainers:
+            for tr in (tr_a, tr_b):
                 tr.shock += tr.shock_pending
                 tr.shock_pending = 0.0
-            if not self.immortal and any(self.dead()):
+            if not immortal and (tr_a.hp <= EPS or tr_b.hp <= EPS):
                 return self._result()
             if self._has_shelldra:
                 for side in (0, 1):
@@ -1102,23 +1129,23 @@ class Battle:
                             u.extra_multicast += int(u.param or 0)
                             u.shelldra_next += 4.0
             if abs(self.t - self.next_burn) < 1e-7:
-                for tr in (self.trainers[i] for i in self.order()):
+                for tr in ordered_trainers:
                     if tr.burn > 0:
                         self.status_damage(tr, tr.burn)
                         tr.burn = max(0.0, tr.burn - 1)
                 self.next_burn += SETTINGS["burn_interval"]
             if abs(self.t - self.next_poison) < 1e-7:
-                for tr in (self.trainers[i] for i in self.order()):
+                for tr in ordered_trainers:
                     self.status_damage(tr, tr.poison)
                 self.next_poison += SETTINGS["poison_interval"]
             if abs(self.t - self.next_sd) < 1e-7:
                 sd_dmg = SETTINGS["sudden_death_base"] * (
                     2.0 ** ((self.t - SETTINGS["sudden_death_start"]) / 3.0)
                 )
-                for tr in (self.trainers[i] for i in self.order()):
+                for tr in ordered_trainers:
                     self._take(tr, sd_dmg)
                 self.next_sd += SETTINGS["sudden_death_interval"]
-            if not self.immortal and any(self.dead()):
+            if not immortal and (tr_a.hp <= EPS or tr_b.hp <= EPS):
                 result = self._result()
         return result
 
