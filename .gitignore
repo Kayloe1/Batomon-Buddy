@@ -24,3 +24,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# PyPy unpacked here for faster practice runs (practice.bat)
+pypy/

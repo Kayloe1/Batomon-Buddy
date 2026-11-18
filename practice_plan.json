@@ -1,0 +1,6 @@
+{
+  "about": "The practice test practice.bat plays. base (today's settings) is always included.",
+  "arms": {},
+  "seeds": [12100, 96],
+  "out": "logs/ab/practice.jsonl"
+}

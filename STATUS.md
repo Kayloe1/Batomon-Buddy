@@ -95,6 +95,19 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   the default too** (positive in all three comparisons). Both together vs the old defaults: +0.90 on seeds
   3100-6100 and +0.25 on fresh seeds 7100-10100; 192 runs, 31 -> 46 won. `k_quick` 24: about the same as 16, not used. Helper scripts: `logs\gold_diag\run96.sh`, `cmp96.py` (git-ignored).
 
+### Faster practice tests (2026-11-18)
+- Practice runs spend 96% of their time in the battle simulator (about 150,000 battles per run). Under
+  **PyPy** (a faster Python) the same run takes about 3.5x less time: 4 days of seed 3100 in 33 s instead
+  of 114 s. Results are identical: 25,473 recorded planner battles give the same winner, time, HP and unit
+  stats, and whole runs (seeds 11100, 11101) give the same day-by-day results. PyPy only runs the offline
+  practice; live play still needs the normal Python (screen reading uses OpenCV and pywin32).
+- `python -m engine.abtest` plays paired tests (today's settings against changed ones on the same seeds),
+  writes each finished run at once to a `.jsonl` file and carries on where it stopped when restarted;
+  `--report FILE` prints the comparison. **`practice.bat`** plays the test in `practice_plan.json` at low
+  priority with all cores but 4, so it can run next to the live bot overnight. It uses PyPy when it is
+  unpacked into a `pypy\` folder in the repo (git-ignored), otherwise `.venv`.
+- On the 4-core cloud machine a practice run takes about 6 minutes with normal Python.
+
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
 stop with a capture, press **Teach it**. The window shows the part of the picture the bot could not read
