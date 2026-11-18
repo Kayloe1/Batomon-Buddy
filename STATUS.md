@@ -89,7 +89,9 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   main: 14 won / 5.67 badges): `k_quick` 16 (more opponents per decision) **14 -> 23 won, 6.38 badges
   (+0.71 +/- 0.47) - now the default**; `reroll_samples` 6: +0.38 here and +0.30 on seeds 7100-10100 (not
   significant alone); `reserve` 10: no change at all (the typical-price rule sets the reserve); `money` 0:
-  -0.16; `w_next2` 0.5: +0.00. Helper scripts: `logs\gold_diag\run96.sh`, `cmp96.py` (git-ignored).
+  -0.16; `w_next2` 0.5: +0.00. Later checks: `k_quick` 16 on fresh seeds 7100-9100 (72 runs) -0.14, so its
+  true gain is probably smaller than +0.71; `reroll_samples` 6 on top of `k_quick` 16: +0.20 (26 won) - **now
+  the default too** (positive in all three comparisons). `k_quick` 24: about the same as 16, not used. Helper scripts: `logs\gold_diag\run96.sh`, `cmp96.py` (git-ignored).
 
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a

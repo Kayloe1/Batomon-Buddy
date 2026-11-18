@@ -58,7 +58,8 @@ class Params:
     reserve: int = 20            # money worth keeping; anything above it is spent (rerolls hunt for merges)
     max_rerolls: int = 25        # surplus rerolls per day
     gift_scale: float = 1.0
-    reroll_samples: int = 3
+    reroll_samples: int = 6      # sampled shops when judging a reroll. 3 -> 6 on 2026-11-18: +0.38 and +0.30
+                                 # badges vs 3 (two sets of 96 paired Gold practice runs), +0.20 on top of k_quick 16
     lock_gain: float = 0.06
     min_gain: float = 0.0     # an action must beat ending the turn by this much
     sell_buy_margin: float = 0.02  # sell-to-buy must clearly beat holding the board (avoids selling just to reroll)
