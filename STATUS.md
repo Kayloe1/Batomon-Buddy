@@ -74,8 +74,9 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
     so the planner no longer overestimates what selling a free or discounted monster will refund.
 
 ### Overnight 2026-11-17/18 (Ranked, unattended)
-- Rank: Gold 3 -> Gold 2 -> Gold 1 -> **Platinum 8** (first 3 finished runs: 10, 10, 9 badges), Platinum 7 after
-  run 4, then back to Platinum 8. Logs: `logs\overnight_1118.txt` and `logs\run_20261117_*`, `run_20261118_*`.
+- Rank: Gold 3 -> Gold 2 -> Gold 1 -> **Platinum 8** (first 3 finished runs: 10, 10, 9 badges), then up and
+  down to **Platinum 3** by 06:42. 15 runs finished between 20:31 and 07:10: 5 won, 7.6 badges on average,
+  no stops after 23:16. Logs: `logs\overnight_1118.txt` and `logs\run_20261117_*`, `run_20261118_*`.
 - **Monitor turned off = no reading.** Windows moved the game to the 1920x1080 screen and shrank it; the reader
   needs exactly 2560x1440 (scaled pictures read 0 of 42 labelled captures, even at 1% smaller).
   `window.fit_to_canonical()` (PR #52) puts the window back, borderless, at 2560x1440 on a big enough monitor
@@ -91,7 +92,8 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   significant alone); `reserve` 10: no change at all (the typical-price rule sets the reserve); `money` 0:
   -0.16; `w_next2` 0.5: +0.00. Later checks: `k_quick` 16 on fresh seeds 7100-9100 (72 runs) -0.14, so its
   true gain is probably smaller than +0.71; `reroll_samples` 6 on top of `k_quick` 16: +0.20 (26 won) - **now
-  the default too** (positive in all three comparisons). `k_quick` 24: about the same as 16, not used. Helper scripts: `logs\gold_diag\run96.sh`, `cmp96.py` (git-ignored).
+  the default too** (positive in all three comparisons). Both together vs the old defaults: +0.90 on seeds
+  3100-6100 and +0.25 on fresh seeds 7100-10100; 192 runs, 31 -> 46 won. `k_quick` 24: about the same as 16, not used. Helper scripts: `logs\gold_diag\run96.sh`, `cmp96.py` (git-ignored).
 
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
