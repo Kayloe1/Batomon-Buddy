@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--arms", default="{}", help='JSON {"name": {Params overrides}}; "base" is always added')
     ap.add_argument("--seeds", nargs=2, type=int, metavar=("FIRST", "COUNT"), default=[12100, 96])
     ap.add_argument("--out", default=os.path.join("logs", "ab", "practice.jsonl"))
-    ap.add_argument("--field", choices=["ghosts", "gold"], default="gold")
+    ap.add_argument("--field", choices=["ghosts", "gold", "high"], default="gold")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 4) - 4),
                     help="parallel runs (default: all cores but 4, so live play keeps its speed)")
     ap.add_argument("--report", metavar="FILE", help="only print the comparison for this file")
@@ -90,6 +90,7 @@ def main(argv: list[str] | None = None) -> int:
         a.arms = json.dumps(plan.get("arms", {}))
         a.seeds = plan.get("seeds", a.seeds)
         a.out = plan.get("out", a.out)
+        a.field = plan.get("field", a.field)
     if a.report:
         print(report(a.report))
         return 0
@@ -102,8 +103,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(jobs)} runs to play ({len(done)} already done), {a.workers} at a time", flush=True)
     from . import opponents, practice
     opponents.pools(n=24, seed=1, recorded=False)      # build the caches once, before the workers start
-    if a.field == "gold":
-        practice.gold_pools()
+    if a.field in ("gold", "high"):
+        practice.pools(a.field)
     t0 = time.time()
     with ProcessPoolExecutor(a.workers) as ex:
         futures = [ex.submit(_job, j) for j in jobs]

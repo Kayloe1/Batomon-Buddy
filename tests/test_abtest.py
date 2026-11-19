@@ -34,3 +34,13 @@ class TrainerRecord(unittest.TestCase):
         self.assertLess(sc["Burglar"], sc["Gamer"])
         self.assertLess(sc["Burglar"], sc["Shopkeeper"])
         self.assertNotEqual(pick_trainer(["Burglar", "Gentleman", "Shopkeeper"])[0], 0)
+
+
+class PracticeFields(unittest.TestCase):
+    def test_high_field_falls_back_to_gold_and_ghosts(self):
+        from engine import practice
+        gold = practice.pools("gold")
+        high = practice.pools("high")
+        for d in (1, 5, 10):
+            self.assertGreaterEqual(len(high[d]), practice.MIN_REAL)
+        self.assertIs(practice.gold_pools(), gold)

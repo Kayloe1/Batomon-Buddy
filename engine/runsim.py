@@ -132,9 +132,9 @@ def play_run(seed: int, policy: str, params: Params | None = None, pool_n: int =
         return random.Random("-".join(map(str, (seed,) + what)))
     # ghosts only in both pools: the recorded real teams would sit at the front of both, and the
     # engine would be graded on the opponents it planned against
-    if field == "gold":                     # the Gold-rank opponents the bot met (engine/practice.py)
+    if field in ("gold", "high"):           # the Gold / Platinum-Diamond opponents the bot met (practice.py)
         from . import practice
-        fight_pools = practice.gold_pools()
+        fight_pools = practice.pools(field)
     else:
         fight_pools = opponents.pools(n=48, seed=9001, recorded=False)        # who we really meet
     planner = None
@@ -212,9 +212,9 @@ def run_many(policy: str, seeds: list[int], params: Params | None = None, worker
     jobs = [(s, policy, asdict(params) if params else None, field, live_choices) for s in seeds]
     if policy == "engine":
         opponents.pools(n=24, seed=1, recorded=False)
-    if field == "gold":
+    if field in ("gold", "high"):
         from . import practice
-        practice.gold_pools()
+        practice.pools(field)
     else:
         opponents.pools(n=48, seed=9001, recorded=False)
     if workers <= 1:
@@ -238,8 +238,9 @@ def main() -> int:
     ap.add_argument("--first-seed", type=int, default=1000)
     ap.add_argument("--workers", type=int, default=default_workers())
     ap.add_argument("--verbose", action="store_true")
-    ap.add_argument("--field", choices=["ghosts", "gold"], default="ghosts",
-                    help="who the runs fight: the ghosts (default) or the Gold-rank practice field")
+    ap.add_argument("--field", choices=["ghosts", "gold", "high"], default="ghosts",
+                    help="who the runs fight: the ghosts (default), the Gold-rank practice field, or the "
+                         "Platinum/Diamond one (high)")
     ap.add_argument("--random-choices", action="store_true",
                     help="old behaviour: no trainer, random gift trinkets without badge bonuses")
     ap.add_argument("--params", default="", help='JSON of Params overrides, e.g. {"w_next": 0.3}')
