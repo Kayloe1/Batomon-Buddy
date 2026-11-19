@@ -140,6 +140,14 @@ Update the CSV as runs accumulate.
 Platinum 1 and Diamond 8 after that; at Diamond every non-winning run got 1-5 badges. The Ranked Continue panel
 template (`templates\continue_ranked_mode.png`) was made from a real panel on Ed's PC (not in git yet).
 
+### Platinum/Diamond practice field (2026-11-19)
+`data/practice_high.jsonl` (251 real teams from Ranked Platinum/Diamond battles, `python -m engine.practice
+--build --field high --ranked-only --alpha 0.5`); use it with `--field high` (runsim, abtest, or `"field":
+"high"` in a plan file). How hard each team is was tuned by the strength setting `alpha` (192 runs each):
+0.5 gives 5.08 badges and 11 won, 0.75 gives 4.16, 1.0 gives 3.08 and none won. Real results: about 7.4 badges
+at Platinum, about 3 at Diamond, so 0.5 (the same setting as the Gold field) sits inside that range, a little
+harder than a typical Platinum day. Days with fewer than 4 real teams borrow Gold teams, then ghosts.
+
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
 stop with a capture, press **Teach it**. The window shows the part of the picture the bot could not read
