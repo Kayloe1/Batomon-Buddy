@@ -1,7 +1,8 @@
 """Choices outside the shop: trainer at the start of a run, trinket from a gift.
 
 Trainer: Ed's own record per trainer from the Batopedia (data/trainers.csv: runs
-won / runs played, read 2026-11-11), smoothed so one lucky run does not dominate,
+won / runs played, read 2026-11-11), smoothed so one lucky run does not dominate, plus the
+bot's own Ranked record per trainer (data/bot_trainer_record.csv, average badges, smoothed),
 minus trainers whose ability works against the engine's plan (qualitative lessons
 from the September notes, no numbers): Mad Scientist replaces the whole team with
 random monsters mid-run, Gentleman removes the cheap monsters merges are built from.
@@ -25,9 +26,29 @@ from .planner import Planner
 AVOID_TRAINERS = knowledge.AVOID_TRAINERS
 PREFERENCE_BONUS = 0.05     # small tie-breaker for trainers that did well in September
 
+# The bot's own finished Ranked runs per trainer (data/bot_trainer_record.csv, from its logs; 57 runs
+# 2026-11-14 to 11-19). Average badges, pulled toward BOT_PRIOR_BADGES by BOT_PRIOR_RUNS imagined runs so a
+# trainer seen once or twice barely moves, then BOT_RECORD_WEIGHT x (that average - the prior) / 10 is added.
+# (2026-11-19: Burglar 0 of 5 won, 3.2 badges, and 1 badge in each of its 3 Diamond runs, while Ed's
+# own record and the meta made it the bot's pick over Gamer and Shopkeeper.)
+BOT_RECORD = data.DATA / "bot_trainer_record.csv"
+BOT_PRIOR_BADGES = 7.0
+BOT_PRIOR_RUNS = 3
+BOT_RECORD_WEIGHT = 0.6
+
+
+def bot_record() -> dict[str, tuple[int, int]]:
+    """{trainer: (runs, badges)} from the bot's own Ranked runs."""
+    try:
+        with open(BOT_RECORD, encoding="utf-8") as f:
+            return {r["trainer"]: (int(r["runs"]), int(r["badges"])) for r in csv.DictReader(f)}
+    except OSError:
+        return {}
+
 
 def trainer_scores() -> dict[str, float]:
     out = {}
+    own = bot_record()
     with open(data.DATA / "trainers.csv", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             won = int(r.get("ed_championships") or 0)
@@ -39,6 +60,9 @@ def trainer_scores() -> dict[str, float]:
                 score -= 1.0
             if r["name"] in knowledge.TRAINER_PREFERENCE:
                 score += PREFERENCE_BONUS
+            runs, badges = own.get(r["name"], (0, 0))
+            avg = (badges + BOT_PRIOR_BADGES * BOT_PRIOR_RUNS) / (runs + BOT_PRIOR_RUNS)
+            score += BOT_RECORD_WEIGHT * (avg - BOT_PRIOR_BADGES) / 10.0
             out[r["name"]] = score
     return out
 

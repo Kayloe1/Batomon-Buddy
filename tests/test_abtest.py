@@ -25,3 +25,12 @@ class Report(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TrainerRecord(unittest.TestCase):
+    def test_bot_record_pushes_burglar_below_gamer_and_shopkeeper(self):
+        from engine.choices import pick_trainer, trainer_scores
+        sc = trainer_scores()
+        self.assertLess(sc["Burglar"], sc["Gamer"])
+        self.assertLess(sc["Burglar"], sc["Shopkeeper"])
+        self.assertNotEqual(pick_trainer(["Burglar", "Gentleman", "Shopkeeper"])[0], 0)
