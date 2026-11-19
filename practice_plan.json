@@ -1,25 +1,12 @@
 {
-  "about": "The practice test practice.bat plays. base (today's settings) is always included. 2026-11-18: 7 strategy tweaks x 192 paired runs; more_rerolls (max_rerolls 40) and deeper_lookahead (greedy_steps 4) dropped after 45 runs: identical or nearly identical to base, so they never change the bot's play.",
+  "about": "The practice test practice.bat plays. base (today's settings) is always included. 2026-11-19 night: re-check of the best tweaks from logs/ab/night_1118.jsonl (192 runs each: margin_weight 0.5 +0.28 +/- 0.30, power_weight 0.15 +0.17 +/- 0.29, w_next 0.8 +0.15 +/- 0.25) on fresh seeds, plus margin_weight 0.8 and all three together.",
   "arms": {
-    "stronger_team": {
-      "power_weight": 0.15
-    },
-    "wider_lookahead": {
-      "screen": 3
-    },
-    "tomorrow_more": {
-      "w_next": 0.8
-    },
-    "margin_less": {
-      "margin_weight": 0.15
-    },
-    "margin_more": {
-      "margin_weight": 0.5
-    }
+    "margin_more": {"margin_weight": 0.5},
+    "margin_most": {"margin_weight": 0.8},
+    "tomorrow_more": {"w_next": 0.8},
+    "stronger_team": {"power_weight": 0.15},
+    "all_three": {"margin_weight": 0.5, "w_next": 0.8, "power_weight": 0.15}
   },
-  "seeds": [
-    12100,
-    192
-  ],
-  "out": "logs/ab/night_1118.jsonl"
+  "seeds": [13100, 192],
+  "out": "logs/ab/night_1119.jsonl"
 }
