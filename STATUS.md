@@ -115,6 +115,31 @@ detected). Opponent teams met are added to `data\opponents_recorded.jsonl` (70 s
   statuses, every unit's numbers), `python -m sim --check` output byte for byte, and whole practice runs on
   4 settings. Against the original code in normal Python, a practice game is now about 5x faster.
 
+### Practice tests and trainer choice (2026-11-18/19)
+All on Ed's PC with PyPy, 192 paired Gold practice runs per setting (`logs\ab\night_1118*.jsonl`, `night_1119*`):
+- Seeds 12100+: `margin_weight` 0.5 +0.28 +/- 0.30, `power_weight` 0.15 +0.17, `w_next` 0.8 +0.15 (50 vs 40
+  won), `screen` 3 +0.11, `margin_weight` 0.15 -0.12; `max_rerolls` 40 and `greedy_steps` 4 play exactly like
+  base (dropped after 45 runs).
+- Re-check on fresh seeds 13100+: `margin_weight` 0.5 +0.06, 0.8 -0.26, `w_next` 0.8 -0.09, `power_weight`
+  0.15 -0.15, all three together +0.16; and again on seeds 15100+: all three -0.03. **None kept.**
+- Merge experiments, seeds 14100+: `gift_sim` +0.01, `keep_merges` -0.28 +/- 0.24, `merge_odds` -0.18,
+  `merge_sim` -0.28. All stay off.
+- Seeds 15100+: `lock_gain` 0.03 / 0.12, `sell_buy_margin` 0 / 0.05: within 0.06 of base; `bench_money` 0.5 -0.18.
+- Conclusion: the planner's settings are at a plateau on this practice field; further gains need a better
+  practice field (Platinum/Diamond opponents) or new ideas, not retuning.
+
+**Trainer choice from the bot's own record (2026-11-19).** 57 finished Ranked runs (`logs\trainer_record_1119.csv`
+on Ed's PC): Burglar 0 of 5 won, 3.2 badges, and 1 badge in all three of its Diamond runs on 11-18/19 (every
+rank drop that night); Egg Breeder 3 of 3 won, Monster Ranger and Scavenger 8.8 badges. `choices.trainer_scores`
+now adds the bot's own average badges per trainer (`data/bot_trainer_record.csv`, pulled toward 7 badges by 3
+imagined runs, weight 0.6 per 10 badges): Burglar drops from 0.38 to 0.23 (below Gamer 0.40 and Shopkeeper
+0.32). Practice runs pick trainers the same way, so new baselines differ slightly from the numbers above.
+Update the CSV as runs accumulate.
+
+**Overnight 2026-11-18/19 (Ranked):** Platinum 1 -> Diamond 8 (won, Egg Breeder) and up and down between
+Platinum 1 and Diamond 8 after that; at Diamond every non-winning run got 1-5 badges. The Ranked Continue panel
+template (`templates\continue_ranked_mode.png`) was made from a real panel on Ed's PC (not in git yet).
+
 ## How to add what the reader does not know yet
 **Text on the shop screen, without Claude (new, 2026-11-14, `stop_lessons.py`):** when the red box shows a
 stop with a capture, press **Teach it**. The window shows the part of the picture the bot could not read
